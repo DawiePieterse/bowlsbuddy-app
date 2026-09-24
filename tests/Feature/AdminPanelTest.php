@@ -37,3 +37,11 @@ it('clears caches from the maintenance page', function () {
 
     Livewire::test(Maintenance::class)->callAction('clearCaches')->assertNotified('Caches cleared');
 });
+
+it('draws avatars locally instead of loading them from another website', function () {
+    $this->actingAs(User::factory()->admin()->create(['alias' => 'Club Secretary']))
+        ->get('/admin')
+        ->assertOk()
+        ->assertDontSee('ui-avatars.com')
+        ->assertSee('data:image/svg+xml;base64,', false);
+});
