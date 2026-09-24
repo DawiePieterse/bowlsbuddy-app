@@ -6,7 +6,7 @@ build, uploaded through the cPanel File Manager. Everything below works without 
 
 | Club | Subdomain | Folder (document root) | Database |
 |---|---|---|---|
-| LCE | `lce.bowlsbuddy.co.za` | `bowlsbuddy-lce/` (`bowlsbuddy-lce/public`) | e.g. `bowlsbg5_lce` |
+| LCE | `lce.bowlsbuddy.co.za` | `bowlsbuddy-lce/` (`bowlsbuddy-lce/public`) | e.g. `bowlsbg5n9w0_lce` |
 
 The app's code and `.env` sit outside `public_html`, so only `public/` can be reached from the web.
 
@@ -26,7 +26,7 @@ InfinityFree build (see docs/DEPLOY.md).
    **Share document root**, and set the document root to `bowlsbuddy-<club>/public`.
 2. **PHP:** cPanel > MultiPHP Manager. Tick the new subdomain and choose PHP 8.3 (8.2 or newer).
 3. **Database:** cPanel > Database Wizard. Create the database and a user with **ALL PRIVILEGES**, and note
-   the full names (with the `bowlsbg5_` prefix) and the password. Open phpMyAdmin, select the database and
+   the full names (with the `bowlsbg5n9w0_` prefix) and the password. Open phpMyAdmin, select the database and
    import `install.sql`.
 4. **Files:** cPanel > File Manager > `bowlsbuddy-<club>/`. Upload `bowlsbuddy.zip` there and extract it
    (it fills in the empty `public/` folder cPanel made). Delete the zip afterwards.
