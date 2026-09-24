@@ -225,12 +225,17 @@ new app's tests.
 
 ### Phase 1: foundation (≈ 1 week)
 - [ ] New GitHub repository for the Laravel 12 + Filament app, private, with this plan copied in as
-  `docs/PLAN.md`. This repository (`bowlsbuddy`) stays as the read-only reference.
-- [ ] Migrations creating the tables in 5.1 with the improvements in 5.2.
-- [ ] Models, `HasMeta` trait, relationships, seeders (LCE: greens A and B, 6 rinks each, 12:00–17:00,
+  `docs/PLAN.md`. This repository (`bowlsbuddy`) stays as the read-only reference. *(Code ready locally;
+  the repository must be created on GitHub by the owner.)*
+- [x] Migrations creating the tables in 5.1 with the improvements in 5.2 (plus a unique email and
+  `remember_token` on `bs_users`).
+- [x] Models, `HasMeta` trait, relationships, seeders (LCE: greens A and B, 6 rinks each, 12:00–17:00,
   60-minute slots, 2 players).
-- [ ] Auth on `bs_users` (email + `pw`, status checks). CI with Pint, PHPStan and Pest.
-- [ ] Test deploy of a "hello world" build to **InfinityFree** (section 9.1): zip upload, `public/` into
+- [x] Auth on `bs_users` (email + `pw`, status checks). CI with Pint, PHPStan and Pest.
+- [x] Filament panel with privileges, local initials avatars (no third-party requests) and the Maintenance
+  page (run database updates, clear caches).
+- [ ] *(Build script done and tested in a local copy of the InfinityFree layout; upload to InfinityFree
+  still to do.)* Test deploy of a "hello world" build to **InfinityFree** (section 9.1): zip upload, `public/` into
   `htdocs/`, database sessions, uploads without a storage symlink, and the maintenance page running
   migrations.
 
