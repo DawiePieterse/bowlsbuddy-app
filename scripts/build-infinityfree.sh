@@ -58,7 +58,21 @@ fi
 echo "Zipping..."
 rm -f "$OUT/app.zip" "$OUT/htdocs.zip"
 (cd "$STAGE/public" && zip -qr "$OUT/htdocs.zip" .)
-(cd "$STAGE" && zip -qr "$OUT/app.zip" . -x 'public/*')
+# Composer falls back to git clones where GitHub zip downloads are blocked (as in Claude sessions), so keep
+# .git history and package test suites out of the upload.
+(cd "$STAGE" && zip -qr -9 "$OUT/app.zip" . -x 'public/*' '*/.git/*' '*/.git' 'vendor/*/*/tests/*' 'vendor/*/*/.github/*')
+
+echo "Checking..."
+app_listing="$(unzip -l "$OUT/app.zip")"
+htdocs_listing="$(unzip -l "$OUT/htdocs.zip")"
+fail() { echo "BUILD FAILED: $1" >&2; exit 1; }
+grep -q ' vendor/autoload\.php$' <<<"$app_listing" || fail "app.zip has no vendor/autoload.php"
+grep -q ' artisan$' <<<"$app_listing" || fail "app.zip has no artisan"
+grep -q '/\.git/' <<<"$app_listing" && fail "app.zip contains .git/ folders"
+grep -q ' \.env$' <<<"$app_listing" && fail "app.zip contains a .env file"
+grep -q ' index\.php$' <<<"$htdocs_listing" || fail "htdocs.zip has no index.php"
+grep -q ' \.htaccess$' <<<"$htdocs_listing" || fail "htdocs.zip has no .htaccess"
+grep -q ' css/filament/' <<<"$htdocs_listing" || fail "htdocs.zip has no Filament assets"
 
 echo "Done: $OUT"
 ls -lh "$OUT"
