@@ -42,7 +42,7 @@ if $INSTALL_SQL; then
     echo "Creating install.sql from a fresh database..."
     (
         cd "$STAGE"
-        export APP_ENV=production APP_KEY="base64:$(head -c 32 /dev/urandom | base64)" \
+        export APP_ENV=build APP_KEY="base64:$(head -c 32 /dev/urandom | base64)" \
             DB_CONNECTION=mysql DB_HOST="${BUILD_DB_HOST:-127.0.0.1}" DB_DATABASE="$BUILD_DB_DATABASE" \
             DB_USERNAME="${BUILD_DB_USERNAME:-root}" DB_PASSWORD="${BUILD_DB_PASSWORD:-}" \
             CACHE_STORE=array SESSION_DRIVER=array
