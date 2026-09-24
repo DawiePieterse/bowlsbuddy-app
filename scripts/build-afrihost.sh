@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# Builds the files to upload to InfinityFree, which has no command line (see docs/DEPLOY.md):
+# Builds the files to upload to Afrihost through the cPanel File Manager (see docs/DEPLOY-AFRIHOST.md):
 #
-#   app.zip      everything except public/  -> extract in the account root, next to htdocs/
-#   htdocs.zip   the contents of public/     -> extract inside htdocs/
-#   install.sql  (with --install-sql) empty database with the club set up -> import once in phpMyAdmin
+#   app.zip          everything except public/  -> extract in the home folder, next to public_html/
+#   public_html.zip  the contents of public/     -> extract inside public_html/
+#   install.sql      (with --install-sql) empty database with the club set up -> import once in phpMyAdmin
 #
 # Only committed files are included. Usage:
 #
-#   scripts/build-infinityfree.sh [--install-sql] [output-dir]
+#   scripts/build-afrihost.sh [--install-sql] [output-dir]
 #
 # --install-sql needs a scratch MySQL/MariaDB database, given by BUILD_DB_HOST, BUILD_DB_DATABASE,
 # BUILD_DB_USERNAME and BUILD_DB_PASSWORD (it is emptied), and the club settings from CLUB_* variables
@@ -23,7 +23,7 @@ if [[ "${1:-}" == "--install-sql" ]]; then
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="$(mkdir -p "${1:-$ROOT/build/infinityfree}" && cd "${1:-$ROOT/build/infinityfree}" && pwd)"
+OUT="$(mkdir -p "${1:-$ROOT/build/afrihost}" && cd "${1:-$ROOT/build/afrihost}" && pwd)"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
@@ -69,23 +69,23 @@ fi
 ') || { echo "BUILD FAILED: vendor files missing after stripping" >&2; exit 1; }
 
 echo "Zipping..."
-rm -f "$OUT/app.zip" "$OUT/htdocs.zip"
-(cd "$STAGE/public" && zip -qr "$OUT/htdocs.zip" .)
+rm -f "$OUT/app.zip" "$OUT/public_html.zip"
+(cd "$STAGE/public" && zip -qr "$OUT/public_html.zip" .)
 # Composer falls back to git clones where GitHub zip downloads are blocked (as in Claude sessions), so keep
 # .git history and package test suites out of the upload.
 (cd "$STAGE" && zip -qr -9 "$OUT/app.zip" . -x 'public/*' '*/.git/*' '*/.git' 'vendor/*/*/tests/*' 'vendor/*/*/.github/*')
 
 echo "Checking..."
 app_listing="$(unzip -l "$OUT/app.zip")"
-htdocs_listing="$(unzip -l "$OUT/htdocs.zip")"
+public_html_listing="$(unzip -l "$OUT/public_html.zip")"
 fail() { echo "BUILD FAILED: $1" >&2; exit 1; }
 grep -q ' vendor/autoload\.php$' <<<"$app_listing" || fail "app.zip has no vendor/autoload.php"
 grep -q ' artisan$' <<<"$app_listing" || fail "app.zip has no artisan"
 grep -q '/\.git/' <<<"$app_listing" && fail "app.zip contains .git/ folders"
 grep -q ' \.env$' <<<"$app_listing" && fail "app.zip contains a .env file"
-grep -q ' index\.php$' <<<"$htdocs_listing" || fail "htdocs.zip has no index.php"
-grep -q ' \.htaccess$' <<<"$htdocs_listing" || fail "htdocs.zip has no .htaccess"
-grep -q ' css/filament/' <<<"$htdocs_listing" || fail "htdocs.zip has no Filament assets"
+grep -q ' index\.php$' <<<"$public_html_listing" || fail "public_html.zip has no index.php"
+grep -q ' \.htaccess$' <<<"$public_html_listing" || fail "public_html.zip has no .htaccess"
+grep -q ' css/filament/' <<<"$public_html_listing" || fail "public_html.zip has no Filament assets"
 
 echo "Done: $OUT"
 ls -lh "$OUT"

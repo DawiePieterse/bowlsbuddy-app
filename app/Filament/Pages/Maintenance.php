@@ -12,7 +12,7 @@ use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Facades\Artisan;
 
 /**
- * Database updates and cache clearing from the browser, for hosts without a command line (InfinityFree).
+ * Database updates and cache clearing from the browser, so updates need no command line on the host.
  */
 class Maintenance extends Page
 {
