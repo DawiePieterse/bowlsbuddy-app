@@ -48,3 +48,4 @@ Until the Download backup button arrives (Phase 5), export the database weekly f
 
 When the first club signs up (see docs/PLAN.md, section 9.2): export the database, import it on the new host,
 upload the same build, copy `.env` with the new database details, and point the domain at the new host.
+For Afrihost, follow [DEPLOY-AFRIHOST.md](DEPLOY-AFRIHOST.md).
