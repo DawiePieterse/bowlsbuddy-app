@@ -36,6 +36,7 @@ echo "Installing production dependencies..."
 
 # Drop package tests and docs that git-cloned packages bring along.
 php "$ROOT/scripts/strip-export-ignored.php" "$STAGE/vendor"
+(cd "$STAGE" && composer dump-autoload --no-dev --classmap-authoritative --no-interaction --quiet)
 
 # Not needed on the server.
 rm -rf "$STAGE"/{tests,.github,docs,scripts,phpunit.xml,phpstan.neon,.env.example,.editorconfig,.gitattributes,package.json,vite.config.js}
@@ -57,6 +58,15 @@ if $INSTALL_SQL; then
         ${BUILD_DB_PASSWORD:+--password="$BUILD_DB_PASSWORD"} --single-transaction --skip-comments \
         --no-tablespaces "$BUILD_DB_DATABASE" > "$OUT/install.sql"
 fi
+
+# Every autoloaded class file must still be there after stripping.
+(cd "$STAGE" && php -r '
+    $missing = 0;
+    foreach (require "vendor/composer/autoload_classmap.php" as $class => $file) {
+        if (! is_file($file)) { fwrite(STDERR, "Missing: $file\n"); if (++$missing > 5) break; }
+    }
+    exit($missing ? 1 : 0);
+') || { echo "BUILD FAILED: vendor files missing after stripping" >&2; exit 1; }
 
 echo "Zipping..."
 rm -f "$OUT/app.zip" "$OUT/htdocs.zip"

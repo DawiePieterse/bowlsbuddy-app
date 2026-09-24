@@ -43,6 +43,11 @@ foreach (glob("$vendor/*/*/.gitattributes") as $attributes) {
         }
 
         foreach (glob("$package/$pattern", GLOB_NOSORT) ?: [] as $match) {
+            // Patterns like ".*" also match "." and "..", which are the package and vendor folders.
+            if (in_array(basename($match), ['.', '..'], true)) {
+                continue;
+            }
+
             $remove($match);
             $removed++;
         }
