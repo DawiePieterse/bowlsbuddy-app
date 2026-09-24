@@ -34,6 +34,9 @@ echo "Installing production dependencies..."
 (cd "$STAGE" && composer install --no-dev --no-interaction --no-progress --prefer-dist \
     --optimize-autoloader --classmap-authoritative --quiet)
 
+# Drop package tests and docs that git-cloned packages bring along.
+php "$ROOT/scripts/strip-export-ignored.php" "$STAGE/vendor"
+
 # Not needed on the server.
 rm -rf "$STAGE"/{tests,.github,docs,scripts,phpunit.xml,phpstan.neon,.env.example,.editorconfig,.gitattributes,package.json,vite.config.js}
 
