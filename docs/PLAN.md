@@ -286,6 +286,9 @@ an event, print the day sheet, reset a password) passes as a browser test.
 
 **Decided: InfinityFree until the first club signs up**, then move to paid hosting before that club goes live.
 
+**Update (24 Sep 2026):** moved straight to paid hosting: Afrihost Bronze Pro (cPanel, R135 pm) on
+`bowlsbuddy.co.za`, one subdomain, folder and database per club. See [DEPLOY-AFRIHOST.md](DEPLOY-AFRIHOST.md).
+
 ### 9.1 Working within InfinityFree's limits
 
 | InfinityFree limit | How the rebuild handles it |
@@ -344,6 +347,7 @@ Laravel is set up for this from Phase 1, so moving hosts later needs no code cha
 2. ~~**Repository?**~~ **Decided: a new repository.** The current `bowlsbuddy` repository is kept unchanged as
    the reference, and archived once the rebuild is live.
 3. ~~**Hosting?**~~ **Decided: InfinityFree** until the first club signs up, then paid hosting (section 9).
+   **Now Afrihost Bronze Pro** on `bowlsbuddy.co.za` (docs/DEPLOY-AFRIHOST.md).
 4. ~~**Dropped features?**~~ **Decided: left out.** Payments, pricing, products, coupons, bills, emails and
    repeating bookings are not built, and their tables are not created.
 5. ~~**The current app:** keep it only as a reference, or launch it at LCE?~~ **Decided: reference only.** It
