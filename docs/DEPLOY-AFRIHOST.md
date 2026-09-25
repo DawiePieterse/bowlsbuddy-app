@@ -39,7 +39,7 @@ room for about 20 clubs for R26 more a month. Silver Pro (R179, 100 databases) i
 
 The app's code and `.env` sit outside `public_html`, so only `public/` can be reached from the web. This
 server allows document roots outside `public_html` (cPanel even suggests `/home/<user>/<domain>`).
-`public_html` belongs to `bowlsbuddy.co.za` itself and is still empty.
+`public_html` belongs to `bowlsbuddy.co.za` itself and holds only the landing page (`landing/index.html`).
 
 ## What gets built
 
@@ -110,7 +110,8 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
   seeded `secretary@example.com` login (25 Sep 2026).
 - [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Are `intl` and `zip` enabled for
   ea-php83? Are daily backups included?
-- [ ] Decide what `bowlsbuddy.co.za` itself shows (a landing page or a redirect); its `public_html` is empty.
+- [x] `bowlsbuddy.co.za` shows a simple landing page: upload `landing/index.html` to `public_html/`. Add each new
+  club to its Clubs list.
 
 ## If Afrihost enables SSH
 
