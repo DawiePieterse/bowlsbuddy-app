@@ -103,8 +103,9 @@ panel's Download backup button (Phase 5) will replace this download.
 - **Server error on the site:** read `bowlsbuddy-<club>/storage/logs/laravel.log` in File Manager (View).
 - **Files starting with a dot are missing** in File Manager: Settings > Show Hidden (dotfiles).
 - **`bowlsbuddy.co.za` shows a red "Has been registered on behalf of a client" page** although `/index.html`
-  shows the landing page: Afrihost's placeholder in `public_html` is served first. Add a `public_html/.htaccess`
-  containing `DirectoryIndex index.html`.
+  shows the landing page: Afrihost's placeholder in `public_html` is served first. Edit `public_html/.htaccess`
+  (it already holds cPanel's PHP blocks; leave them) and add `DirectoryIndex index.html` below the last `END`
+  line. Done for `bowlsbuddy.co.za` on 25 Sep 2026.
 - **File Manager shows "Data error."** instead of a folder's files (seen on `public_html`): tap Reload or the
   folder in the tree on the left. Uploads to that folder still work; check the destination on the upload page.
 - **MultiPHP Manager's version list jumps back to PHP 5.2** after each apply: check the choice before tapping
@@ -124,7 +125,7 @@ panel's Download backup button (Phase 5) will replace this download.
 - [ ] Asked `hosting@afrihost.com` (25 Sep 2026), on Afrihost support's advice, to: enable jailed SSH (hostname,
   port, key-only login?); enable AfriBackup in cPanel and say whether it covers the MySQL databases; enable
   `intl` and `zip` for ea-php83. Waiting for the reply.
-- [x] `bowlsbuddy.co.za` shows a simple landing page: upload `landing/index.html` to `public_html/`. Add each new
+- [x] `bowlsbuddy.co.za` shows a simple landing page (live 25 Sep 2026): upload `landing/index.html` to `public_html/`. Add each new
   club to its Clubs list.
 
 ## If Afrihost enables SSH
