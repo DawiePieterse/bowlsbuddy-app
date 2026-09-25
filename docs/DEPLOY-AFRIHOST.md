@@ -103,10 +103,12 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
 - [x] HTTPS for `lce.bowlsbuddy.co.za` (AutoSSL, 25 Sep 2026).
 - [x] Force HTTPS Redirect for `lce.bowlsbuddy.co.za` and `bowlsbuddy.co.za` (cPanel > Domains, 25 Sep 2026).
 - [x] First login at `https://lce.bowlsbuddy.co.za/admin` as the Secretary (25 Sep 2026).
-- [ ] Change the Secretary's email and password. The seeded login is still `secretary@example.com` with the
-  password printed when `install.sql` was built (shared in a chat, so treat it as exposed). The admin panel
-  has no profile page yet: add one (Filament profile page saving to `bs_users.email` / `pw`), deploy it, then
-  change both, before any members are invited.
+- [x] Profile page in the admin panel (avatar menu, top right > Profile, `/admin/profile`): name, email and
+  password, saved to `bs_users.alias` / `email` / `pw`. Changing the email or password asks for the current
+  password.
+- [ ] Deploy the profile page, then change the Secretary's email and password there, before any members are
+  invited. The seeded login is still `secretary@example.com` with the password printed when `install.sql` was
+  built (shared in a chat, so treat it as exposed).
 - [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Are `intl` and `zip` enabled for
   ea-php83? Are daily backups included?
 - [ ] Decide what `bowlsbuddy.co.za` itself shows (a landing page or a redirect); its `public_html` is empty.
