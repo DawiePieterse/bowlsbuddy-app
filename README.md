@@ -4,7 +4,8 @@ Online rink bookings for bowls clubs: members book practice rinks on their phone
 share bookings on WhatsApp; the Club Secretary opens and closes greens, adds events and prints day sheets.
 
 This is the rebuild of the original ZF2-based Bowls Buddy on **Laravel 12 + Filament 4**, keeping the same
-`bs_*` data structure. See [docs/PLAN.md](docs/PLAN.md) for the plan and progress, and
+`bs_*` data structure. See [docs/PLAN.md](docs/PLAN.md) for the plan and progress,
+[docs/MIGRATION-CHECKLIST.md](docs/MIGRATION-CHECKLIST.md) for every step to go live, and
 [docs/DEPLOY-AFRIHOST.md](docs/DEPLOY-AFRIHOST.md) for deploying to Afrihost ([docs/DEPLOY.md](docs/DEPLOY.md)
 for InfinityFree).
 
