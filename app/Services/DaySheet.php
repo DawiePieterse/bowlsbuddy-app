@@ -55,6 +55,7 @@ class DaySheet
             ->where('datetime_end', '>', $dayStart)
             ->where('datetime_start', '<', $dayEnd)
             ->orderBy('datetime_start')
+            ->orderBy('eid')
             ->get();
 
         $greens = $this->greens->greens();

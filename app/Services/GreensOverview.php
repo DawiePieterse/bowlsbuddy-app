@@ -42,6 +42,7 @@ class GreensOverview
             ->where('datetime_end', '>', $from)
             ->where('datetime_start', '<', $until)
             ->orderBy('datetime_start')
+            ->orderBy('eid')
             ->get();
 
         $days = [];
