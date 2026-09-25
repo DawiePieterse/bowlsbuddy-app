@@ -25,8 +25,9 @@ room for about 20 clubs for R26 more a month. Silver Pro (R179, 100 databases) i
 
 ### What this cPanel has, and hasn't
 
-- **No Terminal**, so no Composer or `artisan` on the server. **SSH Access** only manages keys; whether shell
-  access can be switched on is still to be asked (see [Open items](#open-items)).
+- **No Terminal**, so no Composer or `artisan` on the server. **SSH Access** only manages keys: on this shared
+  account, shell access has to be switched on by Afrihost. Request it by email to `hosting@afrihost.com`
+  (requested 25 Sep 2026, see [Open items](#open-items)).
 - **Git Version Control**, **Cron Jobs**, **Backup** / **Backup Wizard**, **Remote Database Access**,
   **MultiPHP INI Editor** (memory and upload limits), **Database Wizard**, phpMyAdmin 5.2.
 - Softaculous, SitePad and Sitejet are there but not used; don't install apps over a club folder.
@@ -114,8 +115,9 @@ panel's Download backup button (Phase 5) will replace this download.
 - [x] Profile page deployed to LCE and the Secretary's email and password changed there, replacing the exposed
   seeded `secretary@example.com` login (25 Sep 2026).
 - [x] Automatic backups: AfriBackup is included (snapshots kept up to two weeks; see [Backups](#backups)).
-- [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Does AfriBackup include the MySQL
-  databases? Check `intl` and `zip` for ea-php83 (a temporary `check.php`, or ask).
+- [ ] SSH shell access and whether AfriBackup includes the MySQL databases: asked `hosting@afrihost.com`
+  (25 Sep 2026); waiting for the reply (hostname, port, key-only login).
+- [ ] Check `intl` and `zip` for ea-php83 (a temporary `check.php`, or ask Afrihost).
 - [x] `bowlsbuddy.co.za` shows a simple landing page: upload `landing/index.html` to `public_html/`. Add each new
   club to its Clubs list.
 
