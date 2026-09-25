@@ -40,6 +40,9 @@ composer check      # Pint (style), Larastan (static analysis), Pest (tests)
 
 GitHub Actions runs the same checks, plus `composer audit`, on every push.
 
+The booking rules are also checked against answers recorded from the original app; see
+[scripts/reference/README.md](scripts/reference/README.md).
+
 ## Structure
 
 | Where | What |
@@ -47,6 +50,7 @@ GitHub Actions runs the same checks, plus `composer audit`, on every push.
 | `database/migrations` | The `bs_*` booking tables (same names and keys as the original) and Laravel's `bb_*` tables |
 | `app/Models` | `User`, `Rink` (`bs_squares`), `Booking`, `Reservation`, `Event`, `Option`; meta via `Concerns/HasMeta` |
 | `app/Support/Settings.php` | Cached site settings from `bs_options` |
+| `app/Services` | The booking rules (`BookingRules`), booking and cancelling (`BookingService`), greens and closures (`GreenService`), the greens overview and the day sheet |
 | `app/Filament` | Admin panel (Secretary), including the Maintenance page |
 | `config/club.php` | Starting setup for a new club |
 | `scripts/build-infinityfree.sh` | Builds the zip files to upload to InfinityFree |

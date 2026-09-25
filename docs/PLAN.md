@@ -11,7 +11,7 @@ rollback plan. The current code serves as the **reference for how everything sho
 **Decided:** the current app will **not be launched**. It is kept only as the reference, so no fixes are made to it;
 the issues in section 2 are fixed in the rebuild only.
 
-**Status:** Phase 1 (foundation) in progress in this repository.
+**Status:** Phase 1 (foundation) in progress and Phase 2 (booking rules) done, in this repository.
 
 ---
 
@@ -165,7 +165,23 @@ date (`SELECT … FOR UPDATE`), re-checks rules 1–5, then inserts.
 
 **Reference tests:** run the current app locally with a seeded set of rinks, events, closures and bookings.
 Record its greens overview numbers and booking accept/refuse results, and use them as expected values in the
-new app's tests.
+new app's tests. *(Done: `scripts/reference/capture.php` runs the scenarios in `tests/Reference/scenarios.php`
+through the current app; `tests/Feature/ReferenceValuesTest.php` expects the same answers from the rebuild.)*
+
+**Deliberate differences** from the current app (everything else matches it):
+
+| Current app | Rebuild | Why |
+|---|---|---|
+| Any start and end time within the playing hours is accepted; the calendar only offers whole slots | Only whole `time_block` slots, on one day | The booking form can't be sent with odd times |
+| Read-only rinks are refused only by the pop-up; the validator allows them | Read-only rinks refused like disabled ones (staff who create bookings excepted) | One place decides |
+| Events with any status block rinks (the overview counts only enabled ones) | Only enabled events block rinks, everywhere | Disabling an event frees its rinks |
+| A slot inside the `min_range_book` lead time is "already over" | "Too soon to book" | Clearer message; same slots refused |
+| An event gives "This rink is already occupied" | "This rink is taken by an event" | Clearer message; same slots refused |
+| A member could "cancel" an already cancelled booking | Only bookings that aren't cancelled | |
+| Availability checked before the booking transaction, without a lock (issue 8) | Member and rink rows locked, rules re-checked inside the transaction | No double bookings |
+
+Locking the member's and the rink's rows (always in that order) instead of the date's reservations also
+covers the rules that span rinks (one rink per day, active booking limit) and can't deadlock.
 
 ---
 
@@ -242,11 +258,13 @@ new app's tests.
 **Done when:** CI is green, and the seeded app runs on InfinityFree.
 
 ### Phase 2: booking rules (≈ 1–2 weeks)
-- [ ] Reference values captured from the current app (5.3).
-- [ ] `BookingRules`, `GreenService` and greens-overview query, each with Pest tests, including the
-  concurrent-booking test.
+- [x] Reference values captured from the current app (5.3): 15 scenarios, 85 answers and 7 greens overviews
+  in `tests/Reference/reference-values.json`.
+- [x] `BookingRules`, `GreenService` and greens-overview query, each with Pest tests, including the
+  concurrent-booking test. Also `BookingService` (book and cancel under row locks) and `DaySheet` (rule 9).
+  All in `app/Services`.
 
-**Done when:** all rule tests pass and match the reference values.
+**Done when:** all rule tests pass and match the reference values. *(Done.)*
 
 ### Phase 3: member pages (≈ 2 weeks)
 - [ ] Layout and CSS carried over (`public/css`, `public/css-client/default.css`).

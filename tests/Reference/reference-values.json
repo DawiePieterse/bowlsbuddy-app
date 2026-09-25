@@ -1,0 +1,2744 @@
+{
+    "captured_at": "2026-09-25 16:24:56",
+    "original_app": "b84ac77732421b0266290098c4844beb58ea3b83",
+    "scenarios": {
+        "free-slots": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "B-6",
+                        1,
+                        "16:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "visitor",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00",
+                        1,
+                        2
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00",
+                        1,
+                        3
+                    ],
+                    "outcome": "too-many-players"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-27",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-28",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-29",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "playing-hours": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "11:00"
+                    ],
+                    "outcome": "invalid-time"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "17:00"
+                    ],
+                    "outcome": "invalid-time"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "16:00",
+                        2
+                    ],
+                    "outcome": "invalid-time"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        1,
+                        "11:00"
+                    ],
+                    "outcome": "invalid-time"
+                }
+            ]
+        },
+        "past-slots": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        -1,
+                        "16:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        0,
+                        "12:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        0,
+                        "13:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        0,
+                        "14:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        0,
+                        "15:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        0,
+                        "16:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        -1,
+                        "16:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "assist:calendar.see-past",
+                        "A-1",
+                        -1,
+                        "16:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "assist:calendar.see-data",
+                        "A-1",
+                        -1,
+                        "16:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "assist:calendar.see-data",
+                        "A-1",
+                        0,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-27",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-28",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-29",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "booking-range": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        13,
+                        "16:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        14,
+                        "16:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        15,
+                        "12:00"
+                    ],
+                    "outcome": "too-far-ahead"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        15,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "assist:calendar.create-single-bookings",
+                        "A-1",
+                        30,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ]
+        },
+        "lead-time": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "in-the-past"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-2",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "assist:calendar.see-past",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "too-short-notice"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ]
+        },
+        "slots-at-once": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00",
+                        2
+                    ],
+                    "outcome": "too-long"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        1,
+                        "12:00",
+                        2
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-2",
+                        1,
+                        "12:00",
+                        2
+                    ],
+                    "outcome": "booked"
+                }
+            ]
+        },
+        "disabled-rink": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "rink-unavailable"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-2",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-27",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-28",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-29",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 25,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "players-per-rink": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        1,
+                        "13:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-2",
+                        2,
+                        "12:00",
+                        1,
+                        2
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-3",
+                        1,
+                        "12:00",
+                        1,
+                        2
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "one-rink-per-day"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-1",
+                        3,
+                        "12:00",
+                        1,
+                        2
+                    ],
+                    "outcome": "one-rink-per-day"
+                },
+                {
+                    "check": [
+                        "book",
+                        "cara",
+                        "B-2",
+                        3,
+                        "14:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "cara",
+                        "B-2",
+                        3,
+                        "15:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 29,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-27",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-28",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 28
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-29",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "one-rink-per-day": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "B-3",
+                        1,
+                        "15:00"
+                    ],
+                    "outcome": "one-rink-per-day"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "B-3",
+                        2,
+                        "15:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-3",
+                        1,
+                        "15:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "B-3",
+                        1,
+                        "15:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "cara",
+                        "B-3",
+                        1,
+                        "15:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ]
+        },
+        "closed-green": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-2",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "green-closed"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "green-closed"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-6",
+                        1,
+                        "16:00"
+                    ],
+                    "outcome": "green-closed"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        2,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": true,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 29,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-27",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-28",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-29",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "events": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        1,
+                        "13:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        1,
+                        "14:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-3",
+                        1,
+                        "13:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-1",
+                        2,
+                        "13:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-6",
+                        2,
+                        "14:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "B-6",
+                        2,
+                        "15:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        2,
+                        "13:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-6",
+                        3,
+                        "16:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "B-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-2",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "one-rink-per-day"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 27,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [
+                            "Coaching",
+                            "Maintenance"
+                        ],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-27",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 18
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": [
+                            "League"
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-09-28",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [
+                            "Club day"
+                        ],
+                        "B": [
+                            "Club day"
+                        ]
+                    }
+                },
+                {
+                    "date": "2026-09-29",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "hidden-days": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        2,
+                        "12:00"
+                    ],
+                    "outcome": "day-hidden"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "day-hidden"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        4,
+                        "12:00"
+                    ],
+                    "outcome": "day-hidden"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        9,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "admin",
+                        "A-1",
+                        2,
+                        "12:00"
+                    ],
+                    "outcome": "day-hidden"
+                }
+            ],
+            "overview": [
+                {
+                    "date": "2026-09-25",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 0,
+                        "B": 0
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-26",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-09-30",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-01",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-02",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-03",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-04",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-05",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-06",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-07",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                },
+                {
+                    "date": "2026-10-08",
+                    "closed": {
+                        "A": false,
+                        "B": false
+                    },
+                    "free": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "slots": {
+                        "A": 30,
+                        "B": 30
+                    },
+                    "events": {
+                        "A": [],
+                        "B": []
+                    }
+                }
+            ]
+        },
+        "active-booking-limit": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "max-active-bookings"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "B-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "ben",
+                        "A-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                },
+                {
+                    "check": [
+                        "book",
+                        "cara",
+                        "A-1",
+                        3,
+                        "12:00"
+                    ],
+                    "outcome": "booked"
+                }
+            ]
+        },
+        "several-reasons": {
+            "checks": [
+                {
+                    "check": [
+                        "book",
+                        "cara",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-2",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "one-rink-per-day"
+                },
+                {
+                    "check": [
+                        "book",
+                        "anna",
+                        "A-1",
+                        1,
+                        "12:00"
+                    ],
+                    "outcome": "occupied"
+                },
+                {
+                    "check": [
+                        "book",
+                        "cara",
+                        "B-2",
+                        2,
+                        "12:00"
+                    ],
+                    "outcome": "green-closed"
+                }
+            ]
+        },
+        "cancelling": {
+            "checks": [
+                {
+                    "check": [
+                        "cancel",
+                        "anna",
+                        "later"
+                    ],
+                    "outcome": "cancellable"
+                },
+                {
+                    "check": [
+                        "cancel",
+                        "ben",
+                        "later"
+                    ],
+                    "outcome": "not-cancellable"
+                },
+                {
+                    "check": [
+                        "cancel",
+                        "visitor",
+                        "later"
+                    ],
+                    "outcome": "not-cancellable"
+                },
+                {
+                    "check": [
+                        "cancel",
+                        "anna",
+                        "today"
+                    ],
+                    "outcome": "not-cancellable"
+                },
+                {
+                    "check": [
+                        "cancel",
+                        "admin",
+                        "today"
+                    ],
+                    "outcome": "cancellable"
+                },
+                {
+                    "check": [
+                        "cancel",
+                        "assist:calendar.cancel-single-bookings",
+                        "today"
+                    ],
+                    "outcome": "cancellable"
+                },
+                {
+                    "check": [
+                        "cancel",
+                        "anna",
+                        "no-range"
+                    ],
+                    "outcome": "not-cancellable"
+                }
+            ]
+        }
+    }
+}
