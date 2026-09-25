@@ -101,7 +101,7 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
 ## Open items
 
 - [x] HTTPS for `lce.bowlsbuddy.co.za` (AutoSSL, 25 Sep 2026).
-- [ ] Force HTTPS Redirect for `lce.bowlsbuddy.co.za` (and `bowlsbuddy.co.za`) in cPanel > Domains.
+- [x] Force HTTPS Redirect for `lce.bowlsbuddy.co.za` and `bowlsbuddy.co.za` (cPanel > Domains, 25 Sep 2026).
 - [x] First login at `https://lce.bowlsbuddy.co.za/admin` as the Secretary (25 Sep 2026).
 - [ ] Change the Secretary's email and password. The seeded login is still `secretary@example.com` with the
   password printed when `install.sql` was built (shared in a chat, so treat it as exposed). The admin panel
