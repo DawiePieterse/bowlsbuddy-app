@@ -19,8 +19,10 @@ return [
     'booking_range_days' => (int) env('CLUB_BOOKING_RANGE_DAYS', 14),
     'cancel_range_hours' => (int) env('CLUB_CANCEL_RANGE_HOURS', 24),
 
-    // First admin (the Club Secretary). Without a password, a random one is printed by the seeder.
-    'admin_email' => env('CLUB_ADMIN_EMAIL', 'secretary@example.com'),
+    // First admin (the Club Secretary), who logs in with the mobile number. Without a password, a random one is
+    // printed by the seeder.
+    'admin_phone' => env('CLUB_ADMIN_PHONE', '0820000000'),
+    'admin_email' => env('CLUB_ADMIN_EMAIL'),
     'admin_password' => env('CLUB_ADMIN_PASSWORD'),
 
 ];

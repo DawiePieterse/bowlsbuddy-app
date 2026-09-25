@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Maintenance;
 use App\Models\User;
 use Livewire\Livewire;
@@ -44,4 +45,26 @@ it('draws avatars locally instead of loading them from another website', functio
         ->assertOk()
         ->assertDontSee('ui-avatars.com')
         ->assertSee('data:image/svg+xml;base64,', false);
+});
+
+it('logs the Secretary into the admin panel with the mobile number', function () {
+    $admin = User::factory()->admin()->create(['phone' => '0821234567']);
+
+    Livewire::test(Login::class)
+        ->fillForm(['phone' => '082 123 4567', 'password' => 'secret123'])
+        ->call('authenticate')
+        ->assertHasNoFormErrors();
+
+    $this->assertAuthenticatedAs($admin);
+});
+
+it('does not log into the admin panel with an email address', function () {
+    User::factory()->admin()->create(['email' => 'secretary@example.com']);
+
+    Livewire::test(Login::class)
+        ->fillForm(['phone' => 'secretary@example.com', 'password' => 'secret123'])
+        ->call('authenticate')
+        ->assertHasFormErrors(['phone']);
+
+    $this->assertGuest();
 });

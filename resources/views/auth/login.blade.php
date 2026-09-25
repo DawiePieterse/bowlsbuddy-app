@@ -7,9 +7,9 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
-            <label for="email">Email address</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">
-            @error('email') <div class="error">{{ $message }}</div> @enderror
+            <label for="phone">Mobile number</label>
+            <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required autofocus autocomplete="tel" inputmode="tel" placeholder="082 123 4567">
+            @error('phone') <div class="error">{{ $message }}</div> @enderror
 
             <label for="password">Password</label>
             <input id="password" type="password" name="password" required autocomplete="current-password">

@@ -36,7 +36,7 @@ class ClubSeeder extends Seeder
             'subject.square.unit.plural' => 'Players',
             'subject.type' => 'our club',
             'service.user.registration' => 'true',
-            'service.user.activation' => 'immediate',
+            'service.user.activation' => 'manual',
             'service.calendar.days' => '1',
             'service.calendar.day-exceptions' => '',
             'service.greens.closed' => '',
@@ -76,7 +76,8 @@ class ClubSeeder extends Seeder
         $admin = User::query()->create([
             'alias' => 'Club Secretary',
             'status' => 'admin',
-            'email' => $club['admin_email'],
+            'phone' => $club['admin_phone'],
+            'email' => $club['admin_email'] ?: null,
             'pw' => $password,
         ]);
 
@@ -84,7 +85,7 @@ class ClubSeeder extends Seeder
         $admin->setMeta('lastname', 'Secretary');
 
         if (! $club['admin_password']) {
-            $this->command->info("Admin {$club['admin_email']} created with password: {$password}");
+            $this->command->info("Admin {$admin->phone} created with password: {$password}");
         }
     }
 }

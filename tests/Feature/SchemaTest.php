@@ -36,3 +36,10 @@ it('rejects unknown status values', function (string $table, array $row) {
         'time_start' => '12:00', 'time_end' => '17:00', 'time_block' => 3600, 'time_block_bookable' => 3600,
     ]],
 ]);
+
+it('allows each mobile number on one account only', function () {
+    DB::table('bs_users')->insert(['alias' => 'Anna', 'status' => 'enabled', 'phone' => '+27821234567']);
+
+    expect(fn () => DB::table('bs_users')->insert(['alias' => 'Other', 'status' => 'enabled', 'phone' => '+27821234567']))
+        ->toThrow(QueryException::class);
+});

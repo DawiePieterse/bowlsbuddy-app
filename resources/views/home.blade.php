@@ -4,6 +4,8 @@
     <div class="card">
         <h1>Bowls Buddy</h1>
 
+        <x-play-direction />
+
         @auth
             <p>Logged in as <strong>{{ auth()->user()->alias }}</strong>.</p>
             @if (auth()->user()->canAccessPanel(filament()->getPanel('admin')))

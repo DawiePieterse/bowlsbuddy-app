@@ -25,8 +25,10 @@ php artisan migrate --seed      # LCE setup (Greens A and B, 12 rinks) + demo me
 php artisan serve
 ```
 
-The seeder prints the Club Secretary's password (`secretary@example.com`) unless `CLUB_ADMIN_PASSWORD` is
-set. Demo members (local only) use the password `secret123`.
+Everyone logs in with their mobile number. The seeder prints the Club Secretary's password (number
+`CLUB_ADMIN_PHONE`, default 082 000 0000) unless `CLUB_ADMIN_PASSWORD` is set. Demo members (local only) are
+082 000 0001 to 082 000 0008 with the password `secret123`. New registrations wait for the Secretary to
+activate them.
 
 - Member site: <http://127.0.0.1:8000>
 - Admin panel: <http://127.0.0.1:8000/admin>
@@ -48,7 +50,9 @@ GitHub Actions runs the same checks, plus `composer audit`, on every push.
 | `database/migrations` | The `bs_*` booking tables (same names and keys as the original) and Laravel's `bb_*` tables |
 | `app/Models` | `User`, `Rink` (`bs_squares`), `Booking`, `Reservation`, `Event`, `Option`; meta via `Concerns/HasMeta` |
 | `app/Support/Settings.php` | Cached site settings from `bs_options` |
-| `app/Filament` | Admin panel (Secretary), including the Maintenance page |
+| `app/Support/GreenDirections.php` | Direction of play per green and day; shown with `<x-play-direction>` |
+| `app/Support/PhoneNumber.php` | Mobile numbers in one international form for login |
+| `app/Filament` | Admin panel (Secretary): phone login, Direction of play and Maintenance pages |
 | `config/club.php` | Starting setup for a new club |
 | `scripts/build-infinityfree.sh` | Builds the zip files to upload to InfinityFree |
 | `scripts/build-afrihost.sh` | Builds the zip file to upload to Afrihost (one folder per club) |

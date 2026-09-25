@@ -17,7 +17,12 @@ Ticked items were done by 25 Sep 2026.
 - [x] Models (`User`, `Rink`, `Booking`, `Reservation`, `Event`, `Option`), the `HasMeta` trait and
   relationships.
 - [x] Seeders: LCE (Greens A and B, 6 rinks each, 12:00–17:00, 60-minute slots, 2 players) and demo members.
-- [x] Login on `bs_users` (email + `pw`, status checks, rate limited).
+- [x] Login with the mobile number (`bs_users.phone`) and password on the member site and `/admin`; any usual
+  way of writing the number works (082 123 4567, +27 82 …). Rate limited.
+- [x] New accounts wait for the Club Secretary to activate them (`service.user.activation = manual`); the
+  login tells them so.
+- [x] Direction of play per green (`bs_green_directions`): the Secretary sets it on admin > Direction of play;
+  shown at the top of every admin page and on the member home page.
 - [x] Filament panel with privileges, local initials avatars and the Maintenance page.
 - [x] CI: Pint, Larastan, Pest against MySQL, `composer audit`.
 - [x] Afrihost build script (`scripts/build-afrihost.sh`, one zip, optional `install.sql`).
@@ -39,35 +44,39 @@ Ticked items were done by 25 Sep 2026.
   UPDATE`), with a concurrent-booking test.
 - [ ] `GreenService` and the greens overview query (next 14 playing days, free / total slots, events), with
   tests.
-- [ ] Day sheet query (rinks by hour, player names, events, closed greens).
+- [ ] Day sheet query (rinks by hour, player names, events, closed greens, direction of play).
 - [ ] Caches: options, and the greens overview per day, cleared when a booking, event or closure changes.
 
 ## 3. Member pages
 
 - [ ] Layout and CSS carried over from the old app (`public/css`, `public/css-client/default.css`).
-- [ ] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay.
+- [ ] Registration: first name, surname, mobile number, email (optional), password, terms and privacy
+  acceptance, anti-bot delay. Ends with "waiting for the Club Secretary to approve your account".
 - [ ] Log out; "forgot password" page pointing to the Secretary.
-- [ ] Greens overview (closed in red, events in purple).
-- [ ] Green calendar (player names for members, own bookings in green).
-- [ ] Booking pop-up (1–2 players, partner's name, rules acceptance, one-rink-per-day message).
-- [ ] WhatsApp share after booking and from the pop-up.
+- [ ] Greens overview (closed in red, events in purple, direction of play per green per day).
+- [ ] Green calendar (player names for members, own bookings in green, direction of play).
+- [ ] Booking pop-up (1–2 players, partner's name, rules acceptance, one-rink-per-day message, direction of
+  play).
+- [ ] WhatsApp share after booking and from the pop-up (text includes the direction of play).
 - [ ] Cancel own booking before the cut-off.
 - [ ] My bookings.
-- [ ] My account: change email or password, download my data, delete account (POPIA).
+- [ ] My account: change mobile number, email or password, download my data, delete account (POPIA).
 - [ ] Info page, help page, Business Terms and Privacy Policy PDFs (served through a route, no symlink).
 - [ ] Playwright tests for the booking flow at 390 px and 1200 px.
 
 ## 4. Secretary, admin and setup
 
-- [ ] Profile page: the Secretary changes their own email and password (needed before launch, see 6).
+- [ ] Profile page: staff change their own mobile number, email and password.
 - [ ] Panel entry limited to `admin.see-menu`, and a policy per resource.
-- [ ] Members: search, create, edit, activate, set a temporary password, privileges.
+- [ ] Members: search, create, edit, set a temporary password, privileges; mobile number required and unique.
+- [ ] New registrations: "Waiting for activation" list with Activate and Reject, and a count on the dashboard.
 - [ ] Bookings: list, create for a member, edit, cancel, delete.
 - [ ] Events: rink / Green A / Green B / all rinks; list, edit, delete.
 - [ ] Rinks.
 - [ ] Settings: names and text, info and help pages (HTML purified on save), behaviour, terms and privacy
   uploads.
-- [ ] Greens page: open or close a green per day, WhatsApp invite, printable day sheet with QR code.
+- [ ] Greens page: open or close a green per day, WhatsApp invite, printable day sheet with QR code and the
+  direction of play.
 - [ ] Download backup button (SQL dump) in the admin panel.
 - [ ] `php artisan club:create` and the first-run setup page (shown only while there are no users).
 - [ ] Browser test of the Secretary's day: close a green, add an event, print the day sheet, reset a password.
@@ -80,7 +89,7 @@ Ticked items were done by 25 Sep 2026.
   `Permissions-Policy`.
 - [ ] `APP_DEBUG=false`, errors logged, friendly error page.
 - [ ] `composer audit` clean; Dependabot on.
-- [ ] Only first name, surname and email stored (POPIA).
+- [ ] Only first name, surname, mobile number and (optionally) email stored (POPIA).
 - [ ] Pages under 150 ms server time and 15 queries on Afrihost.
 - [ ] Over 80% test coverage of `app/Services`; CI green.
 
@@ -92,8 +101,8 @@ Ticked items were done by 25 Sep 2026.
 - [x] Build uploaded and extracted; `.env` created from `.env.afrihost.example`.
 - [x] HTTPS certificate (AutoSSL) and Force HTTPS Redirect.
 - [x] First Secretary login at `/admin`.
-- [ ] Change the Secretary's email and password (the seeded password was shared in a chat, so treat it as
-  exposed). Needs the profile page from 4.
+- [ ] Reinstall LCE's database for mobile-number logins, with the Secretary's real number and a new password
+  (DEPLOY-AFRIHOST.md, Open items). This also replaces the seeded password that was shared in a chat.
 - [ ] Ask Afrihost: SSH shell access (and port)? `intl` and `zip` on ea-php83? Daily backups included?
 - [ ] Decide what `bowlsbuddy.co.za` shows (landing page or redirect).
 - [ ] Deploy the finished build (update steps in DEPLOY-AFRIHOST.md) and run database updates from

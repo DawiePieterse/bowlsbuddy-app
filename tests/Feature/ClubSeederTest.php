@@ -25,13 +25,21 @@ it('sets up greens A and B with six rinks each', function () {
 });
 
 it('creates the Secretary as admin and the club settings', function () {
+    config(['club.admin_phone' => '083 555 1234']);
     $this->seed(ClubSeeder::class);
 
-    $admin = User::query()->where('email', 'secretary@example.com')->firstOrFail();
+    $admin = User::query()->where('phone', '+27835551234')->firstOrFail();
 
     expect($admin->status)->toBe('admin')
+        ->and($admin->email)->toBeNull()
         ->and($admin->hasPrivilege('admin.config'))->toBeTrue()
         ->and(app(Settings::class)->get('client.name.full'))->toBe('LCE Bowls Club');
+});
+
+it('makes new members wait for the Secretary to activate them', function () {
+    $this->seed(ClubSeeder::class);
+
+    expect(app(Settings::class)->get('service.user.activation'))->toBe('manual');
 });
 
 it('does nothing when the club is already set up', function () {

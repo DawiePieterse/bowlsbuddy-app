@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\PhoneNumber;
 use App\Support\Settings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -33,9 +34,9 @@ class AppServiceProvider extends ServiceProvider
 
         Password::defaults(fn () => Password::min(8));
 
-        // Five login attempts per minute per email address and IP.
+        // Five login attempts per minute per mobile number and IP.
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(
-            Str::lower((string) $request->input('email')).'|'.$request->ip()
+            (PhoneNumber::normalize((string) $request->input('phone')) ?? Str::lower((string) $request->input('phone'))).'|'.$request->ip()
         ));
     }
 }

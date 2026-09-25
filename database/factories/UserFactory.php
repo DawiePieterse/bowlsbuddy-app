@@ -18,6 +18,7 @@ class UserFactory extends Factory
             'alias' => fake()->name(),
             'status' => 'enabled',
             'email' => fake()->unique()->safeEmail(),
+            'phone' => '+2782'.fake()->unique()->numerify('#######'),
             'pw' => 'secret123',
         ];
     }
@@ -25,6 +26,12 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->state(['status' => 'admin']);
+    }
+
+    /** A new registration the Club Secretary has not activated yet. */
+    public function awaitingActivation(): static
+    {
+        return $this->state(['status' => User::AWAITING_ACTIVATION]);
     }
 
     public function withStatus(string $status): static

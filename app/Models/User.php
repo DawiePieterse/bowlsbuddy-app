@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Models\Concerns\HasMeta;
 use App\Models\Meta\UserMeta;
+use App\Support\PhoneNumber;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,6 +21,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property string $alias
  * @property string $status
  * @property string|null $email
+ * @property string|null $phone mobile number in international form, e.g. +27821234567; used to log in
  * @property string|null $pw
  */
 class User extends Authenticatable implements FilamentUser, HasName
@@ -40,6 +43,9 @@ class User extends Authenticatable implements FilamentUser, HasName
         'assist' => 'Assist',
         'admin' => 'Admin',
     ];
+
+    /** Status of a new registration until the Club Secretary activates it. */
+    public const AWAITING_ACTIVATION = 'disabled';
 
     /** Statuses that may log in. */
     public const LOGIN_STATUSES = ['enabled', 'assist', 'admin'];
@@ -64,7 +70,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     protected $authPasswordName = 'pw';
 
-    protected $fillable = ['alias', 'status', 'email', 'pw'];
+    protected $fillable = ['alias', 'status', 'email', 'phone', 'pw'];
 
     protected $attributes = ['remember_token' => null];
 
@@ -85,6 +91,12 @@ class User extends Authenticatable implements FilamentUser, HasName
         ];
     }
 
+    /** @return Attribute<string|null, string|null> */
+    protected function phone(): Attribute
+    {
+        return Attribute::set(fn (?string $value) => $value === null ? null : (PhoneNumber::normalize($value) ?? $value));
+    }
+
     /** @return HasMany<Booking, $this> */
     public function bookings(): HasMany
     {
@@ -94,6 +106,11 @@ class User extends Authenticatable implements FilamentUser, HasName
     public function canLogIn(): bool
     {
         return in_array($this->status, self::LOGIN_STATUSES, true);
+    }
+
+    public function isAwaitingActivation(): bool
+    {
+        return $this->status === self::AWAITING_ACTIVATION;
     }
 
     public function hasPrivilege(string $privilege): bool

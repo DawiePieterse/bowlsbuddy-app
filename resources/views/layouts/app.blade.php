@@ -15,12 +15,15 @@
         .card { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,.06); }
         h1 { font-size: 24px; margin: 0 0 16px; }
         label { display: block; font-size: 14px; margin: 12px 0 4px; }
-        input[type=email], input[type=password] { width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid var(--line); border-radius: 8px; }
+        input[type=email], input[type=tel], input[type=password] { width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid var(--line); border-radius: 8px; }
         .check { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
         button { margin-top: 20px; width: 100%; padding: 12px; font-size: 16px; font-weight: 600; color: #fff; background: var(--blue); border: 0; border-radius: 8px; cursor: pointer; }
         .error { color: var(--red); font-size: 14px; margin-top: 6px; }
         .muted { color: var(--muted); font-size: 14px; }
         a { color: #0066cc; }
+        .play-direction { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 16px; padding: 10px 12px; font-size: 14px; background: #eef6ee; border-radius: 8px; }
+        .play-direction .label { width: 100%; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+        @media print { .play-direction { background: none; border: 1px solid #000; } }
     </style>
 </head>
 <body>

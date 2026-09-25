@@ -49,7 +49,8 @@ scripts/build-afrihost.sh --install-sql   # first install: also install.sql
 ```
 
 Output goes to `build/afrihost/`. `--install-sql` takes the same `BUILD_DB_*` and `CLUB_*` settings as the
-InfinityFree build (see docs/DEPLOY.md).
+InfinityFree build (see docs/DEPLOY.md). Set `CLUB_ADMIN_PHONE` to the Secretary's mobile number: it is their
+login.
 
 ## New club (first install)
 
@@ -59,7 +60,7 @@ InfinityFree build (see docs/DEPLOY.md).
 3. **Database:** cPanel > Database Wizard. Create the database and a user (both `<club>`) with **ALL
    PRIVILEGES**, and note the full names (with the `bowlsbg5n9w0_` prefix) and the password. Open phpMyAdmin,
    click the database on the left, then Import (on a narrow screen the tabs are behind the ☰ button) and
-   import `install.sql`. It should report about 159 queries and leave 15 tables (`bb_*` and `bs_*`).
+   import `install.sql`. It should leave 16 tables (`bb_*` and `bs_*`).
 4. **Files:** cPanel > File Manager > `bowlsbuddy-<club>/`. Upload `bowlsbuddy.zip` there and extract it
    (it fills in the empty `public/` folder cPanel made). Delete the zip afterwards.
 5. **Settings:** in the same folder, create `.env` from `.env.afrihost.example`: set `APP_URL`, the database
@@ -70,7 +71,8 @@ InfinityFree build (see docs/DEPLOY.md).
    shows it, is on that Status tab (possibly behind the ⚙ button). Logins need HTTPS, because cookies are
    secure-only. Then turn on **Force HTTPS Redirect** for the subdomain in cPanel > Domains, not before.
    The green padlocks on the **Installation** tab only mean a certificate is installed; check its Issuer.
-7. Open the site, log in at `/admin` as the Secretary and change the password.
+7. Open the site and log in at `/admin` with the Secretary's mobile number (`CLUB_ADMIN_PHONE` in the build).
+8. Set the direction of play for each green (admin > Direction of play).
 
 ## Updates
 
@@ -103,10 +105,15 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
 - [x] HTTPS for `lce.bowlsbuddy.co.za` (AutoSSL, 25 Sep 2026).
 - [x] Force HTTPS Redirect for `lce.bowlsbuddy.co.za` and `bowlsbuddy.co.za` (cPanel > Domains, 25 Sep 2026).
 - [x] First login at `https://lce.bowlsbuddy.co.za/admin` as the Secretary (25 Sep 2026).
-- [ ] Change the Secretary's email and password. The seeded login is still `secretary@example.com` with the
-  password printed when `install.sql` was built (shared in a chat, so treat it as exposed). The admin panel
-  has no profile page yet: add one (Filament profile page saving to `bs_users.email` / `pw`), deploy it, then
-  change both, before any members are invited.
+- [ ] Move LCE to mobile-number logins. The live database has the old `secretary@example.com` login (its
+  password was shared in a chat, so treat it as exposed) and no phone numbers, and the new build logs in by
+  mobile number only. LCE has no members yet, so reinstall rather than update:
+  1. Build with the Secretary's real number and a new password (not shared in any chat):
+     `CLUB_ADMIN_PHONE=<number> CLUB_ADMIN_PASSWORD=<password> scripts/build-afrihost.sh --install-sql`.
+  2. phpMyAdmin > `bowlsbg5n9w0_lce` > Structure: tick all tables > Drop. Then import the new `install.sql`
+     (16 tables, including `bs_green_directions`).
+  3. Upload and extract `bowlsbuddy.zip` in `bowlsbuddy-lce/` as for an update (`.env` stays).
+  4. Log in at `/admin` with the mobile number, then set the direction of play (admin > Direction of play).
 - [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Are `intl` and `zip` enabled for
   ea-php83? Are daily backups included?
 - [ ] Decide what `bowlsbuddy.co.za` itself shows (a landing page or a redirect); its `public_html` is empty.

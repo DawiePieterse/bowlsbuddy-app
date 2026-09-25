@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * Made-up members and bookings for local development and screenshots. Never run in production.
- * Every demo member's password is "secret123".
+ * Every demo member's password is "secret123"; their mobile numbers are 082 000 0001 to 082 000 0008.
  */
 class DemoSeeder extends Seeder
 {
@@ -23,10 +23,10 @@ class DemoSeeder extends Seeder
     {
         $members = [];
 
-        foreach (self::MEMBERS as [$first, $last]) {
+        foreach (self::MEMBERS as $index => [$first, $last]) {
             $member = User::query()->firstOrCreate(
-                ['email' => strtolower($first).'@example.com'],
-                ['alias' => "$first $last", 'status' => 'enabled', 'pw' => 'secret123'],
+                ['phone' => sprintf('+2782000%04d', $index + 1)],
+                ['alias' => "$first $last", 'status' => 'enabled', 'email' => strtolower($first).'@example.com', 'pw' => 'secret123'],
             );
 
             $member->setMeta('firstname', $first);

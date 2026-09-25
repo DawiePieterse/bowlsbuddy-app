@@ -114,7 +114,7 @@ framework.
 
 | Table | Model | Key | What it holds |
 |---|---|---|---|
-| `bs_users` | `User` | `uid` | Login email, password hash, `status` (`enabled`, `disabled`, `admin`, `assist`...), last activity |
+| `bs_users` | `User` | `uid` | Login mobile number (`phone`, new), optional email, password hash, `status` (`enabled`, `disabled`, `admin`, `assist`...), last activity |
 | `bs_users_meta` | `UserMeta` | `umid` | `firstname`, `lastname`, `locale`, `allow.*` privileges |
 | `bs_squares` | `Rink` | `sid` | Rink name (`A-1`: prefix = green), capacity, times, time blocks, booking and cancel ranges |
 | `bs_squares_meta` | `RinkMeta` | `smid` | Ask-for-names setting, name visibility, info and rules texts (`locale`-aware) |
@@ -125,6 +125,7 @@ framework.
 | `bs_events` | `Event` | `eid` | Blocked time: one rink (`sid`), a green (meta `green`) or all rinks |
 | `bs_events_meta` | `EventMeta` | `emid` | `name`, `description`, `green` (`locale`-aware) |
 | `bs_options` | `Option` | `oid` | Site settings, including `service.greens.closed` (`YYYY-MM-DD:A` lines) |
+| `bs_green_directions` (new) | `GreenDirection` | `gdid` | Direction of play per green (`north-south` or `east-west`) from a date until the next change |
 
 Foreign keys stay as in `data/db/ep3-bs.sql`, with `ON DELETE CASCADE` for the meta tables. A shared
 **`HasMeta` trait** gives every model `->meta('key')` and loads all meta for a page in one query.
@@ -138,6 +139,9 @@ Foreign keys stay as in `data/db/ep3-bs.sql`, with `ON DELETE CASCADE` for the m
 | `player-names` stored as **JSON** instead of PHP-serialized | No `unserialize()` on stored data |
 | `status` columns get `CHECK` constraints listing the allowed values | Bad values can't be saved |
 | Laravel's own tables prefixed `bb_` (`bb_sessions`, `bb_cache`, `bb_migrations`) | Kept apart from the app's tables |
+| `bs_users.phone`: unique mobile number in international form (`+27821234567`), used to log in instead of the email | Members know their number; one account per number. The original kept a phone number in meta, which can't be unique or indexed |
+| New registrations wait for the Club Secretary (`service.user.activation = manual`, status `disabled` until activated) | Only club members get in |
+| `bs_green_directions` (new table) | The Secretary sets the direction of play per green; shown on every page and print |
 | Unused tables (`bs_squares_pricing`, `_products`, `_coupons`, `bs_bookings_bills`) **not created** | Less to secure and maintain; add back later if needed |
 
 The column names and meaning of everything else stay the same.
@@ -156,7 +160,9 @@ The current behaviour is the specification, taken from `Square/Service/SquareVal
 6. **Hidden days** from `service.calendar.day-exceptions` (weekday names or dates).
 7. **Cancel cut-off** `range_cancel` hours before the start.
 8. **Greens overview:** next 14 playing days, with free and total slots and event names per green.
-9. **Day sheet:** rinks by hour, with player names, events and closed greens.
+9. **Day sheet:** rinks by hour, with player names, events, closed greens and the direction of play.
+11. **Direction of play** (new): per green, north-south or east-west, set by the Secretary. It holds from the
+    chosen day until changed; "Not set" until the first time.
 10. **Privileges:** `admin.user`, `admin.booking`, `admin.event`, `admin.config`, `admin.see-menu`,
     `calendar.*` (see `User::$privileges`), granted by `status = admin` or meta `allow.<privilege>`.
 
@@ -174,14 +180,14 @@ new app's tests.
 **Security**
 - CSRF token on every form. Anything that changes data is POST, PUT or DELETE, never a link.
 - **Policies** on every admin action, mapped to the privileges above.
-- Login **rate limiting** per email and IP. Bcrypt cost 12. New session ID at login. Secure, HttpOnly,
+- Login with the **mobile number** and password; **rate limiting** per number and IP. Bcrypt cost 12. New session ID at login. Secure, HttpOnly,
   SameSite=Lax cookies. HTTPS only.
 - Security headers: `Content-Security-Policy`, `X-Frame-Options: DENY`, `Referrer-Policy`,
   `Permissions-Policy`.
 - Output escaped by default (Blade). Rich-text info and help pages are cleaned with an HTML purifier on save.
 - `APP_DEBUG=false` in production, errors logged, friendly error page.
 - `composer audit` and Dependabot for vulnerable packages.
-- **POPIA:** store only first name, surname and email. Members can download their data and delete their
+- **POPIA:** store only first name, surname, mobile number and (optionally) email. Members can download their data and delete their
   account. Password resets go through the Secretary (no email).
 
 **Efficiency**
@@ -196,18 +202,25 @@ new app's tests.
 ## 7. Feature checklist (definition of done)
 
 **Members**
-- [ ] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
+- [ ] Registration: first name, surname, mobile number, email (optional), password, terms and privacy
+  acceptance, anti-bot delay. The account waits for the Secretary's approval; the member sees that on the
+  page and when trying to log in (the login message is done)
 - [ ] Log in and log out; "forgot password" page pointing to the Secretary
+- [ ] Direction of play per green on every page and print: greens overview (per day), green calendar,
+  booking pop-up, WhatsApp share text, day sheet (the `<x-play-direction>` component; home page done)
 - [ ] Greens overview: 14 playing days, free slots, closed (red), events (purple)
 - [ ] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
 - [ ] Book a slot: 1–2 players, partner's name, rules acceptance, one-rink-per-day message
 - [ ] WhatsApp share after booking and from the booking pop-up
 - [ ] Cancel own booking before the cut-off
-- [ ] My bookings; My account (change email or password, delete account, download my data)
+- [ ] My bookings; My account (change mobile number, email or password, delete account, download my data)
 - [ ] Info page, help page, Business Terms and Privacy Policy PDFs
 
 **Secretary / admin**
 - [ ] Open or close a green per day
+- [x] Set the direction of play per green (admin > Direction of play; shown at the top of every admin page)
+- [ ] Approve new registrations: a "waiting for activation" list with an Activate action, and a count on
+  the dashboard
 - [ ] Invite members via WhatsApp
 - [ ] Printable day sheet with QR code to live bookings
 - [ ] Members: search, create, edit, activate, set a temporary password, privileges
@@ -216,7 +229,7 @@ new app's tests.
 - [ ] Settings: names and text, info and help pages, rinks, behaviour, terms and privacy uploads
 
 **New club setup**
-- [ ] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
+- [ ] `php artisan club:create` asks for the club name, admin mobile number, greens, rinks per green, playing times,
   slot length and players per rink, then creates everything
 
 ---
@@ -231,7 +244,8 @@ new app's tests.
   `remember_token` on `bs_users`).
 - [x] Models, `HasMeta` trait, relationships, seeders (LCE: greens A and B, 6 rinks each, 12:00–17:00,
   60-minute slots, 2 players).
-- [x] Auth on `bs_users` (email + `pw`, status checks). CI with Pint, PHPStan and Pest.
+- [x] Auth on `bs_users` (mobile number + `pw`, status checks; accounts wait for activation). CI with Pint,
+  PHPStan and Pest.
 - [x] Filament panel with privileges, local initials avatars (no third-party requests) and the Maintenance
   page (run database updates, clear caches).
 - [ ] *(Build script done and tested in a local copy of the InfinityFree layout; upload to InfinityFree

@@ -20,7 +20,8 @@ Output goes to `build/infinityfree/`:
 
 `--install-sql` needs a scratch database it can empty (`BUILD_DB_DATABASE`, `BUILD_DB_USERNAME`,
 `BUILD_DB_PASSWORD`, `BUILD_DB_HOST`) and uses the `CLUB_*` settings (see `.env.example`). Set
-`CLUB_ADMIN_PASSWORD` to choose the Secretary's first password, or note the random one it prints.
+`CLUB_ADMIN_PHONE` to the Secretary's mobile number (their login) and `CLUB_ADMIN_PASSWORD` to choose their
+first password, or note the random one it prints.
 
 ## First install
 
@@ -31,7 +32,7 @@ Output goes to `build/infinityfree/`:
 3. **Settings:** copy `.env.infinityfree.example` to `.env` in the account root and fill in the database
    details and `APP_KEY` (run `php artisan key:generate --show` locally and paste the result).
 4. **PHP version:** in the control panel, select PHP 8.2 or newer.
-5. Open the site, log in at `/admin` as the Secretary and change the password.
+5. Open the site and log in at `/admin` with the Secretary's mobile number.
 
 ## Updates
 
