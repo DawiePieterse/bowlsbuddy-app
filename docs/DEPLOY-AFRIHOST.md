@@ -35,7 +35,7 @@ room for about 20 clubs for R26 more a month. Silver Pro (R179, 100 databases) i
 
 | Club | Subdomain | Folder (document root) | Database and user | PHP | Status |
 |---|---|---|---|---|---|
-| LCE | `lce.bowlsbuddy.co.za` | `bowlsbuddy-lce/` (`bowlsbuddy-lce/public`) | `bowlsbg5n9w0_lce` | 8.3 | Installed 24 Sep 2026; waiting for HTTPS |
+| LCE | `lce.bowlsbuddy.co.za` | `bowlsbuddy-lce/` (`bowlsbuddy-lce/public`) | `bowlsbg5n9w0_lce` | 8.3 | Live 25 Sep 2026 (HTTPS, Secretary login works) |
 
 The app's code and `.env` sit outside `public_html`, so only `public/` can be reached from the web. This
 server allows document roots outside `public_html` (cPanel even suggests `/home/<user>/<domain>`).
@@ -90,6 +90,8 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
   configuration"** (24 Sep 2026): the new `.co.za` was not live in DNS yet. It needs the registration to
   go through (hours, up to a day); nothing to change on the server. If it lasts beyond a day, ask Afrihost to
   check the registration and nameservers and to run AutoSSL.
+  On 25 Sep it had cleared by itself overnight: AutoSSL issued certificates for every domain (valid three
+  months, renewed automatically).
 - **"Your domain is at risk" / self-signed** on the cPanel home page: same cause; don't buy a certificate.
 - **Server error on the site:** read `bowlsbuddy-<club>/storage/logs/laravel.log` in File Manager (View).
 - **Files starting with a dot are missing** in File Manager: Settings > Show Hidden (dotfiles).
@@ -98,9 +100,13 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
 
 ## Open items
 
-- [ ] HTTPS for `lce.bowlsbuddy.co.za` (waiting for the domain to go live), then Force HTTPS Redirect.
-- [ ] First login at `https://lce.bowlsbuddy.co.za/admin`; change the Secretary's email and password (the
-  seeded login is `secretary@example.com`, with the password printed when `install.sql` was built).
+- [x] HTTPS for `lce.bowlsbuddy.co.za` (AutoSSL, 25 Sep 2026).
+- [ ] Force HTTPS Redirect for `lce.bowlsbuddy.co.za` (and `bowlsbuddy.co.za`) in cPanel > Domains.
+- [x] First login at `https://lce.bowlsbuddy.co.za/admin` as the Secretary (25 Sep 2026).
+- [ ] Change the Secretary's email and password. The seeded login is still `secretary@example.com` with the
+  password printed when `install.sql` was built (shared in a chat, so treat it as exposed). The admin panel
+  has no profile page yet: add one (Filament profile page saving to `bs_users.email` / `pw`), deploy it, then
+  change both, before any members are invited.
 - [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Are `intl` and `zip` enabled for
   ea-php83? Are daily backups included?
 - [ ] Decide what `bowlsbuddy.co.za` itself shows (a landing page or a redirect); its `public_html` is empty.
