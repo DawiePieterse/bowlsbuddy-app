@@ -39,7 +39,7 @@ room for about 20 clubs for R26 more a month. Silver Pro (R179, 100 databases) i
 
 The app's code and `.env` sit outside `public_html`, so only `public/` can be reached from the web. This
 server allows document roots outside `public_html` (cPanel even suggests `/home/<user>/<domain>`).
-`public_html` belongs to `bowlsbuddy.co.za` itself and is still empty.
+`public_html` belongs to `bowlsbuddy.co.za` itself and holds only the landing page (`landing/index.html`).
 
 ## What gets built
 
@@ -81,8 +81,13 @@ InfinityFree build (see docs/DEPLOY.md).
 
 ## Backups
 
-cPanel > Backup: download a database backup for each club weekly (and after big changes), until the admin
-panel's Download backup button arrives (Phase 5). Ask Afrihost whether the package also includes daily backups.
+**AfriBackup** (built into Afrihost hosting) takes automatic snapshots of the account and keeps them for up to
+two weeks. Files, email and whole folders can be restored from it to an earlier point; see Afrihost's help
+article "How to restore a backup using AfriBackup".
+
+Still download a database backup for each club (cPanel > Backup) weekly and before big changes, until it is
+confirmed that AfriBackup also restores the MySQL databases, and to keep a copy older than two weeks. The admin
+panel's Download backup button (Phase 5) will replace this download.
 
 ## Troubleshooting
 
@@ -106,12 +111,13 @@ panel's Download backup button arrives (Phase 5). Ask Afrihost whether the packa
 - [x] Profile page in the admin panel (avatar menu, top right > Profile, `/admin/profile`): name, email and
   password, saved to `bs_users.alias` / `email` / `pw`. Changing the email or password asks for the current
   password.
-- [ ] Deploy the profile page, then change the Secretary's email and password there, before any members are
-  invited. The seeded login is still `secretary@example.com` with the password printed when `install.sql` was
-  built (shared in a chat, so treat it as exposed).
-- [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Are `intl` and `zip` enabled for
-  ea-php83? Are daily backups included?
-- [ ] Decide what `bowlsbuddy.co.za` itself shows (a landing page or a redirect); its `public_html` is empty.
+- [x] Profile page deployed to LCE and the Secretary's email and password changed there, replacing the exposed
+  seeded `secretary@example.com` login (25 Sep 2026).
+- [x] Automatic backups: AfriBackup is included (snapshots kept up to two weeks; see [Backups](#backups)).
+- [ ] Ask Afrihost: can SSH shell access be enabled (and on which port)? Does AfriBackup include the MySQL
+  databases? Check `intl` and `zip` for ea-php83 (a temporary `check.php`, or ask).
+- [x] `bowlsbuddy.co.za` shows a simple landing page: upload `landing/index.html` to `public_html/`. Add each new
+  club to its Clubs list.
 
 ## If Afrihost enables SSH
 

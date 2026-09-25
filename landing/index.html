@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bowls Buddy - green bookings for bowls clubs</title>
+    <meta name="description" content="Bowls Buddy lets bowls club members book greens online, from their phone.">
+    <style>
+        :root { --text: #1d1d1f; --muted: #6e6e73; --bg: #f5f5f7; --card: #fff; --line: #d2d2d7; --green: #34c759; --blue: #0071e3; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); line-height: 1.5; }
+        header { background: #1d1d1f; color: #fff; padding: 40px 24px 36px; text-align: center; }
+        header .name { display: inline-flex; align-items: center; gap: 12px; font-size: 40px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+        header .bowl { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #6ee08a, var(--green) 45%, #1f8a3b); flex: none; }
+        header .tagline { margin-top: 8px; color: #a1a1a6; font-size: 16px; }
+        main { max-width: 480px; margin: 32px auto; padding: 0 16px; }
+        .card { background: var(--card); border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,.06); margin-bottom: 16px; }
+        h1 { font-size: 24px; margin: 0 0 8px; }
+        h2 { font-size: 18px; margin: 0 0 12px; }
+        p { margin: 0 0 12px; }
+        ul { margin: 0; padding-left: 20px; }
+        li { margin-bottom: 4px; }
+        .muted { color: var(--muted); font-size: 14px; }
+        .club { display: block; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; color: var(--text); text-decoration: none; }
+        .club strong { display: block; }
+        .club span { color: var(--blue); font-size: 14px; }
+        footer { text-align: center; padding: 8px 16px 32px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="name"><span class="bowl" aria-hidden="true"></span>Bowls Buddy</div>
+        <div class="tagline">Book the greens from your phone</div>
+    </header>
+    <main>
+        <div class="card">
+            <h1>Green bookings for bowls clubs</h1>
+            <p class="muted">Members book a green from their phone. The Secretary sees the whole day at a glance.</p>
+            <ul>
+                <li>See which greens are free for the next two weeks</li>
+                <li>Book a slot and share it on WhatsApp</li>
+                <li>Closed greens and club events shown on the calendar</li>
+                <li>A printable day sheet for the clubhouse</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Clubs</h2>
+            <a class="club" href="https://lce.bowlsbuddy.co.za/">
+                <strong>LCE Bowls Club</strong>
+                <span>lce.bowlsbuddy.co.za &rarr;</span>
+            </a>
+        </div>
+
+        <div class="card">
+            <h2>Bowls Buddy for your club</h2>
+            <p class="muted">Each club gets its own site, with its own greens and playing times. Get in touch to set it up for yours.</p>
+            <a class="club" href="https://wa.me/27834565646">
+                <strong>WhatsApp</strong>
+                <span>083 456 5646 &rarr;</span>
+            </a>
+        </div>
+    </main>
+    <footer class="muted">&copy; 2026 Pieterse Consulting Services</footer>
+</body>
+</html>
