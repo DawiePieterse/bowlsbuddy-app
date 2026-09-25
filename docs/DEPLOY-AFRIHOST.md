@@ -26,8 +26,9 @@ room for about 20 clubs for R26 more a month. Silver Pro (R179, 100 databases) i
 ### What this cPanel has, and hasn't
 
 - **No Terminal**, so no Composer or `artisan` on the server. **SSH Access** only manages keys: on this shared
-  account, shell access has to be switched on by Afrihost. Request it by email to `hosting@afrihost.com`
-  (requested 25 Sep 2026, see [Open items](#open-items)).
+  account, Afrihost offers only **jailed SSH** (full SSH needs a dedicated server). Jailed SSH is enough for
+  `php artisan`, git and a `composer.phar`. Request it by email to `hosting@afrihost.com` (see
+  [Open items](#open-items)).
 - **Git Version Control**, **Cron Jobs**, **Backup** / **Backup Wizard**, **Remote Database Access**,
   **MultiPHP INI Editor** (memory and upload limits), **Database Wizard**, phpMyAdmin 5.2.
 - Softaculous, SitePad and Sitejet are there but not used; don't install apps over a club folder.
@@ -82,8 +83,8 @@ InfinityFree build (see docs/DEPLOY.md).
 
 ## Backups
 
-**AfriBackup** (built into Afrihost hosting) takes automatic snapshots of the account and keeps them for up to
-two weeks. Files, email and whole folders can be restored from it to an earlier point; see Afrihost's help
+**AfriBackup** (built into Afrihost hosting) takes automatic snapshots of the account and keeps them for 14
+days. It is not shown in this cPanel until `hosting@afrihost.com` enables it. Files, email and whole folders can be restored from it to an earlier point; see Afrihost's help
 article "How to restore a backup using AfriBackup".
 
 Still download a database backup for each club (cPanel > Backup) weekly and before big changes, until it is
@@ -115,9 +116,9 @@ panel's Download backup button (Phase 5) will replace this download.
 - [x] Profile page deployed to LCE and the Secretary's email and password changed there, replacing the exposed
   seeded `secretary@example.com` login (25 Sep 2026).
 - [x] Automatic backups: AfriBackup is included (snapshots kept up to two weeks; see [Backups](#backups)).
-- [ ] SSH shell access and whether AfriBackup includes the MySQL databases: asked `hosting@afrihost.com`
-  (25 Sep 2026); waiting for the reply (hostname, port, key-only login).
-- [ ] Check `intl` and `zip` for ea-php83 (a temporary `check.php`, or ask Afrihost).
+- [ ] Asked `hosting@afrihost.com` (25 Sep 2026), on Afrihost support's advice, to: enable jailed SSH (hostname,
+  port, key-only login?); enable AfriBackup in cPanel and say whether it covers the MySQL databases; enable
+  `intl` and `zip` for ea-php83. Waiting for the reply.
 - [x] `bowlsbuddy.co.za` shows a simple landing page: upload `landing/index.html` to `public_html/`. Add each new
   club to its Clubs list.
 
