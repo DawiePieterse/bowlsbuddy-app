@@ -102,6 +102,11 @@ panel's Download backup button (Phase 5) will replace this download.
 - **"Your domain is at risk" / self-signed** on the cPanel home page: same cause; don't buy a certificate.
 - **Server error on the site:** read `bowlsbuddy-<club>/storage/logs/laravel.log` in File Manager (View).
 - **Files starting with a dot are missing** in File Manager: Settings > Show Hidden (dotfiles).
+- **`bowlsbuddy.co.za` shows a red "Has been registered on behalf of a client" page** although `/index.html`
+  shows the landing page: Afrihost's placeholder in `public_html` is served first. Add a `public_html/.htaccess`
+  containing `DirectoryIndex index.html`.
+- **File Manager shows "Data error."** instead of a folder's files (seen on `public_html`): tap Reload or the
+  folder in the tree on the left. Uploads to that folder still work; check the destination on the upload page.
 - **MultiPHP Manager's version list jumps back to PHP 5.2** after each apply: check the choice before tapping
   Apply again.
 
