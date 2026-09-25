@@ -23,6 +23,20 @@ jobs:
 
     name: PHP ${{ matrix.php }}
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: bowlsbuddy_test
+          MYSQL_USER: bb
+          MYSQL_PASSWORD: bb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -31,7 +45,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, intl
           coverage: none
 
       - name: Install Composer dependencies

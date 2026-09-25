@@ -5,7 +5,8 @@ share bookings on WhatsApp; the Club Secretary opens and closes greens, adds eve
 
 This is the rebuild of the original ZF2-based Bowls Buddy on **Laravel 12 + Filament 4**, keeping the same
 `bs_*` data structure. See [docs/PLAN.md](docs/PLAN.md) for the plan and progress, and
-[docs/DEPLOY.md](docs/DEPLOY.md) for deploying to InfinityFree.
+[docs/DEPLOY-AFRIHOST.md](docs/DEPLOY-AFRIHOST.md) for deploying to Afrihost ([docs/DEPLOY.md](docs/DEPLOY.md)
+for InfinityFree).
 
 ## Requirements
 
@@ -49,6 +50,7 @@ GitHub Actions runs the same checks, plus `composer audit`, on every push.
 | `app/Filament` | Admin panel (Secretary), including the Maintenance page |
 | `config/club.php` | Starting setup for a new club |
 | `scripts/build-infinityfree.sh` | Builds the zip files to upload to InfinityFree |
+| `scripts/build-afrihost.sh` | Builds the zip file to upload to Afrihost (one folder per club) |
 
 ## Licence
 
