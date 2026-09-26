@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Log in'])
+@extends('layouts.app', ['title' => 'Log in', 'narrow' => true])
 
 @section('content')
     <div class="card">
@@ -19,6 +19,7 @@
             <button type="submit">Log in</button>
         </form>
 
-        <p class="muted">Forgot your password? Please contact the Club Secretary.</p>
+        <p class="muted"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
+        <p class="muted">New here? <a href="{{ route('register') }}">Register</a>.</p>
     </div>
 @endsection

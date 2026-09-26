@@ -196,15 +196,15 @@ new app's tests.
 ## 7. Feature checklist (definition of done)
 
 **Members**
-- [ ] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
-- [ ] Log in and log out; "forgot password" page pointing to the Secretary
-- [ ] Greens overview: 14 playing days, free slots, closed (red), events (purple)
-- [ ] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
-- [ ] Book a slot: 1–2 players, partner's name, rules acceptance, one-rink-per-day message
-- [ ] WhatsApp share after booking and from the booking pop-up
-- [ ] Cancel own booking before the cut-off
-- [ ] My bookings; My account (change email or password, delete account, download my data)
-- [ ] Info page, help page, Business Terms and Privacy Policy PDFs
+- [x] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
+- [x] Log in and log out; "forgot password" page pointing to the Secretary
+- [x] Greens overview: 14 playing days, free slots, closed (red), events (purple)
+- [x] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
+- [x] Book a slot: 1–2 players, partner's name, rules acceptance, one-rink-per-day message
+- [x] WhatsApp share after booking and from the booking pop-up
+- [x] Cancel own booking before the cut-off
+- [x] My bookings; My account (change email or password, delete account, download my data)
+- [x] Info page, help page, Business Terms and Privacy Policy PDFs
 
 **Secretary / admin**
 - [ ] Open or close a green per day
@@ -251,10 +251,15 @@ new app's tests.
 **Done when:** all rule tests pass and match the reference values.
 
 ### Phase 3: member pages (≈ 2 weeks)
-- [ ] Layout and CSS carried over (`public/css`, `public/css-client/default.css`).
-- [ ] Every "Members" item in section 7.
+- [x] Layout and CSS: Phase 1's clean layout was kept and extended (`public/css/app.css`) instead of
+  carrying over the old jQuery-era stylesheet — the old app never ran live, so there is no look
+  members know. The plan's booking colours are honoured: own bookings green, closed greens red,
+  events purple.
+- [x] Every "Members" item in section 7 (server-rendered Blade; the booking pop-up became a booking
+  page, which needs no JavaScript).
 
-**Done when:** Playwright tests pass for the booking flow at phone (390 px) and desktop (1200 px) widths.
+**Done when:** Playwright tests pass for the booking flow at phone (390 px) and desktop (1200 px)
+widths. *(Passing: `scripts/e2e.sh`, tests/Browser, both widths.)*
 
 ### Phase 4: Secretary, admin and setup (≈ 1 week)
 - [ ] Filament panel with access limited by privileges (`admin.see-menu` to enter, then per resource).
