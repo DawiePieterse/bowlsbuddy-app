@@ -10,233 +10,280 @@ use App\Models\User;
 use App\Support\Settings;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 /**
- * The booking rules (PLAN.md 5.3, reference semantics in docs/REFERENCE-RULES.md). Every check
- * takes the member (or null for a guest) and answers with the reason the slot cannot be booked,
- * or null when it can. Staff exemptions follow the old app: "calendar.create-single-bookings"
- * frees a user from the window, one-rink-per-day and disabled-rink limits, "calendar.see-past"
- * from the past check, "calendar.cancel-single-bookings" from the cancel cut-off.
+ * Whether a member may book a rink for a time, and cancel a booking. Ported from the original app's
+ * Square\Service\SquareValidator (isValid, isBookable, isCancellable) and the quantity check in
+ * Square\Controller\BookingController. See docs/PLAN.md, section 5.3.
+ *
+ * Staff with the calendar.create-single-bookings privilege may book disabled rinks, at short notice, far
+ * ahead, many slots at once and more than one rink per day, as in the original.
  */
 class BookingRules
 {
+    public const DAY_EXCEPTIONS_OPTION = 'service.calendar.day-exceptions';
+
+    public const MAX_ACTIVE_BOOKINGS_OPTION = 'service.user.default.max_active_bookings';
+
     public function __construct(
-        private GreenService $greens,
-        private Settings $settings,
+        private readonly Settings $settings,
+        private readonly GreenService $greens,
     ) {}
 
-    public function isBookable(?User $user, Rink $rink, CarbonInterface $start, CarbonInterface $end, int $quantity = 1): bool
-    {
-        return $this->refusal($user, $rink, $start, $end, $quantity) === null;
-    }
-
     /**
-     * Why this slot cannot be booked, or null when it can. A range shorter than the rink's
-     * bookable block is stretched to it, as in the old app.
+     * Why $user (null for a visitor) can't book $players players on $rink from $start to $end, or null if
+     * they can.
      */
-    public function refusal(?User $user, Rink $rink, CarbonInterface $start, CarbonInterface $end, int $quantity = 1): ?string
+    public function refusal(Rink $rink, CarbonInterface $start, CarbonInterface $end, ?User $user, int $players = 1): ?BookingRefusal
     {
         $start = CarbonImmutable::instance($start);
         $end = CarbonImmutable::instance($end);
-        $staff = $user !== null && $user->hasPrivilege('calendar.create-single-bookings');
+        $staff = $user?->hasPrivilege('calendar.create-single-bookings') ?? false;
 
-        if ($rink->status === 'disabled' && ! $staff) {
-            return 'This rink is currently not available.';
+        return $this->invalid($rink, $start, $end, $user, $staff)
+            ?? $this->unavailable($rink, $start, $end, $user, $staff, $players);
+    }
+
+    /**
+     * Players already booked on the rink during the time (active, public bookings only).
+     */
+    public function playersBooked(Rink $rink, CarbonInterface $start, CarbonInterface $end): int
+    {
+        return (int) Booking::query()
+            ->where('sid', $rink->sid)
+            ->where('status', '!=', 'cancelled')
+            ->where('visibility', 'public')
+            ->whereHas('reservations', fn (Builder $query) => $query
+                ->where('date', $start->toDateString())
+                ->where('time_start', '<', $end->format('H:i:s'))
+                ->where('time_end', '>', $start->format('H:i:s')))
+            ->sum('quantity');
+    }
+
+    /**
+     * Staff with calendar.cancel-single-bookings may cancel any booking. Members may cancel their own until
+     * range_cancel seconds before it starts; with no range_cancel set on the rink, not at all.
+     */
+    public function canCancel(Booking $booking, ?User $user): bool
+    {
+        if ($user === null || $booking->status !== 'single') {
+            return false;
         }
 
-        if ($start >= $end || ! $start->isSameDay($end)) {
-            return 'The time range is invalid.';
+        if ($user->hasPrivilege('calendar.cancel-single-bookings')) {
+            return true;
         }
 
-        /* Rule 1: within the rink's day and times, whole blocks, not past, within the window */
-
-        if ($end->diffInSeconds($start, true) < $rink->time_block_bookable) {
-            $end = $start->addSeconds($rink->time_block_bookable);
+        if ((int) $booking->uid !== (int) $user->uid) {
+            return false;
         }
 
-        $dayStart = $start->setTimeFromTimeString($rink->time_start);
-        $dayEnd = $start->setTimeFromTimeString($rink->time_end);
+        $rangeCancel = (int) $booking->rink->range_cancel;
 
-        if ($start < $dayStart || $end > $dayEnd) {
-            return 'The time range is invalid.';
+        if ($rangeCancel === 0) {
+            return false;
         }
 
-        if ($rink->time_block_bookable_max && $end->diffInSeconds($start, true) > $rink->time_block_bookable_max && ! $staff) {
-            return sprintf('You cannot book more than %d minutes at once.', round($rink->time_block_bookable_max / 60));
+        $first = $booking->reservations()->orderBy('date')->orderBy('time_start')->first();
+
+        if ($first === null) {
+            return true;
         }
 
-        // A slot without a lead time stays bookable through the first half of a block (old app).
-        if ($start < now()->subSeconds((int) ($rink->time_block_bookable / 2))
-            && ! ($user !== null && $user->hasPrivilege('calendar.see-past'))) {
-            return 'This time is already over.';
-        }
+        return $this->startOf($first)->greaterThan(Carbon::now()->addSeconds($rangeCancel));
+    }
 
-        if ($rink->min_range_book && $start < now()->addSeconds($rink->min_range_book) && ! $staff) {
-            return 'This date is too soon to book.';
-        }
+    /**
+     * Days hidden by the service.calendar.day-exceptions setting: lines or commas with a weekday name
+     * ("Sunday") or a date ("2026-12-25") hide a day; "+2026-12-27" shows that date anyway.
+     */
+    public function isDayHidden(CarbonInterface $date): bool
+    {
+        $hidden = false;
+        $shown = false;
 
-        if ($rink->range_book && $start > now()->addSeconds($rink->range_book) && ! $staff) {
-            return 'This date is too far ahead to book.';
-        }
+        foreach (preg_split('~[\n,]~', (string) $this->settings->get(self::DAY_EXCEPTIONS_OPTION, '')) ?: [] as $exception) {
+            $exception = trim($exception);
 
-        /* Rule 6: hidden days */
-
-        if ($this->greens->isHiddenDay($start)) {
-            return 'This day is not open for booking.';
-        }
-
-        /* Rule 4: closed greens */
-
-        if ($this->greens->isClosed($rink->green(), $start)) {
-            return sprintf('Green %s is closed on this day.', $rink->green());
-        }
-
-        /* Rule 5: events */
-
-        if ($this->blockingEvent($rink, $start, $end) !== null) {
-            return 'This time is blocked by an event.';
-        }
-
-        /* Rule 2: capacity */
-
-        if ($quantity < 1) {
-            return 'The number of players is invalid.';
-        }
-
-        $occupancy = $this->occupancy($rink, $start, $end);
-
-        if ($occupancy > 0 && ! $rink->capacity_heterogenic) {
-            return 'This rink is already booked for this time.';
-        }
-
-        if ($rink->capacity - $occupancy < $quantity) {
-            return $occupancy > 0
-                ? 'This rink is already booked for this time.'
-                : 'Too many players for this rink.';
-        }
-
-        /* Rule 3: one rink per member per day */
-
-        if ($user !== null && ! $staff && $this->hasBookingOn($user, $start)) {
-            return 'You already have a booking on this day.';
-        }
-
-        /* Maximum open bookings, when a limit is set (LCE: none) */
-
-        if ($user !== null && ! $staff) {
-            $limit = $this->maxActiveBookings($user, $rink);
-
-            if ($limit > 0 && $this->activeBookingCount($user) >= $limit) {
-                return sprintf('You can only have %d open booking(s) at the same time.', $limit);
+            if ($exception === '') {
+                continue;
             }
+
+            if ($exception[0] === '+') {
+                $shown = $shown || trim($exception, '+ ') === $date->toDateString();
+            } elseif ($exception === $date->toDateString() || strcasecmp($exception, $date->englishDayOfWeek) === 0) {
+                $hidden = true;
+            }
+        }
+
+        return $hidden && ! $shown;
+    }
+
+    /** Checks on the rink and the time itself (SquareValidator::isValid). */
+    private function invalid(Rink $rink, CarbonImmutable $start, CarbonImmutable $end, ?User $user, bool $staff): ?BookingRefusal
+    {
+        if (in_array($rink->status, ['disabled', 'readonly'], true) && ! $staff) {
+            return BookingRefusal::RinkUnavailable;
+        }
+
+        if ($start->greaterThanOrEqualTo($end) || ! $start->isSameDay($end)) {
+            return BookingRefusal::InvalidTime;
+        }
+
+        $day = $start->startOfDay();
+        $opens = $day->addSeconds(self::seconds($rink->time_start));
+        $closes = $day->addSeconds(self::seconds($rink->time_end));
+
+        if ($start->lessThan($opens) || $end->greaterThan($closes)) {
+            return BookingRefusal::OutsidePlayingHours;
+        }
+
+        // Whole slots only (the original app left this to the calendar page).
+        $block = max(60, $rink->time_block);
+        $length = (int) $start->diffInSeconds($end);
+
+        if ((int) $opens->diffInSeconds($start) % $block !== 0 || $length % $block !== 0
+            || $length < $rink->time_block_bookable) {
+            return BookingRefusal::InvalidTime;
+        }
+
+        $now = CarbonImmutable::now();
+        $minRange = (int) $rink->min_range_book;
+        $earliest = $minRange === 0 ? $now->subSeconds(intdiv($rink->time_block_bookable, 2)) : $now->addSeconds($minRange);
+
+        if ($start->lessThan($earliest)) {
+            $seesPast = $user !== null && ($user->hasPrivilege('calendar.see-past')
+                || ($user->hasPrivilege('calendar.see-data') && $start->isSameDay($earliest)));
+
+            if (! $seesPast) {
+                return $minRange > 0 && $start->greaterThanOrEqualTo($now)
+                    ? BookingRefusal::TooShortNotice
+                    : BookingRefusal::InThePast;
+            }
+
+            if ($minRange > 0 && ! $staff) {
+                return BookingRefusal::TooShortNotice;
+            }
+        }
+
+        if ($rink->range_book && $start->greaterThan($now->addSeconds($rink->range_book)) && ! $staff) {
+            return BookingRefusal::TooFarAhead;
+        }
+
+        if ($rink->time_block_bookable_max && $length > $rink->time_block_bookable_max && ! $staff) {
+            return BookingRefusal::TooLong;
+        }
+
+        if ($this->isDayHidden($start)) {
+            return BookingRefusal::DayHidden;
         }
 
         return null;
     }
 
     /**
-     * Rule 7: whether this user may cancel this booking now.
+     * Checks on what else is booked (SquareValidator::isBookable). The order decides which reason is shown
+     * when several apply, matching the message the original app shows.
      */
-    public function isCancellable(?User $user, Booking $booking): bool
+    private function unavailable(Rink $rink, CarbonImmutable $start, CarbonImmutable $end, ?User $user, bool $staff, int $players): ?BookingRefusal
     {
-        if ($booking->status !== 'single') {
-            return false;
+        if ($this->greens->isRinkClosed($rink, $start)) {
+            return BookingRefusal::GreenClosed;
         }
 
-        if ($user !== null && $user->hasPrivilege('calendar.cancel-single-bookings')) {
-            return true;
+        if ($user !== null && $this->hasMaxActiveBookings($rink, $user)) {
+            return BookingRefusal::MaxActiveBookings;
         }
 
-        if ($user === null || $user->uid !== $booking->uid) {
-            return false;
+        $booked = $this->playersBooked($rink, $start, $end);
+
+        if ($booked >= $rink->capacity || ($booked > 0 && ! $rink->capacity_heterogenic)) {
+            return BookingRefusal::Occupied;
         }
 
-        $rink = $booking->rink;
-
-        if (! $rink || ! $rink->range_cancel) {
-            return false;
+        if ($user !== null && ! $staff && $this->hasBookingOn($user, $start)) {
+            return BookingRefusal::OneRinkPerDay;
         }
 
-        $reservation = $booking->reservations()->orderBy('date')->orderBy('time_start')->first();
-
-        if (! $reservation) {
-            return true;
+        if ($this->hasEvent($rink, $start, $end)) {
+            return BookingRefusal::Event;
         }
 
-        $starts = CarbonImmutable::parse($reservation->date->format('Y-m-d').' '.$reservation->time_start);
+        if ($players < 1) {
+            return BookingRefusal::InvalidPlayers;
+        }
 
-        return $starts > now()->addSeconds($rink->range_cancel);
+        if ($rink->capacity - $booked < $players) {
+            return BookingRefusal::TooManyPlayers;
+        }
+
+        return null;
     }
 
     /**
-     * The first event blocking this rink in the range: on the rink itself, its green, or all rinks.
+     * The limit is the user's meta max_active_bookings, else the rink's, else the club default; 0 is no
+     * limit. Counts reservations that haven't started, on any rink.
      */
-    public function blockingEvent(Rink $rink, CarbonInterface $start, CarbonInterface $end): ?Event
+    private function hasMaxActiveBookings(Rink $rink, User $user): bool
     {
-        return Event::query()
-            ->where('status', 'enabled')
-            ->where('datetime_start', '<', $end)
-            ->where('datetime_end', '>', $start)
-            ->orderBy('datetime_start')
-            ->get()
-            ->first(fn (Event $event) => $event->covers($rink));
-    }
+        $limit = (int) $user->meta('max_active_bookings', '0')
+            ?: (int) $rink->max_active_bookings
+            ?: (int) $this->settings->get(self::MAX_ACTIVE_BOOKINGS_OPTION, '0');
 
-    /**
-     * Players already on the rink in this range (public, not cancelled).
-     */
-    public function occupancy(Rink $rink, CarbonInterface $start, CarbonInterface $end): int
-    {
-        return (int) Reservation::query()
-            ->join('bs_bookings', 'bs_bookings.bid', '=', 'bs_reservations.bid')
-            ->where('bs_bookings.sid', $rink->sid)
-            ->where('bs_bookings.visibility', 'public')
-            ->where('bs_bookings.status', '!=', 'cancelled')
-            ->where('date', $start->format('Y-m-d'))
-            ->where('time_start', '<', $end->format('H:i:s'))
-            ->where('time_end', '>', $start->format('H:i:s'))
-            ->sum('bs_bookings.quantity');
-    }
+        if ($limit === 0) {
+            return false;
+        }
 
-    private function hasBookingOn(User $user, CarbonInterface $date): bool
-    {
-        return Reservation::query()
-            ->where('date', $date->format('Y-m-d'))
-            ->whereHas('booking', fn ($query) => $query
+        $now = Carbon::now();
+
+        $active = Reservation::query()
+            ->whereHas('booking', fn (Builder $query) => $query
                 ->where('uid', $user->uid)
-                ->where('status', '!=', 'cancelled'))
+                ->where('status', '!=', 'cancelled')
+                ->where('visibility', 'public'))
+            ->where(fn (Builder $query) => $query
+                ->where('date', '>', $now->toDateString())
+                ->orWhere(fn (Builder $query) => $query
+                    ->where('date', $now->toDateString())
+                    ->where('time_start', '>', $now->format('H:i:s'))))
+            ->count();
+
+        return $active >= $limit;
+    }
+
+    /** Whether the user has a booking that isn't cancelled on that day, on any rink. */
+    private function hasBookingOn(User $user, CarbonInterface $day): bool
+    {
+        return Booking::query()
+            ->where('uid', $user->uid)
+            ->where('status', '!=', 'cancelled')
+            ->whereHas('reservations', fn (Builder $query) => $query->where('date', $day->toDateString()))
             ->exists();
     }
 
-    /**
-     * The user's limit of open bookings: their own, else the rink's, else the site default; 0 is none.
-     */
-    private function maxActiveBookings(User $user, Rink $rink): int
+    private function hasEvent(Rink $rink, CarbonInterface $start, CarbonInterface $end): bool
     {
-        $limit = (int) $this->settings->get('service.user.default.max_active_bookings', '0');
-
-        if ((int) $rink->max_active_bookings !== 0) {
-            $limit = (int) $rink->max_active_bookings;
-        }
-
-        if ((int) $user->meta('max_active_bookings', '0') !== 0) {
-            $limit = (int) $user->meta('max_active_bookings', '0');
-        }
-
-        return $limit;
+        return Event::query()
+            ->with('metaEntries')
+            ->where('status', 'enabled')
+            ->where('datetime_end', '>', $start)
+            ->where('datetime_start', '<', $end)
+            ->get()
+            ->contains(fn (Event $event) => $event->covers($rink));
     }
 
-    private function activeBookingCount(User $user): int
+    private function startOf(Reservation $reservation): Carbon
     {
-        return Reservation::query()
-            ->where(fn ($query) => $query
-                ->where('date', '>', now()->format('Y-m-d'))
-                ->orWhere(fn ($today) => $today
-                    ->where('date', now()->format('Y-m-d'))
-                    ->where('time_start', '>', now()->format('H:i:s'))))
-            ->whereHas('booking', fn ($query) => $query
-                ->where('uid', $user->uid)
-                ->where('status', '!=', 'cancelled'))
-            ->count();
+        return $reservation->date->copy()->addSeconds(self::seconds($reservation->time_start));
+    }
+
+    /** Seconds since midnight of a "HH:MM" or "HH:MM:SS" time. */
+    public static function seconds(string $time): int
+    {
+        $parts = array_map('intval', explode(':', $time));
+
+        return $parts[0] * 3600 + ($parts[1] ?? 0) * 60 + ($parts[2] ?? 0);
     }
 }

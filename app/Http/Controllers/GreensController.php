@@ -6,7 +6,9 @@ use App\Models\Event;
 use App\Models\Reservation;
 use App\Models\Rink;
 use App\Models\User;
+use App\Services\BookingRules;
 use App\Services\ClubSetup;
+use App\Services\DaySheet;
 use App\Services\GreenService;
 use App\Services\GreensOverview;
 use Carbon\CarbonImmutable;
@@ -21,6 +23,11 @@ use Illuminate\View\View;
 
 class GreensController extends Controller
 {
+    public function __construct(
+        private readonly GreenService $greens,
+        private readonly BookingRules $rules,
+    ) {}
+
     /**
      * The greens overview: the next 14 playing days with free slots, closures and events per green.
      */
@@ -31,43 +38,33 @@ class GreensController extends Controller
             return redirect()->route('setup');
         }
 
-        return view('greens.index', ['days' => $overview->days(14)]);
+        return view('greens.index', ['days' => $overview->days()]);
     }
 
     /**
      * One green's calendar for one day: its rinks by hourly slots. Player names show for
      * logged-in members only; the member's own bookings show green.
      */
-    public function show(Request $request, GreenService $greens, GreensOverview $overview, string $green, ?string $date = null): View
+    public function show(Request $request, string $green, ?string $date = null): View
     {
-        abort_unless(in_array($green, $greens->greens(), true), 404);
+        $rinks = $this->greens->greens()[$green] ?? abort(404);
 
-        $days = $greens->playingDays(14);
+        $days = $this->playingDays();
 
         abort_if($days === [], 404);
 
-        try {
-            $day = $date === null ? $days[0] : CarbonImmutable::createFromFormat('!Y-m-d', $date);
-        } catch (InvalidFormatException) {
-            abort(404);
-        }
-
-        $rinks = Rink::query()->visible()->orderBy('priority')->get()
-            ->filter(fn (Rink $rink) => $rink->green() === $green)
-            ->values();
-
-        abort_if($rinks->isEmpty(), 404);
+        $day = $date === null ? $days[0] : $this->parseDay($date);
 
         $dayIndex = collect($days)->search(fn (CarbonImmutable $other) => $other->isSameDay($day));
 
         return view('greens.show', [
             'green' => $green,
-            'greens' => $greens->greens(),
+            'greens' => array_keys($this->greens->greens()),
             'day' => $day,
             'rinks' => $rinks,
-            'closed' => $greens->isClosed($green, $day),
-            'hidden' => $greens->isHiddenDay($day),
-            'grid' => $this->grid($request, $overview, $rinks, $day, $greens->isClosed($green, $day)),
+            'closed' => $this->greens->isClosed($green, $day),
+            'hidden' => $this->rules->isDayHidden($day),
+            'grid' => $this->grid($request, $rinks, $day, $this->greens->isClosed($green, $day)),
             'previousDay' => $dayIndex !== false && $dayIndex > 0 ? $days[$dayIndex - 1] : null,
             'nextDay' => $dayIndex !== false && $dayIndex < count($days) - 1 ? $days[$dayIndex + 1] : null,
         ]);
@@ -77,70 +74,78 @@ class GreensController extends Controller
      * The Secretary closes this green for the day (the plan's green open/close, privilege
      * "admin.event" like other blocked time).
      */
-    public function close(Request $request, GreenService $greens, string $green, string $date): RedirectResponse
+    public function close(Request $request, string $green, string $date): RedirectResponse
     {
-        [$green, $day] = $this->greenDay($request, $greens, $green, $date);
+        $day = $this->greenDay($request, $green, $date);
 
-        $greens->close($green, $day);
+        $this->greens->setClosed($green, $day, true);
 
         return redirect()->route('greens.show', [$green, $date])
             ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M').'.');
     }
 
-    public function open(Request $request, GreenService $greens, string $green, string $date): RedirectResponse
+    public function open(Request $request, string $green, string $date): RedirectResponse
     {
-        [$green, $day] = $this->greenDay($request, $greens, $green, $date);
+        $day = $this->greenDay($request, $green, $date);
 
-        $greens->open($green, $day);
+        $this->greens->setClosed($green, $day, false);
 
         return redirect()->route('greens.show', [$green, $date])
             ->with('status', 'Green '.$green.' is open again on '.$day->format('D j M').'.');
     }
 
     /**
-     * The printable day sheet (PLAN.md section 7): rinks by hour with player names, events and
-     * closed greens, plus a QR code to the live calendar.
+     * The printable day sheet (PLAN.md section 7): the green's rinks by hour with player names,
+     * events and closures, plus a QR code to the live calendar.
      */
-    public function sheet(Request $request, GreenService $greens, GreensOverview $overview, string $green, string $date): View
+    public function sheet(DaySheet $daySheet, string $green, string $date): View
     {
-        abort_unless(in_array($green, $greens->greens(), true), 404);
+        abort_unless(array_key_exists($green, $this->greens->greens()), 404);
 
-        try {
-            $day = CarbonImmutable::createFromFormat('!Y-m-d', $date);
-        } catch (InvalidFormatException) {
-            abort(404);
-        }
+        $day = $this->parseDay($date);
 
-        $rinks = Rink::query()->visible()->orderBy('priority')->get()
-            ->filter(fn (Rink $rink) => $rink->green() === $green)
-            ->values();
-
-        abort_if($rinks->isEmpty(), 404);
+        $sheet = $daySheet->for($day)[$green];
 
         $liveUrl = route('greens.show', [$green, $date]);
 
         return view('greens.sheet', [
             'green' => $green,
             'day' => $day,
-            'rinks' => $rinks,
-            'closed' => $greens->isClosed($green, $day),
-            'grid' => $this->grid($request, $overview, $rinks, $day, $greens->isClosed($green, $day)),
+            'sheet' => $sheet,
             'liveUrl' => $liveUrl,
             'qrSvg' => $this->qrSvg($liveUrl),
         ]);
     }
 
-    /** @return array{string, CarbonImmutable} */
-    private function greenDay(Request $request, GreenService $greens, string $green, string $date): array
+    /** @return list<CarbonImmutable> the next 14 days that aren't hidden from the calendar */
+    private function playingDays(): array
     {
-        abort_unless($request->user()?->hasPrivilege('admin.event'), 403);
-        abort_unless(in_array($green, $greens->greens(), true), 404);
+        $days = [];
 
+        for ($day = CarbonImmutable::today(); $day < CarbonImmutable::today()->addDays(GreensOverview::DAYS); $day = $day->addDay()) {
+            if (! $this->rules->isDayHidden($day)) {
+                $days[] = $day;
+            }
+        }
+
+        return $days;
+    }
+
+    private function parseDay(string $date): CarbonImmutable
+    {
         try {
-            return [$green, CarbonImmutable::createFromFormat('!Y-m-d', $date)];
+            return CarbonImmutable::createFromFormat('!Y-m-d', $date);
         } catch (InvalidFormatException) {
             abort(404);
         }
+    }
+
+    private function greenDay(Request $request, string $green, string $date): CarbonImmutable
+    {
+        abort_unless($request->user()?->hasPrivilege('admin.event'), 403);
+        abort_unless(array_key_exists($green, $this->greens->greens()), 404);
+
+        return $this->parseDay($date);
     }
 
     private function qrSvg(string $url): string
@@ -161,13 +166,13 @@ class GreensController extends Controller
      * @param  Collection<int, Rink>  $rinks
      * @return list<array{time: string, cells: list<array<string, mixed>>}>
      */
-    private function grid(Request $request, GreensOverview $overview, $rinks, CarbonImmutable $day, bool $closed): array
+    private function grid(Request $request, Collection $rinks, CarbonImmutable $day, bool $closed): array
     {
         $user = $request->user();
 
         // The day's bookings on these rinks, with who booked and the player names.
         $reservations = Reservation::query()
-            ->where('date', $day->format('Y-m-d'))
+            ->where('date', $day->toDateString())
             ->whereHas('booking', fn ($query) => $query
                 ->whereIn('sid', $rinks->pluck('sid'))
                 ->where('visibility', 'public')
@@ -180,11 +185,18 @@ class GreensController extends Controller
             ->where('status', 'enabled')
             ->where('datetime_start', '<', $day->addDay())
             ->where('datetime_end', '>', $day)
+            ->orderBy('datetime_start')
+            ->orderBy('eid')
             ->get();
 
         $grid = [];
+        $first = $rinks->first();
+        $block = max(60, $first->time_block);
+        $closes = BookingRules::seconds($first->time_end);
 
-        foreach ($overview->slots($rinks->first(), $day) as [$start, $end]) {
+        for ($slotStart = BookingRules::seconds($first->time_start); $slotStart < $closes; $slotStart += $block) {
+            $start = $day->addSeconds($slotStart);
+            $end = $day->addSeconds(min($slotStart + $block, $closes));
             $cells = [];
 
             foreach ($rinks as $rink) {
@@ -236,7 +248,8 @@ class GreensController extends Controller
             ];
         }
 
-        if ($start < now()->subSeconds((int) ($rink->time_block_bookable / 2))) {
+        // Bookable through the first half of the slot, like the rules.
+        if ($start < now()->subSeconds(intdiv($rink->time_block_bookable, 2))) {
             return ['state' => 'past'];
         }
 

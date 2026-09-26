@@ -1,138 +1,113 @@
 <?php
 
-use App\Models\Booking;
-use App\Models\Event;
-use App\Models\Rink;
-use App\Models\User;
+use App\Services\BookingRules;
+use App\Services\GreenService;
 use App\Services\GreensOverview;
 use App\Support\Settings;
 use Database\Seeders\ClubSeeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /*
- * The greens overview reference values (docs/REFERENCE-RULES.md): LCE seed gives 5 slots per rink
- * and day (12:00-17:00, 60 minutes), 30 per green. "Now" is Monday 2026-10-05 13:00, so the
- * overview starts today; the assertions below look at tomorrow, a full day.
+ * Rule 8: the greens overview. "Now" is Monday 5 October 2026, 13:30, so today's 12:00 and 13:00 slots
+ * have started and 3 of each rink's 5 slots are left.
  */
 
 beforeEach(function () {
-    config(['club.admin_password' => 'a-good-password']);
-    Carbon::setTestNow('2026-10-05 13:00');
     $this->seed(ClubSeeder::class);
+    $this->travelTo(Carbon::parse('2026-10-05 13:30'));
 });
 
-function overviewDay(int $index = 1): array
-{
-    return app(GreensOverview::class)->days(14)[$index];
-}
-
-function bookTomorrow(string $rinkName, string $time, int $quantity = 1): void
-{
-    $user = User::query()->firstOrCreate(
-        ['email' => 'member@example.com'],
-        ['alias' => 'Member', 'status' => 'enabled', 'pw' => 'a-good-password'],
-    );
-
-    $booking = Booking::query()->create([
-        'uid' => $user->uid,
-        'sid' => Rink::query()->where('name', $rinkName)->firstOrFail()->sid,
-        'status' => 'single',
-        'visibility' => 'public',
-        'quantity' => $quantity,
-    ]);
-
-    $booking->reservations()->create([
-        'date' => '2026-10-06',
-        'time_start' => $time,
-        'time_end' => Carbon::parse('2026-10-06 '.$time)->addHour()->format('H:i:s'),
-    ]);
-}
-
-it('shows 14 playing days with 30 free slots per green on an empty day', function () {
-    $days = app(GreensOverview::class)->days(14);
+it('shows the next 14 days with free and total slots per green', function () {
+    $days = app(GreensOverview::class)->days();
 
     expect($days)->toHaveCount(14)
-        ->and($days[0]['date']->format('Y-m-d'))->toBe('2026-10-05')
-        ->and($days[1]['greens'])->toBe([
-            'A' => ['total' => 30, 'free' => 30, 'closed' => false, 'events' => []],
-            'B' => ['total' => 30, 'free' => 30, 'closed' => false, 'events' => []],
-        ]);
+        ->and($days[0]['date']->toDateString())->toBe('2026-10-05')
+        ->and($days[13]['date']->toDateString())->toBe('2026-10-18')
+        ->and($days[0]['free'])->toBe(['A' => 18, 'B' => 18])
+        ->and($days[0]['slots'])->toBe(['A' => 30, 'B' => 30])
+        ->and($days[1]['free'])->toBe(['A' => 30, 'B' => 30])
+        ->and($days[1]['closed'])->toBe(['A' => false, 'B' => false])
+        ->and($days[1]['events'])->toBe(['A' => [], 'B' => []]);
 });
 
-it('does not count slots already over today as free', function () {
-    // At 13:00, the 12:00 slot is over on every rink; 13:00-17:00 remain
-    expect(overviewDay(0)['greens']['A'])->toMatchArray(['total' => 30, 'free' => 24]);
+it('counts bookings, events and closed greens', function () {
+    $member = member();
+    booked($member, 'A-1', '2026-10-05 15:00');
+    booked($member, 'B-2', '2026-10-05 16:00', visibility: 'private');
+    booked($member, 'B-1', '2026-10-05 12:00');
+    booked($member, 'A-2', '2026-10-06 12:00', status: 'cancelled');
+    rink('B-3')->update(['capacity_heterogenic' => true]);
+    booked($member, 'B-3', '2026-10-05 16:00');
+
+    blockedBy('green:B', '2026-10-05 14:00', '2026-10-05 15:00', 'League');
+    blockedBy(null, '2026-10-06 12:00', '2026-10-06 13:00', 'Club day');
+    blockedBy('A-4', '2026-10-06 16:00', '2026-10-06 17:00', 'Coaching');
+    blockedBy(null, '2026-10-07 12:00', '2026-10-07 17:00', 'Cancelled day', status: 'disabled');
+
+    app(GreenService::class)->setClosed('A', Carbon::parse('2026-10-06'), true);
+
+    [$today, $tomorrow, $wednesday] = app(GreensOverview::class)->days();
+
+    expect($today['free'])->toBe(['A' => 17, 'B' => 12])
+        ->and($today['events'])->toBe(['A' => [], 'B' => ['League']])
+        ->and($tomorrow['free'])->toBe(['A' => 23, 'B' => 24])
+        ->and($tomorrow['slots'])->toBe(['A' => 30, 'B' => 30])
+        ->and($tomorrow['events'])->toBe(['A' => ['Club day', 'Coaching'], 'B' => ['Club day']])
+        ->and($tomorrow['closed'])->toBe(['A' => true, 'B' => false])
+        ->and($wednesday['free'])->toBe(['A' => 30, 'B' => 30])
+        ->and($wednesday['events'])->toBe(['A' => [], 'B' => []]);
 });
 
-it('counts a booking against its green', function () {
-    bookTomorrow('A-1', '14:00:00');
+it('leaves out hidden days', function () {
+    app(Settings::class)->set(BookingRules::DAY_EXCEPTIONS_OPTION, "Sunday\n+2026-10-18");
 
-    expect(overviewDay()['greens']['A'])->toMatchArray(['total' => 30, 'free' => 29])
-        ->and(overviewDay()['greens']['B'])->toMatchArray(['total' => 30, 'free' => 30]);
+    $dates = collect(app(GreensOverview::class)->days())->map(fn (array $day) => $day['date']->toDateString());
+
+    expect($dates)->toHaveCount(13)
+        ->and($dates)->not->toContain('2026-10-11')
+        ->and($dates)->toContain('2026-10-18');
 });
 
-it('shows a closed green with no free slots', function () {
-    app(Settings::class)->set('service.greens.closed', '2026-10-06:A');
+it('counts a slot free only when it can still be booked', function () {
+    $this->travelTo(Carbon::parse('2026-10-06 09:00'));
+    booked(member(), 'A-1', '2026-10-06 12:00');
+    blockedBy('B-1', '2026-10-06 13:00', '2026-10-06 14:00');
 
-    expect(overviewDay()['greens']['A'])->toMatchArray(['total' => 30, 'free' => 0, 'closed' => true])
-        ->and(overviewDay()['greens']['B'])->toMatchArray(['total' => 30, 'free' => 30, 'closed' => false]);
+    $free = app(GreensOverview::class)->days()[0]['free'];
+    $rules = app(BookingRules::class);
+    $bookable = ['A' => 0, 'B' => 0];
+
+    foreach (app(GreenService::class)->greens() as $green => $rinks) {
+        foreach ($rinks as $rink) {
+            foreach ([12, 13, 14, 15, 16] as $hour) {
+                [$start, $end] = slot("2026-10-06 $hour:00");
+
+                if ($rules->refusal($rink, $start, $end, null) === null) {
+                    $bookable[$green]++;
+                }
+            }
+        }
+    }
+
+    expect($free)->toBe($bookable)->and($free)->toBe(['A' => 29, 'B' => 29]);
 });
 
-it('blocks one rink for a day with an event and names it', function () {
-    $event = Event::query()->create([
-        'sid' => Rink::query()->where('name', 'A-1')->firstOrFail()->sid,
-        'status' => 'enabled',
-        'datetime_start' => '2026-10-06 12:00:00',
-        'datetime_end' => '2026-10-06 17:00:00',
-    ]);
-    $event->setMeta('name', 'Club competition');
+it('uses the same few queries however many bookings there are', function () {
+    foreach (['A-1', 'A-2', 'B-1', 'B-2'] as $rink) {
+        booked(member(), $rink, '2026-10-06 12:00');
+    }
+    blockedBy(null, '2026-10-06 12:00', '2026-10-06 13:00');
+    app(Settings::class)->get('warm-up');
 
-    expect(overviewDay()['greens']['A'])->toMatchArray(['total' => 30, 'free' => 25, 'events' => ['Club competition']])
-        ->and(overviewDay()['greens']['B'])->toMatchArray(['free' => 30, 'events' => []]);
+    DB::enableQueryLog();
+    app(GreensOverview::class)->days();
+
+    expect(count(DB::getQueryLog()))->toBeLessThanOrEqual(4);
 });
 
-it('blocks a whole green or all rinks with a green or global event', function () {
-    $event = Event::query()->create([
-        'sid' => null,
-        'status' => 'enabled',
-        'datetime_start' => '2026-10-06 12:00:00',
-        'datetime_end' => '2026-10-06 17:00:00',
-    ]);
-    $event->setMeta('name', 'Green A maintenance');
-    $event->setMeta('green', 'A');
+it('no longer counts a slot once it has started', function () {
+    $this->travelTo(Carbon::parse('2026-10-05 13:00'));
 
-    expect(overviewDay()['greens']['A'])->toMatchArray(['free' => 0, 'events' => ['Green A maintenance']])
-        ->and(overviewDay()['greens']['B'])->toMatchArray(['free' => 30, 'events' => []]);
-
-    $event->setMeta('green', null);
-
-    expect(overviewDay()['greens']['B'])->toMatchArray(['free' => 0, 'events' => ['Green A maintenance']]);
-});
-
-it('blocks only overlapped slots for a shorter event', function () {
-    Event::query()->create([
-        'sid' => Rink::query()->where('name', 'A-1')->firstOrFail()->sid,
-        'status' => 'enabled',
-        'datetime_start' => '2026-10-06 13:30:00',
-        'datetime_end' => '2026-10-06 14:30:00',
-    ]);
-
-    // The 13:00 and 14:00 slots on A-1 are touched
-    expect(overviewDay()['greens']['A'])->toMatchArray(['total' => 30, 'free' => 28]);
-});
-
-it('ignores cancelled bookings', function () {
-    bookTomorrow('A-1', '14:00:00');
-    Booking::query()->latest('bid')->firstOrFail()->update(['status' => 'cancelled']);
-
-    expect(overviewDay()['greens']['A'])->toMatchArray(['free' => 30]);
-});
-
-it('skips hidden days', function () {
-    app(Settings::class)->set('service.calendar.day-exceptions', 'Tuesday');
-
-    $days = app(GreensOverview::class)->days(14);
-
-    expect($days)->toHaveCount(14)
-        ->and(array_map(fn ($day) => $day['date']->format('D'), $days))->not->toContain('Tue');
+    expect(app(GreensOverview::class)->days()[0]['free'])->toBe(['A' => 18, 'B' => 18]);
 });

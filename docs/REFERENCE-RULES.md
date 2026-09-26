@@ -1,5 +1,11 @@
 # Booking rules: reference values from the current app
 
+> **The executable version of this document is authoritative:** `scripts/reference/capture.php` records how
+> the current app really answers the scenarios in `tests/Reference/scenarios.php`, and
+> `tests/Feature/ReferenceValuesTest.php` holds the rebuild to those answers. This file stays as the written
+> summary; where they differ (e.g. read-only rinks are refused too, and `calendar.see-data` staff may book
+> earlier slots of the same day), the recorded values and the deliberate-differences table in PLAN.md 5.3 win.
+
 Phase 2 step one (PLAN.md 5.3): the current app's behaviour is the specification. The old repository
 (`DawiePieterse/bowlsbuddy`) vendors **ep3-bs unmodified** ("No code has been forked/modified yet",
 its README) and was never run live, so the reference is:

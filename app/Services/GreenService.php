@@ -4,166 +4,90 @@ namespace App\Services;
 
 use App\Models\Rink;
 use App\Support\Settings;
-use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
- * Greens: a rink's green is the part of its name before the dash ("A-1" is on green "A").
- * The Secretary closes a green per day through the "service.greens.closed" setting, one
- * "YYYY-MM-DD:G" entry per line. Hidden days come from "service.calendar.day-exceptions":
- * weekday names or "Y-m-d" dates, one per line or comma; a "+Y-m-d" entry re-allows a date
- * whose weekday is hidden.
+ * Greens and the days they are closed. A rink belongs to the green named by the prefix of its name ("A-1" is
+ * on green "A"). Closed days are kept in the service.greens.closed setting as "YYYY-MM-DD:A" lines.
+ *
+ * Ported from Square\Manager\GreenManager in the original app.
  */
 class GreenService
 {
-    public function __construct(private Settings $settings) {}
+    public const CLOSED_OPTION = 'service.greens.closed';
+
+    public function __construct(private readonly Settings $settings) {}
 
     /**
-     * The greens, in rink priority order.
+     * Visible rinks by green, greens and rinks in natural order ("A-2" before "A-10").
      *
-     * @return list<string>
+     * @return array<string, Collection<int, Rink>>
      */
     public function greens(): array
     {
-        $greens = [];
+        $greens = Rink::query()->visible()->get()
+            ->sort(fn (Rink $a, Rink $b) => strnatcmp($a->name, $b->name))
+            ->groupBy(fn (Rink $rink) => $rink->green())
+            ->map(fn (Collection $rinks) => $rinks->values())
+            ->all();
 
-        foreach (Rink::query()->visible()->orderBy('priority')->pluck('name') as $name) {
-            $green = trim(explode('-', $name, 2)[0]);
-
-            if ($green !== '' && ! in_array($green, $greens, true)) {
-                $greens[] = $green;
-            }
-        }
+        uksort($greens, 'strnatcmp');
 
         return $greens;
     }
 
     public function isClosed(string $green, CarbonInterface $date): bool
     {
-        return in_array($green, $this->closedGreens($date), true);
+        return in_array($date->toDateString().':'.$green, $this->closedEntries(), true);
+    }
+
+    public function isRinkClosed(Rink $rink, CarbonInterface $date): bool
+    {
+        return $this->isClosed($rink->green(), $date);
     }
 
     /**
-     * The greens closed on this day.
-     *
-     * @return list<string>
+     * @param  list<string>  $greens
+     * @return array<string, bool> green => whether it is closed that day
      */
-    public function closedGreens(CarbonInterface $date): array
+    public function closedOn(array $greens, CarbonInterface $date): array
     {
-        $day = $date->format('Y-m-d');
         $closed = [];
 
-        foreach ($this->closedEntries() as [$entryDay, $green]) {
-            if ($entryDay === $day && ! in_array($green, $closed, true)) {
-                $closed[] = $green;
-            }
+        foreach ($greens as $green) {
+            $closed[$green] = $this->isClosed($green, $date);
         }
 
         return $closed;
     }
 
-    public function close(string $green, CarbonInterface $date): void
+    /** Opens or closes a green for a day. Entries for days before today are dropped at the same time. */
+    public function setClosed(string $green, CarbonInterface $date, bool $closed): void
     {
-        if (! $this->isClosed($green, $date)) {
-            $entries = $this->closedEntries();
-            $entries[] = [$date->format('Y-m-d'), $green];
+        $entry = $date->toDateString().':'.$green;
+        $today = Carbon::today()->toDateString();
 
-            $this->storeClosedEntries($entries);
-        }
-    }
-
-    public function open(string $green, CarbonInterface $date): void
-    {
-        $day = $date->format('Y-m-d');
-
-        $entries = array_values(array_filter(
+        $entries = array_filter(
             $this->closedEntries(),
-            fn (array $entry) => $entry !== [$day, $green],
-        ));
+            fn (string $existing) => $existing !== $entry && substr($existing, 0, 10) >= $today,
+        );
 
-        $this->storeClosedEntries($entries);
-    }
-
-    /**
-     * Whether this day is hidden from the calendar (rule 6, old SquareValidator day exceptions).
-     */
-    public function isHiddenDay(CarbonInterface $date): bool
-    {
-        $exceptions = (string) $this->settings->get('service.calendar.day-exceptions', '');
-
-        if (trim($exceptions) === '') {
-            return false;
+        if ($closed) {
+            $entries[] = $entry;
         }
 
-        $day = $date->format('Y-m-d');
-        $weekday = $date->format('l');
-        $hidden = false;
-        $allowed = false;
-
-        foreach (preg_split('/[\n,]/', $exceptions) ?: [] as $entry) {
-            $entry = trim($entry);
-
-            if ($entry === '') {
-                continue;
-            }
-
-            if ($entry[0] === '+') {
-                $allowed = $allowed || trim($entry, '+ ') === $day;
-            } else {
-                $hidden = $hidden || $entry === $day || strcasecmp($entry, $weekday) === 0;
-            }
-        }
-
-        return $hidden && ! $allowed;
-    }
-
-    /**
-     * The next $count playing days (days not hidden from the calendar), starting today.
-     *
-     * @return list<CarbonImmutable>
-     */
-    public function playingDays(int $count = 14, ?CarbonInterface $from = null): array
-    {
-        $day = CarbonImmutable::instance($from ?? now())->startOfDay();
-        $days = [];
-
-        // A guard far past any sane exception list, so a "hide everything" setting cannot loop forever.
-        for ($i = 0; $i < 366 && count($days) < $count; $i++) {
-            if (! $this->isHiddenDay($day)) {
-                $days[] = $day;
-            }
-
-            $day = $day->addDay();
-        }
-
-        return $days;
-    }
-
-    /** @return list<array{string, string}> [date "Y-m-d", green] */
-    private function closedEntries(): array
-    {
-        $entries = [];
-
-        $raw = (string) $this->settings->get('service.greens.closed', '');
-
-        foreach (preg_split('/[\n,]/', $raw) ?: [] as $line) {
-            $line = trim($line);
-
-            if (preg_match('/^(\d{4}-\d{2}-\d{2}):(.+)$/', $line, $parts)) {
-                $entries[] = [$parts[1], trim($parts[2])];
-            }
-        }
-
-        return $entries;
-    }
-
-    /** @param list<array{string, string}> $entries */
-    private function storeClosedEntries(array $entries): void
-    {
         sort($entries);
 
-        $lines = array_map(fn (array $entry) => $entry[0].':'.$entry[1], $entries);
+        $this->settings->set(self::CLOSED_OPTION, implode("\n", $entries));
+    }
 
-        $this->settings->set('service.greens.closed', implode("\n", $lines));
+    /** @return list<string> */
+    private function closedEntries(): array
+    {
+        $lines = preg_split('~\R~', (string) $this->settings->get(self::CLOSED_OPTION, '')) ?: [];
+
+        return array_values(array_filter(array_map('trim', $lines), fn (string $line) => $line !== ''));
     }
 }

@@ -4,7 +4,11 @@ namespace App\Services;
 
 use RuntimeException;
 
-/**
- * A booking the rules refused. The message is the reason, safe to show to the member.
- */
-class BookingRefused extends RuntimeException {}
+/** Thrown when a booking can't be made or cancelled; the refusal says why. */
+class BookingRefused extends RuntimeException
+{
+    public function __construct(public readonly ?BookingRefusal $refusal, string $message = '')
+    {
+        parent::__construct($message ?: ($refusal?->message() ?? 'This booking cannot be changed.'));
+    }
+}

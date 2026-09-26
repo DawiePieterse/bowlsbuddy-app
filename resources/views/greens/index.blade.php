@@ -16,17 +16,17 @@
         @foreach ($days as $day)
             <div class="overview-day">
                 <div class="date">{{ $day['date']->format('D j M') }}</div>
-                @foreach ($day['greens'] as $green => $info)
+                @foreach ($day['slots'] as $green => $total)
                     <div class="green-cell">
-                        @if ($info['closed'])
+                        @if ($day['closed'][$green])
                             <span class="green-pill closed">Green {{ $green }} <span class="slots">closed</span></span>
                         @else
-                            <a class="green-pill {{ $info['events'] ? 'event' : ($info['free'] === 0 ? 'full' : '') }}"
+                            <a class="green-pill {{ $day['events'][$green] ? 'event' : ($day['free'][$green] === 0 ? 'full' : '') }}"
                                href="{{ route('greens.show', [$green, $day['date']->format('Y-m-d')]) }}">
                                 Green {{ $green }}
-                                <span class="slots">{{ $info['free'] }} of {{ $info['total'] }} free</span>
-                                @if ($info['events'])
-                                    <span class="events">{{ implode(', ', $info['events']) }}</span>
+                                <span class="slots">{{ $day['free'][$green] }} of {{ $total }} free</span>
+                                @if ($day['events'][$green])
+                                    <span class="events">{{ implode(', ', $day['events'][$green]) }}</span>
                                 @endif
                             </a>
                         @endif

@@ -3,158 +3,164 @@
 namespace App\Services;
 
 use App\Models\Event;
-use App\Models\Reservation;
 use App\Models\Rink;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
- * The greens overview (PLAN.md 5.3 rule 8): the next 14 playing days with, per green, the free
- * and total slots, whether the green is closed and the names of its events. Free means bookable
- * by a member right now, so closed greens, events, occupied slots and today's finished slots
- * don't count. Everything is loaded in three queries, whatever the number of days.
+ * The greens overview on the home page: for the next 14 days (hidden days left out), per green whether it
+ * is closed, how many of its slots are still free out of how many, and the names of the events on it.
+ *
+ * Ported from greensOverview() in the original app's Frontend\Controller\IndexController. A slot is free
+ * when it hasn't started, no event covers it and it has room for another booking. Closing a green doesn't
+ * change the numbers; the page shows the green as closed instead.
  */
 class GreensOverview
 {
-    public function __construct(private GreenService $greens) {}
+    public const DAYS = 14;
+
+    public function __construct(
+        private readonly GreenService $greens,
+        private readonly BookingRules $rules,
+    ) {}
 
     /**
-     * @return list<array{date: CarbonImmutable, greens: array<string, array{total: int, free: int, closed: bool, events: list<string>}>}>
+     * @return list<array{date: CarbonImmutable, closed: array<string, bool>, free: array<string, int>, slots: array<string, int>, events: array<string, list<string>>}>
      */
-    public function days(int $count = 14, ?CarbonInterface $from = null): array
+    public function days(): array
     {
-        $days = $this->greens->playingDays($count, $from);
+        $greens = $this->greens->greens();
+        $from = CarbonImmutable::today();
+        $until = $from->addDays(self::DAYS);
+        $now = CarbonImmutable::now();
 
-        if (! $days) {
-            return [];
-        }
-
-        $rinks = Rink::query()->visible()->orderBy('priority')->get();
-        $byGreen = $rinks->groupBy(fn (Rink $rink) => $rink->green());
-
-        $first = $days[0];
-        $last = end($days);
-
-        /** @var array<int, array<string, list<array{string, string, int}>>> sid => date => [start, end, players] */
-        $booked = [];
-
-        $reservations = Reservation::query()
-            ->join('bs_bookings', 'bs_bookings.bid', '=', 'bs_reservations.bid')
-            ->where('bs_bookings.visibility', 'public')
-            ->where('bs_bookings.status', '!=', 'cancelled')
-            ->whereBetween('date', [$first->format('Y-m-d'), $last->format('Y-m-d')])
-            ->toBase()
-            ->get(['bs_reservations.date', 'bs_reservations.time_start', 'bs_reservations.time_end', 'bs_bookings.sid', 'bs_bookings.quantity']);
-
-        foreach ($reservations as $reservation) {
-            $booked[(int) $reservation->sid][substr((string) $reservation->date, 0, 10)][] = [
-                (string) $reservation->time_start, (string) $reservation->time_end, (int) $reservation->quantity,
-            ];
-        }
-
+        $booked = $this->bookedTimes($from, $until);
         $events = Event::query()
             ->with('metaEntries')
             ->where('status', 'enabled')
-            ->where('datetime_start', '<', $last->addDay())
-            ->where('datetime_end', '>', $first)
+            ->where('datetime_end', '>', $from)
+            ->where('datetime_start', '<', $until)
             ->orderBy('datetime_start')
+            ->orderBy('eid')
             ->get();
 
-        $overview = [];
+        $days = [];
 
-        foreach ($days as $day) {
-            $greens = [];
-
-            foreach ($byGreen as $green => $greenRinks) {
-                $closed = $this->greens->isClosed($green, $day);
-                $total = 0;
-                $free = 0;
-                $names = [];
-
-                foreach ($greenRinks as $rink) {
-                    $dayEvents = $events->filter(
-                        fn (Event $event) => $event->covers($rink)
-                            && $event->datetime_start < $day->setTimeFromTimeString($rink->time_end)
-                            && $event->datetime_end > $day->setTimeFromTimeString($rink->time_start)
-                    );
-
-                    foreach ($dayEvents as $event) {
-                        $name = trim((string) $event->meta('name'));
-
-                        if ($name !== '' && ! in_array($name, $names, true)) {
-                            $names[] = $name;
-                        }
-                    }
-
-                    foreach ($this->slots($rink, $day) as [$start, $end]) {
-                        $total++;
-
-                        if ($closed || $this->finished($rink, $start)) {
-                            continue;
-                        }
-
-                        if ($dayEvents->first(fn (Event $event) => $event->datetime_start < $end && $event->datetime_end > $start)) {
-                            continue;
-                        }
-
-                        if ($this->slotFull($rink, $booked[$rink->sid][$day->format('Y-m-d')] ?? [], $start, $end)) {
-                            continue;
-                        }
-
-                        $free++;
-                    }
-                }
-
-                $greens[$green] = ['total' => $total, 'free' => $free, 'closed' => $closed, 'events' => $names];
+        for ($day = $from; $day->lessThan($until); $day = $day->addDay()) {
+            if ($this->rules->isDayHidden($day)) {
+                continue;
             }
 
-            $overview[] = ['date' => $day, 'greens' => $greens];
+            $dayEvents = $events->filter(fn (Event $event) => $event->datetime_start->lessThan($day->addDay())
+                && $event->datetime_end->greaterThan($day));
+
+            $entry = ['date' => $day, 'closed' => [], 'free' => [], 'slots' => [], 'events' => []];
+
+            foreach ($greens as $green => $rinks) {
+                $entry['closed'][$green] = $this->greens->isClosed($green, $day);
+                $entry['free'][$green] = 0;
+                $entry['slots'][$green] = 0;
+                $entry['events'][$green] = $this->eventNames($dayEvents, $rinks);
+
+                foreach ($rinks as $rink) {
+                    [$free, $total] = $this->countSlots($rink, $day, $booked[$day->toDateString()][$rink->sid] ?? [], $dayEvents, $now);
+
+                    $entry['free'][$green] += $free;
+                    $entry['slots'][$green] += $total;
+                }
+            }
+
+            $days[] = $entry;
         }
 
-        return $overview;
+        return $days;
     }
 
     /**
-     * The rink's slots on this day.
+     * Active public bookings as date => sid => list of [start second, end second, players].
      *
-     * @return list<array{CarbonImmutable, CarbonImmutable}>
+     * @return array<string, array<int, list<array{int, int, int}>>>
      */
-    public function slots(Rink $rink, CarbonInterface $day): array
+    private function bookedTimes(CarbonImmutable $from, CarbonImmutable $until): array
     {
-        $day = CarbonImmutable::instance($day);
-        $start = $day->setTimeFromTimeString($rink->time_start);
-        $dayEnd = $day->setTimeFromTimeString($rink->time_end);
-        $slots = [];
+        $rows = DB::table('bs_reservations')
+            ->join('bs_bookings', 'bs_bookings.bid', '=', 'bs_reservations.bid')
+            ->where('bs_bookings.status', '!=', 'cancelled')
+            ->where('bs_bookings.visibility', 'public')
+            ->where('bs_reservations.date', '>=', $from->toDateString())
+            ->where('bs_reservations.date', '<', $until->toDateString())
+            ->get(['bs_reservations.date', 'bs_reservations.time_start', 'bs_reservations.time_end', 'bs_bookings.sid', 'bs_bookings.quantity']);
 
-        while ($rink->time_block > 0 && $start->addSeconds($rink->time_block) <= $dayEnd) {
-            $slots[] = [$start, $start->addSeconds($rink->time_block)];
-            $start = $start->addSeconds($rink->time_block);
+        $booked = [];
+
+        foreach ($rows as $row) {
+            $booked[substr((string) $row->date, 0, 10)][(int) $row->sid][] = [
+                BookingRules::seconds((string) $row->time_start),
+                BookingRules::seconds((string) $row->time_end),
+                (int) $row->quantity,
+            ];
         }
 
-        return $slots;
+        return $booked;
     }
 
-    /** A slot no longer bookable today (it stays bookable through its first half, as in the rules). */
-    private function finished(Rink $rink, CarbonImmutable $start): bool
+    /**
+     * @param  Collection<int, Event>  $events
+     * @param  Collection<int, Rink>  $rinks
+     * @return list<string>
+     */
+    private function eventNames(Collection $events, Collection $rinks): array
     {
-        return $start < now()->subSeconds((int) ($rink->time_block_bookable / 2));
+        return $events
+            ->filter(fn (Event $event) => $rinks->contains(fn (Rink $rink) => $event->covers($rink)))
+            ->map(fn (Event $event) => (string) $event->meta('name'))
+            ->unique()
+            ->values()
+            ->all();
     }
 
-    /** @param list<array{string, string, int}> $dayBookings [start, end, players] */
-    private function slotFull(Rink $rink, array $dayBookings, CarbonImmutable $start, CarbonImmutable $end): bool
+    /**
+     * @param  list<array{int, int, int}>  $booked
+     * @param  Collection<int, Event>  $events
+     * @return array{int, int} free and total slots of the rink that day
+     */
+    private function countSlots(Rink $rink, CarbonImmutable $day, array $booked, Collection $events, CarbonImmutable $now): array
     {
-        $players = 0;
+        $block = max(60, $rink->time_block);
+        $closes = BookingRules::seconds($rink->time_end);
+        $free = 0;
+        $total = 0;
 
-        foreach ($dayBookings as [$bookedStart, $bookedEnd, $quantity]) {
-            if ($bookedStart < $end->format('H:i:s') && $bookedEnd > $start->format('H:i:s')) {
-                $players += $quantity;
+        for ($slotStart = BookingRules::seconds($rink->time_start); $slotStart < $closes; $slotStart += $block) {
+            $slotEnd = $slotStart + $block;
+            $total++;
+
+            if ($day->addSeconds($slotStart)->lessThanOrEqualTo($now)) {
+                continue;
+            }
+
+            $taken = $events->contains(fn (Event $event) => $event->datetime_start->lessThan($day->addSeconds($slotEnd))
+                && $event->datetime_end->greaterThan($day->addSeconds($slotStart))
+                && $event->covers($rink));
+
+            if ($taken) {
+                continue;
+            }
+
+            $players = 0;
+
+            foreach ($booked as [$bookedStart, $bookedEnd, $quantity]) {
+                if ($bookedStart < $slotEnd && $bookedEnd > $slotStart) {
+                    $players += $quantity;
+                }
+            }
+
+            if ($players < $rink->capacity && ! ($players > 0 && ! $rink->capacity_heterogenic)) {
+                $free++;
             }
         }
 
-        if ($players === 0) {
-            return false;
-        }
-
-        return ! $rink->capacity_heterogenic || $players >= $rink->capacity;
+        return [$free, $total];
     }
 }
