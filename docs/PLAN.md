@@ -278,13 +278,16 @@ an event, print the day sheet, reset a password) passes as a browser test. *(Pas
 tests/Browser/secretary-day.spec.js at both widths, and ClubSetupTest for the command and setup page.)*
 
 ### Phase 5: launch at LCE (≈ 1 week, plus a short trial)
-- [ ] Security check: go through section 6 point by point and run `composer audit`.
-- [ ] Deploy to InfinityFree with the zip build; set up LCE on the first-run page; upload Business Terms and
-  Privacy Policy.
+- [x] Security check: section 6 point by point, recorded in docs/SECURITY-CHECK.md; `composer audit`
+  clean; security-headers middleware and Dependabot added while checking.
+- [ ] Deploy to Afrihost with the zip build (`scripts/build-afrihost.sh`, verified) — LCE already runs
+  the Phase 1 build there, so this is an update upload plus **Run database updates**; upload Business
+  Terms and Privacy Policy under Settings > Documents.
 - [ ] Trial with the Secretary and a few members for 1–2 weeks, then invite everyone (WhatsApp invite
   button).
-- [ ] Backups: the Secretary or you download a backup from the admin panel each week (InfinityFree has no
-  scheduled jobs), and one restore is tested on a local copy.
+- [x] Backups: **Download backup** button on the admin panel's Maintenance page (SQL dump), with a
+  restore proven in BackupTest; the Secretary or you download one each week. AfriBackup runs besides
+  it (docs/DEPLOY-AFRIHOST.md).
 - [ ] Archive the `bowlsbuddy` repository on GitHub (read-only). It stays available as the reference and for
   its history.
 

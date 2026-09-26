@@ -87,9 +87,10 @@ InfinityFree build (see docs/DEPLOY.md).
 days. It is not shown in this cPanel until `hosting@afrihost.com` enables it. Files, email and whole folders can be restored from it to an earlier point; see Afrihost's help
 article "How to restore a backup using AfriBackup".
 
-Still download a database backup for each club (cPanel > Backup) weekly and before big changes, until it is
-confirmed that AfriBackup also restores the MySQL databases, and to keep a copy older than two weeks. The admin
-panel's Download backup button (Phase 5) will replace this download.
+Still download a database backup for each club weekly and before big changes, until it is
+confirmed that AfriBackup also restores the MySQL databases, and to keep a copy older than two weeks. Use the
+admin panel's **Maintenance > Download backup** button (an SQL dump; restore by importing it in phpMyAdmin),
+or cPanel > Backup.
 
 ## Troubleshooting
 

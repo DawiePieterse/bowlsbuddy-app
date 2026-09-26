@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
+use App\Services\DatabaseBackup;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -63,6 +64,20 @@ class Maintenance extends Page
                     Artisan::call('optimize:clear');
 
                     Notification::make()->title('Caches cleared')->success()->send();
+                }),
+
+            Action::make('downloadBackup')
+                ->label('Download backup')
+                ->icon(Heroicon::OutlinedArrowDownTray)
+                ->color('gray')
+                ->action(function () {
+                    $name = 'bowlsbuddy-backup-'.now()->format('Y-m-d-Hi').'.sql';
+
+                    return response()->streamDownload(function () {
+                        app(DatabaseBackup::class)->dump(function (string $chunk) {
+                            echo $chunk;
+                        });
+                    }, $name, ['Content-Type' => 'application/sql']);
                 }),
         ];
     }
