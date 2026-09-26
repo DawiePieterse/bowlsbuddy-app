@@ -242,9 +242,11 @@ new app's tests.
 **Done when:** CI is green, and the seeded app runs on InfinityFree.
 
 ### Phase 2: booking rules (≈ 1–2 weeks)
-- [ ] Reference values captured from the current app (5.3).
-- [ ] `BookingRules`, `GreenService` and greens-overview query, each with Pest tests, including the
-  concurrent-booking test.
+- [x] Reference values captured from the current app (5.3): docs/REFERENCE-RULES.md. The old app turned
+  out to be unmodified ep3-bs, so the reference is its code plus this plan's club rules.
+- [x] `BookingRules`, `GreenService` and greens-overview query (`GreensOverview`), plus `BookingService`
+  (locked, transactional creation), each with Pest tests, including the concurrent-booking tests
+  (tests/Concurrency, forked processes against MySQL).
 
 **Done when:** all rule tests pass and match the reference values.
 
