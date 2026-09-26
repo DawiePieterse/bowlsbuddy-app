@@ -1,315 +1,339 @@
 <?php
 
-use App\Models\Booking;
-use App\Models\Event;
 use App\Models\Rink;
 use App\Models\User;
+use App\Services\BookingRefusal;
 use App\Services\BookingRules;
+use App\Services\GreenService;
 use App\Support\Settings;
 use Database\Seeders\ClubSeeder;
 use Illuminate\Support\Carbon;
 
 /*
- * The booking rules (PLAN.md 5.3), tested against the reference values in docs/REFERENCE-RULES.md:
- * LCE seed, "now" pinned to Monday 2026-10-05 13:00.
+ * The booking rules of docs/PLAN.md, section 5.3, on the LCE setup. "Now" is Monday 5 October 2026, 09:00.
  */
 
 beforeEach(function () {
-    config(['club.admin_password' => 'a-good-password']);
-    Carbon::setTestNow('2026-10-05 13:00');
     $this->seed(ClubSeeder::class);
+    $this->travelTo(Carbon::parse('2026-10-05 09:00'));
 });
 
-function rules(): BookingRules
+function refusal(string $rink, string $start, ?User $user, int $players = 1, int $hours = 1): ?BookingRefusal
 {
-    return app(BookingRules::class);
+    [$from, $until] = slot($start, $hours);
+
+    return app(BookingRules::class)->refusal(rink($rink), $from, $until, $user, $players);
 }
 
-function rink(string $name = 'A-1'): Rink
-{
-    return Rink::query()->where('name', $name)->firstOrFail();
-}
+describe('rule 1: playing hours, slots and booking range', function () {
+    it('accepts a free slot', function () {
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull()
+            ->and(refusal('B-6', '2026-10-06 16:00', member()))->toBeNull();
+    });
 
-function member(string $email = 'member@example.com'): User
-{
-    $user = User::query()->firstOrCreate(
-        ['email' => $email],
-        ['alias' => 'Member', 'status' => 'enabled', 'pw' => 'a-good-password'],
-    );
+    it('lets visitors see a free slot as bookable', function () {
+        expect(refusal('A-1', '2026-10-06 12:00', null))->toBeNull();
+    });
 
-    $user->setMeta('firstname', 'Some');
-    $user->setMeta('lastname', 'Member');
+    it('refuses times outside the playing hours', function () {
+        expect(refusal('A-1', '2026-10-06 11:00', member()))->toBe(BookingRefusal::OutsidePlayingHours)
+            ->and(refusal('A-1', '2026-10-06 17:00', member()))->toBe(BookingRefusal::OutsidePlayingHours)
+            ->and(refusal('A-1', '2026-10-06 16:00', member(), hours: 2))->toBe(BookingRefusal::OutsidePlayingHours);
+    });
 
-    return $user;
-}
+    it('refuses anything but whole slots on the same day', function () {
+        [$start] = slot('2026-10-06 12:00');
+        $rules = app(BookingRules::class);
 
-function staff(): User
-{
-    $user = User::query()->firstOrCreate(
-        ['email' => 'assist@example.com'],
-        ['alias' => 'Assist', 'status' => 'assist', 'pw' => 'a-good-password'],
-    );
+        expect(refusal('A-1', '2026-10-06 12:30', member()))->toBe(BookingRefusal::InvalidTime)
+            ->and($rules->refusal(rink('A-1'), $start, $start->copy()->addMinutes(30), member()))->toBe(BookingRefusal::InvalidTime)
+            ->and($rules->refusal(rink('A-1'), $start, $start, member()))->toBe(BookingRefusal::InvalidTime)
+            ->and($rules->refusal(rink('A-1'), $start, $start->copy()->subHour(), member()))->toBe(BookingRefusal::InvalidTime)
+            ->and($rules->refusal(rink('A-1'), $start, $start->copy()->addDay(), member()))->toBe(BookingRefusal::InvalidTime);
+    });
 
-    $user->setMeta('allow.calendar.create-single-bookings', 'true');
-    $user->setMeta('allow.calendar.cancel-single-bookings', 'true');
+    it('refuses slots that are over, allowing up to half a slot after the start', function () {
+        $this->travelTo(Carbon::parse('2026-10-06 12:30'));
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull();
 
-    return $user;
-}
+        $this->travelTo(Carbon::parse('2026-10-06 12:31'));
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBe(BookingRefusal::InThePast)
+            ->and(refusal('A-1', '2026-10-05 16:00', member()))->toBe(BookingRefusal::InThePast)
+            ->and(refusal('A-1', '2026-10-06 13:00', member()))->toBeNull();
+    });
 
-/** @return array{Carbon\CarbonImmutable, Carbon\CarbonImmutable} */
-function slot(string $time, int $daysAhead = 1): array
-{
-    $start = Carbon::parse('2026-10-05 '.$time)->addDays($daysAhead)->toImmutable();
+    it('lets staff who see the past book it, and staff who see the data book earlier today', function () {
+        $this->travelTo(Carbon::parse('2026-10-06 15:00'));
 
-    return [$start, $start->addHour()];
-}
+        expect(refusal('A-1', '2026-10-06 12:00', staff('calendar.see-past')))->toBeNull()
+            ->and(refusal('A-1', '2026-10-05 12:00', staff('calendar.see-past')))->toBeNull()
+            ->and(refusal('A-1', '2026-10-06 12:00', staff('calendar.see-data')))->toBeNull()
+            ->and(refusal('A-1', '2026-10-05 12:00', staff('calendar.see-data')))->toBe(BookingRefusal::InThePast)
+            ->and(refusal('A-1', '2026-10-06 12:00', User::factory()->admin()->create()))->toBeNull();
+    });
 
-function bookSlot(User $user, string $time, int $daysAhead = 1, string $rinkName = 'A-1', int $quantity = 1): Booking
-{
-    [$start, $end] = slot($time, $daysAhead);
+    it('refuses dates more than range_book ahead, except for staff who create bookings', function () {
+        expect(refusal('A-1', '2026-10-19 12:00', member()))->toBe(BookingRefusal::TooFarAhead)
+            ->and(refusal('A-1', '2026-10-18 16:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-19 12:00', staff('calendar.create-single-bookings')))->toBeNull()
+            ->and(refusal('A-1', '2026-12-01 12:00', User::factory()->admin()->create()))->toBeNull();
+    });
 
-    $booking = Booking::query()->create([
-        'uid' => $user->uid,
-        'sid' => rink($rinkName)->sid,
-        'status' => 'single',
-        'visibility' => 'public',
-        'quantity' => $quantity,
+    it('refuses slots within the min_range_book lead time', function () {
+        rink('A-1')->update(['min_range_book' => 3 * 3600]);
+
+        expect(refusal('A-1', '2026-10-05 12:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-05 13:00', member()))->toBeNull();
+
+        $this->travelTo(Carbon::parse('2026-10-05 10:30'));
+
+        expect(refusal('A-1', '2026-10-05 12:00', member()))->toBe(BookingRefusal::TooShortNotice)
+            ->and(refusal('A-1', '2026-10-05 14:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-05 12:00', staff('calendar.see-past')))->toBe(BookingRefusal::TooShortNotice)
+            ->and(refusal('A-1', '2026-10-05 12:00', staff('calendar.see-past', 'calendar.create-single-bookings')))->toBeNull();
+    });
+
+    it('refuses more slots at once than time_block_bookable_max, except for staff', function () {
+        expect(refusal('A-1', '2026-10-06 12:00', member(), hours: 2))->toBe(BookingRefusal::TooLong)
+            ->and(refusal('A-1', '2026-10-06 12:00', staff('calendar.create-single-bookings'), hours: 2))->toBeNull();
+
+        rink('A-1')->update(['time_block_bookable_max' => null]);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member(), hours: 2))->toBeNull();
+    });
+
+    it('refuses disabled and read-only rinks, except to staff who create bookings', function (string $status) {
+        rink('A-1')->update(['status' => $status]);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBe(BookingRefusal::RinkUnavailable)
+            ->and(refusal('A-1', '2026-10-06 12:00', staff('calendar.create-single-bookings')))->toBeNull();
+    })->with(['disabled', 'readonly']);
+});
+
+describe('rule 2: players per rink', function () {
+    it('allows one booking per slot', function () {
+        booked(member(), 'A-1', '2026-10-06 12:00', players: 1);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBe(BookingRefusal::Occupied)
+            ->and(refusal('A-1', '2026-10-06 13:00', member()))->toBeNull()
+            ->and(refusal('A-2', '2026-10-06 12:00', member()))->toBeNull();
+    });
+
+    it('fills a mixed rink up to its capacity', function () {
+        rink('A-1')->update(['capacity_heterogenic' => true]);
+        booked(member(), 'A-1', '2026-10-06 12:00', players: 1);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-06 12:00', member(), players: 2))->toBe(BookingRefusal::TooManyPlayers);
+
+        booked(member(), 'A-1', '2026-10-06 12:00', players: 1);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBe(BookingRefusal::Occupied);
+    });
+
+    it('counts a booking over several slots in each of them', function () {
+        booked(member(), 'A-1', '2026-10-06 12:00', hours: 2);
+
+        expect(refusal('A-1', '2026-10-06 13:00', member()))->toBe(BookingRefusal::Occupied)
+            ->and(refusal('A-1', '2026-10-06 14:00', member()))->toBeNull();
+    });
+
+    it('checks the number of players', function () {
+        expect(refusal('A-1', '2026-10-06 12:00', member(), players: 2))->toBeNull()
+            ->and(refusal('A-1', '2026-10-06 12:00', member(), players: 3))->toBe(BookingRefusal::TooManyPlayers)
+            ->and(refusal('A-1', '2026-10-06 12:00', member(), players: 0))->toBe(BookingRefusal::InvalidPlayers);
+    });
+
+    it('ignores cancelled and private bookings', function () {
+        booked(member(), 'A-1', '2026-10-06 12:00', status: 'cancelled');
+        booked(member(), 'A-1', '2026-10-06 12:00', visibility: 'private');
+
+        expect(refusal('A-1', '2026-10-06 12:00', member(), players: 2))->toBeNull()
+            ->and(app(BookingRules::class)->playersBooked(rink('A-1'), ...slot('2026-10-06 12:00')))->toBe(0);
+    });
+});
+
+describe('rule 3: one rink per member per day', function () {
+    it('refuses a second booking on the same day, on any rink', function () {
+        $member = member();
+        booked($member, 'A-1', '2026-10-06 12:00');
+
+        expect(refusal('B-3', '2026-10-06 15:00', $member))->toBe(BookingRefusal::OneRinkPerDay)
+            ->and(refusal('B-3', '2026-10-07 15:00', $member))->toBeNull()
+            ->and(refusal('B-3', '2026-10-06 15:00', member()))->toBeNull();
+    });
+
+    it('does not count a cancelled booking', function () {
+        $member = member();
+        booked($member, 'A-1', '2026-10-06 12:00', status: 'cancelled');
+
+        expect(refusal('B-3', '2026-10-06 15:00', $member))->toBeNull();
+    });
+
+    it('does not apply to staff who create bookings', function () {
+        $secretary = User::factory()->admin()->create();
+        $assist = staff('calendar.create-single-bookings');
+        booked($secretary, 'A-1', '2026-10-06 12:00');
+        booked($assist, 'A-2', '2026-10-06 12:00');
+
+        expect(refusal('B-3', '2026-10-06 15:00', $secretary))->toBeNull()
+            ->and(refusal('B-3', '2026-10-06 15:00', $assist))->toBeNull();
+    });
+});
+
+describe('rule 4: closed greens', function () {
+    it('blocks every rink of a closed green for that day, for everyone', function () {
+        app(GreenService::class)->setClosed('A', Carbon::parse('2026-10-06'), true);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBe(BookingRefusal::GreenClosed)
+            ->and(refusal('A-6', '2026-10-06 16:00', User::factory()->admin()->create()))->toBe(BookingRefusal::GreenClosed)
+            ->and(refusal('B-1', '2026-10-06 12:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-07 12:00', member()))->toBeNull();
+
+        app(GreenService::class)->setClosed('A', Carbon::parse('2026-10-06'), false);
+
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull();
+    });
+});
+
+describe('rule 5: events', function () {
+    it('blocks the rink, green or all rinks the event is on', function (?string $on, array $blocked, array $free) {
+        blockedBy($on, '2026-10-06 12:00', '2026-10-06 14:00');
+
+        foreach ($blocked as $name) {
+            expect(refusal($name, '2026-10-06 13:00', member()))->toBe(BookingRefusal::Event);
+        }
+
+        foreach ($free as $name) {
+            expect(refusal($name, '2026-10-06 13:00', member()))->toBeNull();
+        }
+    })->with([
+        'one rink' => ['A-1', ['A-1'], ['A-2', 'B-1']],
+        'one green' => ['green:B', ['B-1', 'B-6'], ['A-1', 'A-6']],
+        'all rinks' => [null, ['A-1', 'B-6'], []],
     ]);
 
-    $booking->reservations()->create([
-        'date' => $start->format('Y-m-d'),
-        'time_start' => $start->format('H:i:s'),
-        'time_end' => $end->format('H:i:s'),
-    ]);
+    it('only blocks the slots the event overlaps', function () {
+        blockedBy(null, '2026-10-06 13:30', '2026-10-06 14:30');
 
-    return $booking;
-}
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-06 13:00', member()))->toBe(BookingRefusal::Event)
+            ->and(refusal('A-1', '2026-10-06 14:00', member()))->toBe(BookingRefusal::Event)
+            ->and(refusal('A-1', '2026-10-06 15:00', member()))->toBeNull();
+    });
 
-it('accepts a free slot on an open day', function () {
-    [$start, $end] = slot('14:00');
+    it('ignores disabled events', function () {
+        blockedBy(null, '2026-10-06 12:00', '2026-10-06 17:00', status: 'disabled');
 
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull();
+    });
 });
 
-it('refuses times outside the rink day', function (string $from, string $to) {
-    $day = Carbon::parse('2026-10-06')->toImmutable();
+describe('rule 6: hidden days', function () {
+    it('hides weekdays and dates from service.calendar.day-exceptions, and shows "+" dates anyway', function () {
+        app(Settings::class)->set(BookingRules::DAY_EXCEPTIONS_OPTION, "Sunday\n2026-10-07, 2026-10-08\n+2026-10-18");
 
-    $start = $day->setTimeFromTimeString($from);
-    $end = $day->setTimeFromTimeString($to);
+        expect(refusal('A-1', '2026-10-11 12:00', member()))->toBe(BookingRefusal::DayHidden)
+            ->and(refusal('A-1', '2026-10-07 12:00', member()))->toBe(BookingRefusal::DayHidden)
+            ->and(refusal('A-1', '2026-10-08 12:00', member()))->toBe(BookingRefusal::DayHidden)
+            ->and(refusal('A-1', '2026-10-18 12:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-06 12:00', member()))->toBeNull()
+            ->and(refusal('A-1', '2026-10-11 12:00', User::factory()->admin()->create()))->toBe(BookingRefusal::DayHidden);
+    });
 
-    expect(rules()->refusal(member(), rink(), $start, $end))->not->toBeNull();
-})->with([
-    'before opening' => ['11:00', '12:00'],
-    'past closing' => ['17:00', '18:00'],
-    'over closing' => ['16:30', '17:30'],
-    'backwards' => ['15:00', '14:00'],
-]);
-
-it('refuses a past day and a slot past its first half, keeps a slot within it', function () {
-    // Yesterday
-    [$start, $end] = slot('14:00', -1);
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBe('This time is already over.');
-
-    // Today 12:00, now 13:00: more than half the hour gone
-    [$start, $end] = slot('12:00', 0);
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBe('This time is already over.');
-
-    // Today 13:00 slot at 13:29: still within its first half hour
-    Carbon::setTestNow('2026-10-05 13:29');
-    [$start, $end] = slot('13:00', 0);
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
-
-    // The same slot one minute past the half
-    Carbon::setTestNow('2026-10-05 13:31');
-    expect(rules()->refusal(member(), rink(), $start, $end))->not->toBeNull();
+    it('hides nothing without day exceptions', function () {
+        expect(app(BookingRules::class)->isDayHidden(Carbon::parse('2026-10-11')))->toBeFalse();
+    });
 });
 
-it('lets a user with calendar.see-past book past slots', function () {
-    $admin = User::query()->where('email', 'secretary@example.com')->firstOrFail();
+describe('active booking limit', function () {
+    it('limits the bookings a member has open, from the club default, the rink or the member', function () {
+        $member = member();
+        booked($member, 'A-1', '2026-10-04 12:00');
+        booked($member, 'A-1', '2026-10-06 12:00');
+        booked($member, 'A-1', '2026-10-07 12:00', status: 'cancelled');
 
-    [$start, $end] = slot('12:00', 0);
+        expect(refusal('A-1', '2026-10-08 12:00', $member))->toBeNull();
 
-    expect(rules()->refusal($admin, rink(), $start, $end))->toBeNull();
+        app(Settings::class)->set(BookingRules::MAX_ACTIVE_BOOKINGS_OPTION, '1');
+        expect(refusal('A-1', '2026-10-08 12:00', $member))->toBe(BookingRefusal::MaxActiveBookings);
+
+        rink('A-1')->update(['max_active_bookings' => 2]);
+        expect(refusal('A-1', '2026-10-08 12:00', $member))->toBeNull()
+            ->and(refusal('A-2', '2026-10-08 12:00', $member))->toBe(BookingRefusal::MaxActiveBookings);
+
+        $member->setMeta('max_active_bookings', '1');
+        expect(refusal('A-1', '2026-10-08 12:00', $member->fresh()))->toBe(BookingRefusal::MaxActiveBookings);
+    });
 });
 
-it('enforces the 14 day booking window on the clock, staff exempt', function () {
-    // 12:00 slot 14 days ahead, now 13:00: within now + 14 days
-    [$start, $end] = slot('12:00', 14);
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
+describe('when several rules apply', function () {
+    it('gives the same reason the original app shows', function () {
+        $member = member();
+        booked($member, 'B-1', '2026-10-06 12:00');
+        booked(member(), 'A-1', '2026-10-06 12:00');
+        blockedBy('A-2', '2026-10-06 12:00', '2026-10-06 13:00');
 
-    // 14:00 slot 14 days ahead: an hour past now + 14 days
-    [$start, $end] = slot('14:00', 14);
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBe('This date is too far ahead to book.');
+        // Occupied and an event: "occupied".
+        blockedBy('A-1', '2026-10-06 12:00', '2026-10-06 13:00');
+        expect(refusal('A-1', '2026-10-06 12:00', member()))->toBe(BookingRefusal::Occupied)
+            // Already booked that day and an event: "one rink per day".
+            ->and(refusal('A-2', '2026-10-06 12:00', $member))->toBe(BookingRefusal::OneRinkPerDay);
 
-    // 15 days ahead
-    [$start, $end] = slot('12:00', 15);
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBe('This date is too far ahead to book.')
-        ->and(rules()->refusal(staff(), rink(), $start, $end))->toBeNull();
+        // Closed green over everything else.
+        app(GreenService::class)->setClosed('A', Carbon::parse('2026-10-06'), true);
+        expect(refusal('A-1', '2026-10-06 12:00', $member))->toBe(BookingRefusal::GreenClosed);
+    });
 });
 
-it('refuses a slot already booked, capacity not heterogenic', function () {
-    bookSlot(member('other@example.com'), '14:00');
+describe('rule 7: cancelling', function () {
+    it('lets members cancel their own booking until range_cancel hours before it starts', function () {
+        $member = member();
+        $booking = booked($member, 'A-1', '2026-10-06 12:00');
+        $rules = app(BookingRules::class);
 
-    [$start, $end] = slot('14:00');
+        $this->travelTo(Carbon::parse('2026-10-05 11:59'));
+        expect($rules->canCancel($booking, $member))->toBeTrue()
+            ->and($rules->canCancel($booking, member()))->toBeFalse()
+            ->and($rules->canCancel($booking, null))->toBeFalse();
 
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBe('This rink is already booked for this time.');
+        $this->travelTo(Carbon::parse('2026-10-05 12:00'));
+        expect($rules->canCancel($booking, $member))->toBeFalse();
+    });
+
+    it('lets staff with the privilege cancel any booking at any time', function () {
+        $booking = booked(member(), 'A-1', '2026-10-05 12:00');
+        $rules = app(BookingRules::class);
+
+        expect($rules->canCancel($booking, staff('calendar.cancel-single-bookings')))->toBeTrue()
+            ->and($rules->canCancel($booking, User::factory()->admin()->create()))->toBeTrue()
+            ->and($rules->canCancel($booking, staff('calendar.create-single-bookings')))->toBeFalse();
+    });
+
+    it('does not let members cancel when the rink has no cancel range, or twice', function () {
+        $member = member();
+        $cancelled = booked($member, 'A-1', '2026-10-10 12:00', status: 'cancelled');
+        $booking = booked($member, 'A-2', '2026-10-10 12:00');
+        $rules = app(BookingRules::class);
+
+        expect($rules->canCancel($cancelled, $member))->toBeFalse();
+
+        Rink::query()->where('name', 'A-2')->update(['range_cancel' => null]);
+
+        expect($rules->canCancel($booking->fresh(), $member))->toBeFalse();
+    });
 });
 
-it('accepts the neighbouring slot and the same time on another rink', function () {
-    bookSlot(member('other@example.com'), '14:00');
+describe('rule 10: privileges', function () {
+    it('gives admins every privilege and assists only those granted to them', function () {
+        $admin = User::factory()->admin()->create();
+        $assist = staff('calendar.see-data');
+        $member = member();
 
-    [$start, $end] = slot('13:00');
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
-
-    [$start, $end] = slot('14:00');
-    expect(rules()->refusal(member(), rink('A-2'), $start, $end))->toBeNull();
-});
-
-it('ignores cancelled bookings when checking occupancy', function () {
-    bookSlot(member('other@example.com'), '14:00')->update(['status' => 'cancelled']);
-
-    [$start, $end] = slot('14:00');
-
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
-});
-
-it('refuses more players than the rink capacity', function () {
-    [$start, $end] = slot('14:00');
-
-    expect(rules()->refusal(member(), rink(), $start, $end, 3))->toBe('Too many players for this rink.')
-        ->and(rules()->refusal(member(), rink(), $start, $end, 2))->toBeNull()
-        ->and(rules()->refusal(member(), rink(), $start, $end, 0))->toBe('The number of players is invalid.');
-});
-
-it('allows one rink per member per day, staff exempt', function () {
-    $user = member();
-    bookSlot($user, '14:00', 1, 'A-1');
-
-    // Another rink, same day
-    [$start, $end] = slot('15:00');
-    expect(rules()->refusal($user, rink('B-3'), $start, $end))->toBe('You already have a booking on this day.');
-
-    // Another day
-    [$start, $end] = slot('15:00', 2);
-    expect(rules()->refusal($user, rink('B-3'), $start, $end))->toBeNull();
-
-    // Staff book for members regardless
-    $staff = staff();
-    bookSlot($staff, '14:00', 1, 'A-2');
-    [$start, $end] = slot('15:00');
-    expect(rules()->refusal($staff, rink('B-3'), $start, $end))->toBeNull();
-});
-
-it('does not count a cancelled booking for one rink per day', function () {
-    $user = member();
-    bookSlot($user, '14:00')->update(['status' => 'cancelled']);
-
-    [$start, $end] = slot('15:00');
-
-    expect(rules()->refusal($user, rink('B-3'), $start, $end))->toBeNull();
-});
-
-it('blocks a rink, a green or all rinks with an event', function () {
-    [$start, $end] = slot('14:00');
-
-    $event = Event::query()->create([
-        'sid' => rink('A-1')->sid,
-        'status' => 'enabled',
-        'datetime_start' => $start->subHour(),
-        'datetime_end' => $end->addHour(),
-    ]);
-    $event->setMeta('name', 'Club competition');
-
-    expect(rules()->refusal(member(), rink('A-1'), $start, $end))->toBe('This time is blocked by an event.')
-        ->and(rules()->refusal(member(), rink('A-2'), $start, $end))->toBeNull();
-
-    // Green event: sid null, meta green
-    $event->update(['sid' => null]);
-    $event->setMeta('green', 'A');
-
-    expect(rules()->refusal(member(), rink('A-2'), $start, $end))->toBe('This time is blocked by an event.')
-        ->and(rules()->refusal(member(), rink('B-1'), $start, $end))->toBeNull();
-
-    // All rinks: sid null, no green
-    $event->setMeta('green', null);
-
-    expect(rules()->refusal(member(), rink('B-1'), $start, $end))->toBe('This time is blocked by an event.');
-});
-
-it('ignores disabled events', function () {
-    [$start, $end] = slot('14:00');
-
-    Event::query()->create([
-        'sid' => null,
-        'status' => 'disabled',
-        'datetime_start' => $start->subHour(),
-        'datetime_end' => $end->addHour(),
-    ]);
-
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
-});
-
-it('refuses a rink on a closed green', function () {
-    [$start, $end] = slot('14:00');
-
-    app(Settings::class)->set('service.greens.closed', $start->format('Y-m-d').':A');
-
-    expect(rules()->refusal(member(), rink('A-1'), $start, $end))->toBe('Green A is closed on this day.')
-        ->and(rules()->refusal(member(), rink('B-1'), $start, $end))->toBeNull();
-});
-
-it('refuses hidden days, and lets a + entry re-allow one', function () {
-    [$start, $end] = slot('14:00'); // a Tuesday
-
-    app(Settings::class)->set('service.calendar.day-exceptions', 'Tuesday');
-
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBe('This day is not open for booking.');
-
-    app(Settings::class)->set('service.calendar.day-exceptions', "Tuesday\n+".$start->format('Y-m-d'));
-
-    expect(rules()->refusal(member(), rink(), $start, $end))->toBeNull();
-});
-
-it('refuses a disabled rink for members but not staff', function () {
-    rink('A-1')->update(['status' => 'disabled']);
-
-    [$start, $end] = slot('14:00');
-
-    expect(rules()->refusal(member(), rink('A-1'), $start, $end))->toBe('This rink is currently not available.')
-        ->and(rules()->refusal(staff(), rink('A-1'), $start, $end))->toBeNull();
-});
-
-it('limits open bookings when max_active_bookings is set', function () {
-    $user = member();
-    $user->setMeta('max_active_bookings', '1');
-
-    bookSlot($user, '14:00', 1);
-
-    [$start, $end] = slot('14:00', 2);
-
-    expect(rules()->refusal($user, rink('A-2'), $start, $end))->toBe('You can only have 1 open booking(s) at the same time.');
-});
-
-it('lets the owner cancel before the cut-off only, staff any time', function () {
-    $user = member();
-
-    // Tomorrow 14:00, now Monday 13:00: more than 24 hours ahead
-    $booking = bookSlot($user, '14:00', 1);
-    expect(rules()->isCancellable($user, $booking))->toBeTrue();
-
-    // Less than 24 hours ahead
-    Carbon::setTestNow('2026-10-05 15:00');
-    expect(rules()->isCancellable($user, $booking))->toBeFalse()
-        ->and(rules()->isCancellable(staff(), $booking))->toBeTrue()
-        ->and(rules()->isCancellable(member('other@example.com'), $booking))->toBeFalse()
-        ->and(rules()->isCancellable(null, $booking))->toBeFalse();
-});
-
-it('does not let the owner cancel when the rink has no cancel range', function () {
-    $user = member();
-    rink('A-1')->update(['range_cancel' => 0]);
-
-    $booking = bookSlot($user, '14:00', 5);
-
-    expect(rules()->isCancellable($user, $booking))->toBeFalse();
+        foreach (array_keys(User::PRIVILEGES) as $privilege) {
+            expect($admin->hasPrivilege($privilege))->toBeTrue()
+                ->and($member->hasPrivilege($privilege))->toBeFalse()
+                ->and($assist->hasPrivilege($privilege))->toBe($privilege === 'calendar.see-data');
+        }
+    });
 });

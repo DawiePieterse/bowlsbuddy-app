@@ -1,81 +1,50 @@
 <?php
 
+use App\Models\Rink;
 use App\Services\GreenService;
 use App\Support\Settings;
 use Database\Seeders\ClubSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function () {
-    config(['club.admin_password' => 'a-good-password']);
-    Carbon::setTestNow('2026-10-05 13:00'); // a Monday
     $this->seed(ClubSeeder::class);
+    $this->travelTo(Carbon::parse('2026-10-05 09:00'));
 });
 
-function greens(): GreenService
-{
-    return app(GreenService::class);
-}
+it('groups the visible rinks by green, in natural order', function () {
+    Rink::query()->create(rink('A-1')->only([
+        'capacity', 'capacity_heterogenic', 'time_start', 'time_end', 'time_block', 'time_block_bookable',
+    ]) + ['name' => 'A-10']);
+    rink('B-6')->update(['status' => 'disabled']);
 
-it('lists the greens from the rink names', function () {
-    expect(greens()->greens())->toBe(['A', 'B']);
+    $greens = app(GreenService::class)->greens();
+
+    expect(array_keys($greens))->toBe(['A', 'B'])
+        ->and($greens['A']->pluck('name')->all())->toBe(['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'A-10'])
+        ->and($greens['B']->pluck('name')->all())->toBe(['B-1', 'B-2', 'B-3', 'B-4', 'B-5']);
 });
 
-it('closes and reopens a green per day', function () {
-    $service = greens();
-    $day = Carbon::parse('2026-10-06');
+it('opens and closes greens per day and stores them as the original app did', function () {
+    $greens = app(GreenService::class);
 
-    expect($service->isClosed('A', $day))->toBeFalse();
+    $greens->setClosed('B', Carbon::parse('2026-10-07'), true);
+    $greens->setClosed('A', Carbon::parse('2026-10-06'), true);
 
-    $service->close('A', $day);
+    expect(app(Settings::class)->get(GreenService::CLOSED_OPTION))->toBe("2026-10-06:A\n2026-10-07:B")
+        ->and($greens->isClosed('A', Carbon::parse('2026-10-06')))->toBeTrue()
+        ->and($greens->isClosed('B', Carbon::parse('2026-10-06')))->toBeFalse()
+        ->and($greens->isRinkClosed(rink('B-2'), Carbon::parse('2026-10-07')))->toBeTrue()
+        ->and($greens->closedOn(['A', 'B'], Carbon::parse('2026-10-06')))->toBe(['A' => true, 'B' => false]);
 
-    expect($service->isClosed('A', $day))->toBeTrue()
-        ->and($service->isClosed('B', $day))->toBeFalse()
-        ->and($service->isClosed('A', $day->copy()->addDay()))->toBeFalse()
-        ->and(app(Settings::class)->get('service.greens.closed'))->toBe('2026-10-06:A');
+    $greens->setClosed('A', Carbon::parse('2026-10-06'), false);
 
-    $service->close('B', $day);
-    $service->close('A', $day); // twice is once
-
-    expect($service->closedGreens($day))->toBe(['A', 'B'])
-        ->and(app(Settings::class)->get('service.greens.closed'))->toBe("2026-10-06:A\n2026-10-06:B");
-
-    $service->open('A', $day);
-
-    expect($service->isClosed('A', $day))->toBeFalse()
-        ->and($service->isClosed('B', $day))->toBeTrue();
+    expect(app(Settings::class)->get(GreenService::CLOSED_OPTION))->toBe('2026-10-07:B');
 });
 
-it('reads closed greens the setting stores, in either separator', function () {
-    app(Settings::class)->set('service.greens.closed', "2026-10-06:A,2026-10-07:B\n2026-10-06:B");
+it('forgets closures of past days when a green is opened or closed', function () {
+    app(Settings::class)->set(GreenService::CLOSED_OPTION, "2026-10-01:A\r\n2026-10-05:B\n");
 
-    expect(greens()->closedGreens(Carbon::parse('2026-10-06')))->toBe(['A', 'B'])
-        ->and(greens()->closedGreens(Carbon::parse('2026-10-07')))->toBe(['B']);
-});
+    app(GreenService::class)->setClosed('A', Carbon::parse('2026-10-09'), true);
 
-it('hides weekdays and dates, with + entries as exceptions', function () {
-    $service = greens();
-    app(Settings::class)->set('service.calendar.day-exceptions', "Tuesday, 2026-10-08\n+2026-10-13");
-
-    expect($service->isHiddenDay(Carbon::parse('2026-10-06')))->toBeTrue()   // a Tuesday
-        ->and($service->isHiddenDay(Carbon::parse('2026-10-08')))->toBeTrue()  // the date
-        ->and($service->isHiddenDay(Carbon::parse('2026-10-07')))->toBeFalse()
-        ->and($service->isHiddenDay(Carbon::parse('2026-10-13')))->toBeFalse(); // Tuesday, but re-allowed
-});
-
-it('lists the next playing days, skipping hidden ones', function () {
-    app(Settings::class)->set('service.calendar.day-exceptions', 'Tuesday,Thursday,Saturday,Sunday');
-
-    $days = greens()->playingDays(4);
-
-    expect(array_map(fn ($day) => $day->format('Y-m-d D'), $days))
-        ->toBe(['2026-10-05 Mon', '2026-10-07 Wed', '2026-10-09 Fri', '2026-10-12 Mon']);
-});
-
-it('gives up on an exception list hiding every day', function () {
-    app(Settings::class)->set(
-        'service.calendar.day-exceptions',
-        'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-    );
-
-    expect(greens()->playingDays(14))->toBe([]);
+    expect(app(Settings::class)->get(GreenService::CLOSED_OPTION))->toBe("2026-10-05:B\n2026-10-09:A");
 });

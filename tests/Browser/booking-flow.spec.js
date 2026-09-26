@@ -82,5 +82,5 @@ test('a second booking on the same day is refused', async ({ page }, testInfo) =
 
     // The same slot straight away again: the form refuses it (occupied comes before one-per-day)
     await page.goto(slotUrl);
-    await expect(page.getByText('This rink is already booked for this time.')).toBeVisible();
+    await expect(page.getByText('This rink is already occupied.')).toBeVisible();
 });

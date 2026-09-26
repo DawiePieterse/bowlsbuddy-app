@@ -57,9 +57,9 @@ class EventResource extends Resource
                     ->live()
                     ->required(),
                 Select::make('green')
-                    ->options(fn (): array => array_combine(
-                        app(GreenService::class)->greens(),
-                        array_map(fn (string $green) => 'Green '.$green, app(GreenService::class)->greens()),
+                    ->options(fn (): array => array_map(
+                        fn (string $green) => 'Green '.$green,
+                        array_combine(array_keys(app(GreenService::class)->greens()), array_keys(app(GreenService::class)->greens())),
                     ))
                     ->visible(fn (Get $get): bool => $get('scope') === 'green')
                     ->requiredIf('scope', 'green'),

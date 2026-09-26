@@ -15,18 +15,19 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
         th, td { border: 1px solid #999; padding: 6px 8px; text-align: center; height: 34px; vertical-align: middle; }
         th { background: #eee; }
-        td.state-event { background: #eadcf5; }
-        td.state-closed { background: #f6dada; }
+        td.has-event { background: #eadcf5; }
         .print-button { margin: 16px 0; padding: 10px 18px; font-size: 15px; }
         @media print { .print-button { display: none; } body { margin: 8mm; } }
     </style>
 </head>
 <body>
+    @php($time = fn (int $seconds) => sprintf('%02d:%02d', intdiv($seconds, 3600), intdiv($seconds % 3600, 60)))
+
     <div class="top">
         <div>
             <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
             <p class="sub">{{ app(\App\Support\Settings::class)->get('client.name.full') }} &middot; day sheet</p>
-            @if ($closed)
+            @if ($sheet['closed'])
                 <p class="sub"><strong>Green {{ $green }} is closed on this day.</strong></p>
             @endif
         </div>
@@ -42,22 +43,28 @@
         <thead>
             <tr>
                 <th>Time</th>
-                @foreach ($rinks as $rink)
-                    <th>{{ $rink->name }}</th>
+                @foreach ($sheet['rinks'] as $row)
+                    <th>{{ $row['rink']->name }}</th>
                 @endforeach
             </tr>
         </thead>
         <tbody>
-            @foreach ($grid as $row)
+            @foreach ($sheet['slots'] as $index => [$from, $until])
                 <tr>
-                    <th>{{ $row['time'] }}</th>
-                    @foreach ($row['cells'] as $cell)
-                        <td class="state-{{ $cell['state'] }}">
-                            @if (in_array($cell['state'], ['own', 'booked'], true))
-                                {{ $cell['label'] }}
-                            @elseif ($cell['state'] === 'event')
-                                {{ $cell['label'] }}
-                            @elseif ($cell['state'] === 'closed')
+                    <th>{{ $time($from) }}-{{ $time($until) }}</th>
+                    @foreach ($sheet['rinks'] as $row)
+                        @php($cell = $row['cells'][$index])
+                        <td @class(['has-event' => $cell['events'] !== []])>
+                            @foreach ($cell['events'] as $eventName)
+                                {{ $eventName }}@if (! $loop->last || $cell['bookings']), @endif
+                            @endforeach
+                            @foreach ($cell['bookings'] as $booking)
+                                {{ implode(', ', array_merge(
+                                    [trim($booking->user->firstName().' '.$booking->user->lastName()) ?: $booking->user->alias],
+                                    $booking->playerNames(),
+                                )) }}@if (! $loop->last), @endif
+                            @endforeach
+                            @if ($sheet['closed'] && ! $cell['events'] && ! $cell['bookings'])
                                 Closed
                             @endif
                         </td>

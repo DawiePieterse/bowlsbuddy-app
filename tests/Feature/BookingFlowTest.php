@@ -40,7 +40,7 @@ it('shows the refusal instead of the form on an unbookable slot', function () {
     $this->actingAs($other)
         ->get('/book?rink='.$this->rink->sid.'&start=2026-10-06 14:00')
         ->assertOk()
-        ->assertSee('This rink is already booked for this time.')
+        ->assertSee('This rink is already occupied.')
         ->assertDontSee('Book this rink');
 });
 
@@ -132,7 +132,7 @@ it('turns a second rink on the same day into a friendly warning', function () {
             'players' => 1,
         ])
         ->assertRedirect('/book?rink='.$this->rink->sid.'&start=2026-10-06 15:00')
-        ->assertSessionHas('warning', 'You already have a booking on this day.');
+        ->assertSessionHas('warning', 'You can only book one rink per day. You already have a booking on this day.');
 
     expect(Booking::query()->count())->toBe(1);
 });

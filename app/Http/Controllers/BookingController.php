@@ -24,7 +24,7 @@ class BookingController extends Controller
     {
         [$rink, $start, $end] = $this->slotFromRequest($request);
 
-        $reason = $rules->refusal($request->user(), $rink, $start, $end);
+        $reason = $rules->refusal($rink, $start, $end, $request->user())?->message();
 
         return view('bookings.create', [
             'rink' => $rink,
@@ -58,12 +58,12 @@ class BookingController extends Controller
         }
 
         try {
-            $booking = $service->create(
+            $booking = $service->book(
                 $request->user(),
                 $rink,
                 $start,
                 $end,
-                quantity: (int) $input['players'],
+                players: (int) $input['players'],
                 playerNames: (int) $input['players'] === 2 ? [$partner] : [],
             );
         } catch (BookingRefused $refused) {
@@ -120,7 +120,7 @@ class BookingController extends Controller
         return view('bookings.index', [
             'bookings' => $bookings,
             'cancellable' => $bookings->mapWithKeys(fn (Booking $booking) => [
-                $booking->bid => $rules->isCancellable($request->user(), $booking),
+                $booking->bid => $rules->canCancel($booking, $request->user()),
             ]),
         ]);
     }
@@ -133,7 +133,7 @@ class BookingController extends Controller
         );
 
         try {
-            $service->cancel($request->user(), $booking);
+            $service->cancel($booking, $request->user());
         } catch (BookingRefused $refused) {
             return back()->with('warning', $refused->getMessage());
         }
