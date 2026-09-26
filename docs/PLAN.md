@@ -196,27 +196,27 @@ new app's tests.
 ## 7. Feature checklist (definition of done)
 
 **Members**
-- [ ] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
-- [ ] Log in and log out; "forgot password" page pointing to the Secretary
-- [ ] Greens overview: 14 playing days, free slots, closed (red), events (purple)
-- [ ] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
-- [ ] Book a slot: 1–2 players, partner's name, rules acceptance, one-rink-per-day message
-- [ ] WhatsApp share after booking and from the booking pop-up
-- [ ] Cancel own booking before the cut-off
-- [ ] My bookings; My account (change email or password, delete account, download my data)
-- [ ] Info page, help page, Business Terms and Privacy Policy PDFs
+- [x] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
+- [x] Log in and log out; "forgot password" page pointing to the Secretary
+- [x] Greens overview: 14 playing days, free slots, closed (red), events (purple)
+- [x] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
+- [x] Book a slot: 1–2 players, partner's name, rules acceptance, one-rink-per-day message
+- [x] WhatsApp share after booking and from the booking pop-up
+- [x] Cancel own booking before the cut-off
+- [x] My bookings; My account (change email or password, delete account, download my data)
+- [x] Info page, help page, Business Terms and Privacy Policy PDFs
 
 **Secretary / admin**
-- [ ] Open or close a green per day
-- [ ] Invite members via WhatsApp
-- [ ] Printable day sheet with QR code to live bookings
-- [ ] Members: search, create, edit, activate, set a temporary password, privileges
-- [ ] Bookings: list, create for a member, edit, cancel, delete
-- [ ] Events: for a rink, a green or all rinks; list, edit, delete
-- [ ] Settings: names and text, info and help pages, rinks, behaviour, terms and privacy uploads
+- [x] Open or close a green per day
+- [x] Invite members via WhatsApp
+- [x] Printable day sheet with QR code to live bookings
+- [x] Members: search, create, edit, activate, set a temporary password, privileges
+- [x] Bookings: list, create for a member, edit, cancel, delete
+- [x] Events: for a rink, a green or all rinks; list, edit, delete
+- [x] Settings: names and text, info and help pages, rinks, behaviour, terms and privacy uploads
 
 **New club setup**
-- [ ] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
+- [x] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
   slot length and players per rink, then creates everything
 
 ---
@@ -242,39 +242,52 @@ new app's tests.
 **Done when:** CI is green, and the seeded app runs on InfinityFree.
 
 ### Phase 2: booking rules (≈ 1–2 weeks)
-- [ ] Reference values captured from the current app (5.3).
-- [ ] `BookingRules`, `GreenService` and greens-overview query, each with Pest tests, including the
-  concurrent-booking test.
+- [x] Reference values captured from the current app (5.3): docs/REFERENCE-RULES.md. The old app turned
+  out to be unmodified ep3-bs, so the reference is its code plus this plan's club rules.
+- [x] `BookingRules`, `GreenService` and greens-overview query (`GreensOverview`), plus `BookingService`
+  (locked, transactional creation), each with Pest tests, including the concurrent-booking tests
+  (tests/Concurrency, forked processes against MySQL).
 
 **Done when:** all rule tests pass and match the reference values.
 
 ### Phase 3: member pages (≈ 2 weeks)
-- [ ] Layout and CSS carried over (`public/css`, `public/css-client/default.css`).
-- [ ] Every "Members" item in section 7.
+- [x] Layout and CSS: Phase 1's clean layout was kept and extended (`public/css/app.css`) instead of
+  carrying over the old jQuery-era stylesheet — the old app never ran live, so there is no look
+  members know. The plan's booking colours are honoured: own bookings green, closed greens red,
+  events purple.
+- [x] Every "Members" item in section 7 (server-rendered Blade; the booking pop-up became a booking
+  page, which needs no JavaScript).
 
-**Done when:** Playwright tests pass for the booking flow at phone (390 px) and desktop (1200 px) widths.
+**Done when:** Playwright tests pass for the booking flow at phone (390 px) and desktop (1200 px)
+widths. *(Passing: `scripts/e2e.sh`, tests/Browser, both widths.)*
 
 ### Phase 4: Secretary, admin and setup (≈ 1 week)
-- [ ] Filament panel with access limited by privileges (`admin.see-menu` to enter, then per resource).
-- [ ] Filament resources: **Members** (with "activate" and "set temporary password" actions), **Bookings**,
-  **Events** (rink / Green A / Green B / all rinks selector), **Rinks**.
-- [ ] Filament settings pages: names and text, info and help pages, behaviour, terms and privacy uploads.
-- [ ] Green open/close, WhatsApp invite and day sheet on the greens page (custom, as today).
-- [ ] `club:create` command (for paid hosting), plus a **first-run setup page** asking the same questions,
-  shown only while there are no users (for InfinityFree, which has no command line).
-- [ ] Every "Secretary / admin" and "New club setup" item in section 7.
+- [x] Filament panel with access limited by privileges (`admin.see-menu` to enter, then per resource
+  through policies mapped to `admin.user` / `admin.booking` / `admin.event` / `admin.config`).
+- [x] Filament resources: **Members** (with "activate" and "set temporary password" actions), **Bookings**,
+  **Events** (rink / green / all rinks selector), **Rinks**.
+- [x] Filament settings page (tabs): names and text, info and help pages (sanitized on save), behaviour,
+  terms and privacy uploads.
+- [x] Green open/close, WhatsApp invite and day sheet (with QR code) on the greens pages.
+- [x] `club:create` command (for paid hosting), plus a **first-run setup page** asking the same questions,
+  shown only while there are no users (for hosts without a command line).
+- [x] Every "Secretary / admin" and "New club setup" item in section 7.
 
 **Done when:** a new club can be created with one command, and the Secretary's whole day (close a green, add
-an event, print the day sheet, reset a password) passes as a browser test.
+an event, print the day sheet, reset a password) passes as a browser test. *(Passing:
+tests/Browser/secretary-day.spec.js at both widths, and ClubSetupTest for the command and setup page.)*
 
 ### Phase 5: launch at LCE (≈ 1 week, plus a short trial)
-- [ ] Security check: go through section 6 point by point and run `composer audit`.
-- [ ] Deploy to InfinityFree with the zip build; set up LCE on the first-run page; upload Business Terms and
-  Privacy Policy.
+- [x] Security check: section 6 point by point, recorded in docs/SECURITY-CHECK.md; `composer audit`
+  clean; security-headers middleware and Dependabot added while checking.
+- [ ] Deploy to Afrihost with the zip build (`scripts/build-afrihost.sh`, verified) — LCE already runs
+  the Phase 1 build there, so this is an update upload plus **Run database updates**; upload Business
+  Terms and Privacy Policy under Settings > Documents.
 - [ ] Trial with the Secretary and a few members for 1–2 weeks, then invite everyone (WhatsApp invite
   button).
-- [ ] Backups: the Secretary or you download a backup from the admin panel each week (InfinityFree has no
-  scheduled jobs), and one restore is tested on a local copy.
+- [x] Backups: **Download backup** button on the admin panel's Maintenance page (SQL dump), with a
+  restore proven in BackupTest; the Secretary or you download one each week. AfriBackup runs besides
+  it (docs/DEPLOY-AFRIHOST.md).
 - [ ] Archive the `bowlsbuddy` repository on GitHub (read-only). It stays available as the reference and for
   its history.
 
