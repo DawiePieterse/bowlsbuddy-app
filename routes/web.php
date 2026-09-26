@@ -6,10 +6,21 @@ use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\GreensController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\SetupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [GreensController::class, 'index'])->name('home');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/greens/{green}/{date}/sheet', [GreensController::class, 'sheet'])->name('greens.sheet');
+    Route::post('/greens/{green}/{date}/close', [GreensController::class, 'close'])->name('greens.close');
+    Route::post('/greens/{green}/{date}/open', [GreensController::class, 'open'])->name('greens.open');
+});
+
 Route::get('/greens/{green}/{date?}', [GreensController::class, 'show'])->name('greens.show');
+
+Route::get('/setup', [SetupController::class, 'create'])->name('setup');
+Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
 
 Route::view('/info', 'pages.info')->name('info');
 Route::view('/help', 'pages.help')->name('help');

@@ -207,16 +207,16 @@ new app's tests.
 - [x] Info page, help page, Business Terms and Privacy Policy PDFs
 
 **Secretary / admin**
-- [ ] Open or close a green per day
-- [ ] Invite members via WhatsApp
-- [ ] Printable day sheet with QR code to live bookings
-- [ ] Members: search, create, edit, activate, set a temporary password, privileges
-- [ ] Bookings: list, create for a member, edit, cancel, delete
-- [ ] Events: for a rink, a green or all rinks; list, edit, delete
-- [ ] Settings: names and text, info and help pages, rinks, behaviour, terms and privacy uploads
+- [x] Open or close a green per day
+- [x] Invite members via WhatsApp
+- [x] Printable day sheet with QR code to live bookings
+- [x] Members: search, create, edit, activate, set a temporary password, privileges
+- [x] Bookings: list, create for a member, edit, cancel, delete
+- [x] Events: for a rink, a green or all rinks; list, edit, delete
+- [x] Settings: names and text, info and help pages, rinks, behaviour, terms and privacy uploads
 
 **New club setup**
-- [ ] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
+- [x] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
   slot length and players per rink, then creates everything
 
 ---
@@ -262,17 +262,20 @@ new app's tests.
 widths. *(Passing: `scripts/e2e.sh`, tests/Browser, both widths.)*
 
 ### Phase 4: Secretary, admin and setup (≈ 1 week)
-- [ ] Filament panel with access limited by privileges (`admin.see-menu` to enter, then per resource).
-- [ ] Filament resources: **Members** (with "activate" and "set temporary password" actions), **Bookings**,
-  **Events** (rink / Green A / Green B / all rinks selector), **Rinks**.
-- [ ] Filament settings pages: names and text, info and help pages, behaviour, terms and privacy uploads.
-- [ ] Green open/close, WhatsApp invite and day sheet on the greens page (custom, as today).
-- [ ] `club:create` command (for paid hosting), plus a **first-run setup page** asking the same questions,
-  shown only while there are no users (for InfinityFree, which has no command line).
-- [ ] Every "Secretary / admin" and "New club setup" item in section 7.
+- [x] Filament panel with access limited by privileges (`admin.see-menu` to enter, then per resource
+  through policies mapped to `admin.user` / `admin.booking` / `admin.event` / `admin.config`).
+- [x] Filament resources: **Members** (with "activate" and "set temporary password" actions), **Bookings**,
+  **Events** (rink / green / all rinks selector), **Rinks**.
+- [x] Filament settings page (tabs): names and text, info and help pages (sanitized on save), behaviour,
+  terms and privacy uploads.
+- [x] Green open/close, WhatsApp invite and day sheet (with QR code) on the greens pages.
+- [x] `club:create` command (for paid hosting), plus a **first-run setup page** asking the same questions,
+  shown only while there are no users (for hosts without a command line).
+- [x] Every "Secretary / admin" and "New club setup" item in section 7.
 
 **Done when:** a new club can be created with one command, and the Secretary's whole day (close a green, add
-an event, print the day sheet, reset a password) passes as a browser test.
+an event, print the day sheet, reset a password) passes as a browser test. *(Passing:
+tests/Browser/secretary-day.spec.js at both widths, and ClubSetupTest for the command and setup page.)*
 
 ### Phase 5: launch at LCE (≈ 1 week, plus a short trial)
 - [ ] Security check: go through section 6 point by point and run `composer audit`.

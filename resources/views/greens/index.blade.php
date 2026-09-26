@@ -5,6 +5,14 @@
         <h1>Greens</h1>
         <p class="muted">The next 14 playing days. Tap a green to see its rinks and book a slot.</p>
 
+        @auth
+            @if (auth()->user()->hasPrivilege('admin.user'))
+                @php($inviteText = 'Join '.app(\App\Support\Settings::class)->get('client.name.full', 'our club').' on Bowls Buddy and book your practice rink online: '.route('register'))
+                <p><a class="button whatsapp" style="margin-top: 0;" target="_blank" rel="noopener"
+                      href="https://wa.me/?text={{ rawurlencode($inviteText) }}">Invite members via WhatsApp</a></p>
+            @endif
+        @endauth
+
         @foreach ($days as $day)
             <div class="overview-day">
                 <div class="date">{{ $day['date']->format('D j M') }}</div>

@@ -26,6 +26,27 @@
             <div class="flash warning">Green {{ $green }} is closed on this day.</div>
         @endif
 
+        @auth
+            @if (auth()->user()->hasPrivilege('admin.event'))
+                <div class="calendar-nav">
+                    @if ($closed)
+                        <form method="POST" action="{{ route('greens.open', [$green, $day->format('Y-m-d')]) }}">
+                            @csrf
+                            <button type="submit" class="subtle" style="margin-top: 0;">Open green {{ $green }} on this day</button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('greens.close', [$green, $day->format('Y-m-d')]) }}"
+                              onsubmit="return confirm('Close green {{ $green }} on {{ $day->format('D j M') }}?');">
+                            @csrf
+                            <button type="submit" class="danger" style="margin-top: 0;">Close green {{ $green }} on this day</button>
+                        </form>
+                    @endif
+                    <a class="button subtle" style="margin-top: 0;" target="_blank"
+                       href="{{ route('greens.sheet', [$green, $day->format('Y-m-d')]) }}">Day sheet</a>
+                </div>
+            @endif
+        @endauth
+
         @guest
             <p class="muted"><a href="{{ route('login') }}">Log in</a> to book a rink and see who is playing.</p>
         @endguest

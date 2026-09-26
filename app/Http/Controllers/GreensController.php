@@ -6,10 +6,15 @@ use App\Models\Event;
 use App\Models\Reservation;
 use App\Models\Rink;
 use App\Models\User;
+use App\Services\ClubSetup;
 use App\Services\GreenService;
 use App\Services\GreensOverview;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
+use chillerlan\QRCode\Output\QRMarkupSVG;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -19,8 +24,13 @@ class GreensController extends Controller
     /**
      * The greens overview: the next 14 playing days with free slots, closures and events per green.
      */
-    public function index(GreensOverview $overview): View
+    public function index(GreensOverview $overview): View|RedirectResponse
     {
+        // A fresh install goes to the first-run setup page.
+        if (! app(ClubSetup::class)->isSetUp()) {
+            return redirect()->route('setup');
+        }
+
         return view('greens.index', ['days' => $overview->days(14)]);
     }
 
@@ -61,6 +71,87 @@ class GreensController extends Controller
             'previousDay' => $dayIndex !== false && $dayIndex > 0 ? $days[$dayIndex - 1] : null,
             'nextDay' => $dayIndex !== false && $dayIndex < count($days) - 1 ? $days[$dayIndex + 1] : null,
         ]);
+    }
+
+    /**
+     * The Secretary closes this green for the day (the plan's green open/close, privilege
+     * "admin.event" like other blocked time).
+     */
+    public function close(Request $request, GreenService $greens, string $green, string $date): RedirectResponse
+    {
+        [$green, $day] = $this->greenDay($request, $greens, $green, $date);
+
+        $greens->close($green, $day);
+
+        return redirect()->route('greens.show', [$green, $date])
+            ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M').'.');
+    }
+
+    public function open(Request $request, GreenService $greens, string $green, string $date): RedirectResponse
+    {
+        [$green, $day] = $this->greenDay($request, $greens, $green, $date);
+
+        $greens->open($green, $day);
+
+        return redirect()->route('greens.show', [$green, $date])
+            ->with('status', 'Green '.$green.' is open again on '.$day->format('D j M').'.');
+    }
+
+    /**
+     * The printable day sheet (PLAN.md section 7): rinks by hour with player names, events and
+     * closed greens, plus a QR code to the live calendar.
+     */
+    public function sheet(Request $request, GreenService $greens, GreensOverview $overview, string $green, string $date): View
+    {
+        abort_unless(in_array($green, $greens->greens(), true), 404);
+
+        try {
+            $day = CarbonImmutable::createFromFormat('!Y-m-d', $date);
+        } catch (InvalidFormatException) {
+            abort(404);
+        }
+
+        $rinks = Rink::query()->visible()->orderBy('priority')->get()
+            ->filter(fn (Rink $rink) => $rink->green() === $green)
+            ->values();
+
+        abort_if($rinks->isEmpty(), 404);
+
+        $liveUrl = route('greens.show', [$green, $date]);
+
+        return view('greens.sheet', [
+            'green' => $green,
+            'day' => $day,
+            'rinks' => $rinks,
+            'closed' => $greens->isClosed($green, $day),
+            'grid' => $this->grid($request, $overview, $rinks, $day, $greens->isClosed($green, $day)),
+            'liveUrl' => $liveUrl,
+            'qrSvg' => $this->qrSvg($liveUrl),
+        ]);
+    }
+
+    /** @return array{string, CarbonImmutable} */
+    private function greenDay(Request $request, GreenService $greens, string $green, string $date): array
+    {
+        abort_unless($request->user()?->hasPrivilege('admin.event'), 403);
+        abort_unless(in_array($green, $greens->greens(), true), 404);
+
+        try {
+            return [$green, CarbonImmutable::createFromFormat('!Y-m-d', $date)];
+        } catch (InvalidFormatException) {
+            abort(404);
+        }
+    }
+
+    private function qrSvg(string $url): string
+    {
+        $options = new QROptions([
+            'outputInterface' => QRMarkupSVG::class,
+            'outputBase64' => false,
+            'addQuietzone' => true,
+        ]);
+
+        return (new QRCode($options))->render($url);
     }
 
     /**
