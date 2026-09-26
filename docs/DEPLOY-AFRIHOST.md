@@ -25,13 +25,24 @@ room for about 20 clubs for R26 more a month. Silver Pro (R179, 100 databases) i
 
 ### What this cPanel has, and hasn't
 
-- **No Terminal**, so no Composer or `artisan` on the server. **SSH Access** only manages keys: on this shared
-  account, Afrihost offers only **jailed SSH** (full SSH needs a dedicated server). Jailed SSH is enough for
-  `php artisan`, git and a `composer.phar`. Request it by email to `hosting@afrihost.com` (see
-  [Open items](#open-items)).
+- **Jailed SSH is enabled** (Afrihost support, 26 Sep 2026): enough for `php artisan`, git and a
+  `composer.phar`. See [SSH](#ssh).
 - **Git Version Control**, **Cron Jobs**, **Backup** / **Backup Wizard**, **Remote Database Access**,
   **MultiPHP INI Editor** (memory and upload limits), **Database Wizard**, phpMyAdmin 5.2.
+- The **intl** and **zip** extensions are enabled for PHP 8.3 (ea-php83) — confirmed by support, 26 Sep 2026.
 - Softaculous, SitePad and Sitejet are there but not used; don't install apps over a club folder.
+
+### SSH
+
+Enabled by Afrihost support on 26 Sep 2026 (jailed shell; full SSH would need a dedicated server).
+
+| What | Value |
+|---|---|
+| Host | `thula.aserv.co.za` (or the shared IP `197.242.159.147`), port **24** |
+| User / password | `bowlsbg5n9w0` / the cPanel password (reset: ClientZone > Hosting > the domain > Website Manager > Reset Password) |
+| Login | **Password only** — support says key-only login is not supported on this server (even though cPanel > SSH Access can import keys) |
+| From where | Only **South African IP addresses** are allowed. From elsewhere (or a cloud session), use **cPanel > Terminal**, which now works and needs no allowlisting |
+| Blocked? | Send support your public IP, `ping`/`traceroute` to the domain, and `ssh -v bowlsbg5n9w0@thula.aserv.co.za -p24` output, and ask for an allowed-host entry |
 
 ## Clubs
 
@@ -83,14 +94,15 @@ InfinityFree build (see docs/DEPLOY.md).
 
 ## Backups
 
-**AfriBackup** (built into Afrihost hosting) takes automatic snapshots of the account and keeps them for 14
-days. It is not shown in this cPanel until `hosting@afrihost.com` enables it. Files, email and whole folders can be restored from it to an earlier point; see Afrihost's help
-article "How to restore a backup using AfriBackup".
+This server does **not** use AfriBackup: it runs Afrihost's newer backup software (**Afrires**), which keeps
+the past **14 days** of websites, email **and MySQL databases** (support, 26 Sep 2026). There is nothing to
+see or do in cPanel: **restores are done by Afrihost support only** (they need root access), so a restore is
+a ticket to `hosting@afrihost.com`.
 
-Still download a database backup for each club weekly and before big changes, until it is
-confirmed that AfriBackup also restores the MySQL databases, and to keep a copy older than two weeks. Use the
-admin panel's **Maintenance > Download backup** button (an SQL dump; restore by importing it in phpMyAdmin),
-or cPanel > Backup.
+Because their restore is out of our hands and their history is only two weeks, still download a database
+backup for each club weekly and before big changes, and keep a copy older than two weeks. Use the admin
+panel's **Maintenance > Download backup** button (an SQL dump; restore by importing it in phpMyAdmin), or
+cPanel > Backup.
 
 ## Troubleshooting
 
@@ -122,14 +134,25 @@ or cPanel > Backup.
   password.
 - [x] Profile page deployed to LCE and the Secretary's email and password changed there, replacing the exposed
   seeded `secretary@example.com` login (25 Sep 2026).
-- [x] Automatic backups: AfriBackup is included (snapshots kept up to two weeks; see [Backups](#backups)).
-- [ ] Asked `hosting@afrihost.com` (25 Sep 2026), on Afrihost support's advice, to: enable jailed SSH (hostname,
-  port, key-only login?); enable AfriBackup in cPanel and say whether it covers the MySQL databases; enable
-  `intl` and `zip` for ea-php83. Waiting for the reply.
+- [x] Automatic backups: this server runs Afrires, 14 days of files, email and MySQL databases, restored
+  only by support (see [Backups](#backups)).
+- [x] Answered by `hosting@afrihost.com` (26 Sep 2026): jailed SSH enabled (see [SSH](#ssh); password only,
+  South African IPs, cPanel > Terminal always works); backups are Afrires, databases included,
+  restores via support; `intl` and `zip` already enabled for ea-php83.
 - [x] `bowlsbuddy.co.za` shows a simple landing page (live 25 Sep 2026): upload `landing/index.html` to `public_html/`. Add each new
   club to its Clubs list.
 
-## If Afrihost enables SSH
+## Now that SSH is enabled
 
-Deploys can then use git and Composer on the server (cPanel > Git Version Control) and `php artisan migrate`,
-instead of zip uploads. The folder layout above stays the same.
+Deploys can use git and Composer on the server (cPanel > Git Version Control, or clone over HTTPS in the
+Terminal) and `php artisan migrate`, instead of zip uploads. The folder layout above stays the same. First
+time in the Terminal:
+
+```bash
+cd ~/bowlsbuddy-lce
+php -v                       # should be PHP 8.3 (ea-php83)
+php artisan migrate --force  # instead of the Maintenance page
+```
+
+Composer is not preinstalled in the jail: upload `composer.phar` once (`php composer.phar --version`), or
+keep shipping `vendor/` in the zip build, which stays the simplest update path.
