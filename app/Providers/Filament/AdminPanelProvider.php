@@ -12,7 +12,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -37,7 +36,20 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(fn () => ClubLogo::url())
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->colors([
-                'primary' => Color::Green,
+                // A dark grass green, anchored so buttons (600) match the member pages' brand.
+                'primary' => [
+                    50 => '#f1f7f1',
+                    100 => '#dcebdd',
+                    200 => '#bcd7bd',
+                    300 => '#93bd96',
+                    400 => '#62996a',
+                    500 => '#2f7a38',
+                    600 => '#1b5e20',
+                    700 => '#164e1c',
+                    800 => '#124117',
+                    900 => '#0e3413',
+                    950 => '#072408',
+                ],
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
