@@ -61,22 +61,28 @@ it('shows the direction to members on the overview, calendar, booking page and d
 
     $this->actingAs($member)->get('/')
         ->assertOk()
-        ->assertSee('North-South');
+        ->assertSeeInOrder(['arrow-ns', 'North-South']);
 
     $this->actingAs($member)->get('/greens/A/2026-10-06')
         ->assertOk()
-        ->assertSee('Direction of play')
+        ->assertSeeInOrder(['arrow-ns', 'Direction of play'])
         ->assertSee('North-South');
 
     $this->actingAs($member)
         ->get('/book?rink='.Rink::query()->where('name', 'A-1')->firstOrFail()->sid.'&start=2026-10-06 14:00')
         ->assertOk()
-        ->assertSee('Direction of play')
+        ->assertSeeInOrder(['arrow-ns', 'Direction of play'])
         ->assertSee('North-South');
 
     $this->actingAs($this->admin)->get('/greens/A/2026-10-06/sheet')
         ->assertOk()
         ->assertSee('play North-South');
+
+    // East-West gets the left-right arrow
+    app(GreenService::class)->setDirection('A', Carbon::parse('2026-10-06'), 'EW');
+
+    $this->actingAs($member)->get('/')->assertSeeInOrder(['arrow-ew', 'East-West'])->assertDontSee('arrow-ns');
+    $this->actingAs($member)->get('/greens/A/2026-10-06')->assertSeeInOrder(['arrow-ew', 'Direction of play']);
 
     // Green B has no direction indicated
     $this->actingAs($member)->get('/greens/B/2026-10-06')

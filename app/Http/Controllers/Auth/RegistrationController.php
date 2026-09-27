@@ -70,7 +70,7 @@ class RegistrationController extends Controller
             ]);
         }
 
-        $immediate = $settings->get('service.user.activation', 'immediate') === 'immediate';
+        $immediate = $settings->get('service.user.activation', 'manual') === 'immediate';
 
         $user = User::query()->create([
             'alias' => trim($input['firstname'].' '.$input['lastname']),

@@ -21,7 +21,7 @@
         <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
 
         @if ($direction)
-            <p class="direction-note">&#8597; Direction of play: <strong>{{ $direction }}</strong></p>
+            <p class="direction-note"><x-direction-arrow :direction="$direction" /> Direction of play: <strong>{{ $direction }}</strong></p>
         @endif
 
         @if ($hidden)
@@ -65,6 +65,13 @@
             <p class="muted"><a href="{{ route('login') }}">Log in</a> to book a rink and see who is playing.</p>
         @endguest
 
+        <p class="calendar-key" aria-hidden="true">
+            <span><i class="key key-free"></i>Free</span>
+            <span><i class="key key-booked"></i>Booked</span>
+            @auth<span><i class="key key-own"></i>Yours</span>@endauth
+            <span><i class="key key-event"></i>Event</span>
+        </p>
+
         <div style="overflow-x: auto;">
             <table class="calendar">
                 <thead>
@@ -83,24 +90,24 @@
                                 <td>
                                     @if ($cell['state'] === 'free')
                                         @auth
-                                            <a class="slot-free" href="{{ $cell['url'] }}">Book</a>
+                                            <a class="slot-free" href="{{ $cell['url'] }}"><span class="slot-text">Book</span></a>
                                         @else
-                                            <a class="slot-free" href="{{ route('login') }}">Free</a>
+                                            <a class="slot-free" href="{{ route('login') }}"><span class="slot-text">Free</span></a>
                                         @endauth
                                     @elseif ($cell['state'] === 'own' || $cell['state'] === 'booked')
                                         <span class="slot-busy {{ $cell['state'] === 'own' ? 'slot-own' : '' }}">
                                             @forelse ($cell['names'] as $name)
-                                                <span class="player">{{ $name }}</span>
+                                                <span class="player slot-text">{{ $name }}</span>
                                             @empty
-                                                Booked
+                                                <span class="slot-text">Booked</span>
                                             @endforelse
                                         </span>
                                     @elseif ($cell['state'] === 'event')
-                                        <span class="slot-busy slot-event">{{ $cell['label'] }}</span>
+                                        <span class="slot-busy slot-event"><span class="slot-text">{{ $cell['label'] }}</span></span>
                                     @elseif ($cell['state'] === 'closed')
-                                        <span class="slot-busy">Closed</span>
+                                        <span class="slot-busy slot-closed"><span class="slot-text">Closed</span></span>
                                     @else
-                                        <span class="slot-busy slot-past">&mdash;</span>
+                                        <span class="slot-busy slot-past"><span class="slot-text">&mdash;</span></span>
                                     @endif
                                 </td>
                             @endforeach

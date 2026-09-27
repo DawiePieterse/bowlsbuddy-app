@@ -6,7 +6,7 @@
         <p><strong>{{ $start->format('l j F Y') }}</strong>, {{ $start->format('H:i') }}&ndash;{{ $end->format('H:i') }}</p>
 
         @if ($direction = app(\App\Services\GreenService::class)->directionLabel($rink->green(), $start))
-            <p class="muted">&#8597; Direction of play: <strong>{{ $direction }}</strong></p>
+            <p class="muted"><x-direction-arrow :direction="$direction" /> Direction of play: <strong>{{ $direction }}</strong></p>
         @endif
 
         @if ($reason !== null)

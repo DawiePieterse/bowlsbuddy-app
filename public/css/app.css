@@ -86,6 +86,8 @@ a { color: var(--link); }
 .green-pill .events { display: block; color: var(--purple); font-size: 13px; }
 .green-pill .direction { display: block; color: var(--muted); font-size: 12px; }
 .direction-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+.arrow { width: 20px; height: 20px; color: var(--brand); vertical-align: -5px; margin-right: 2px; }
+.arrow-ns { transform: rotate(90deg); }
 .direction-form { display: flex; gap: 6px; align-items: center; }
 .direction-form select { width: auto; padding: 8px 10px; font-size: 14px; }
 .direction-form button { padding: 10px 14px; font-size: 14px; }
@@ -105,6 +107,7 @@ a { color: var(--link); }
 .calendar .slot-past { background: transparent; color: var(--line); }
 .calendar-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .calendar-nav .spacer { flex: 1; }
+.calendar-nav .button { margin-top: 0; }
 
 /* Bookings list */
 .booking-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
@@ -118,6 +121,29 @@ a { color: var(--link); }
     main { margin: 16px auto; }
     .card { padding: 16px; border-radius: 10px; }
     .overview-day .date { flex-basis: 100%; }
+}
+
+/* Phone: the green's calendar shows colours only - green free, grey booked, pink event */
+.calendar-key { display: none; }
+@media (max-width: 700px) {
+    .calendar-key { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+    .calendar-key span { display: inline-flex; align-items: center; gap: 5px; }
+    .calendar-key .key { display: inline-block; width: 16px; height: 16px; border-radius: 4px; }
+    .calendar-nav { flex-wrap: nowrap; gap: 6px; }
+    .calendar-nav .spacer { display: none; }
+    .calendar-nav .button { flex: 1 1 auto; padding: 9px 6px; font-size: 14px; white-space: nowrap; }
+    .calendar td { height: 40px; padding: 4px; }
+    .calendar .slot-text {
+        position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    .calendar a.slot-free, .calendar .slot-busy { min-height: 30px; padding: 0; }
+    .calendar a.slot-free, .key-free { background: #b9dfbb; border: 1px solid var(--green); }
+    .calendar .slot-busy, .key-booked { background: #c3c9c4; border: 1px solid #9aa39c; }
+    .calendar .slot-own, .key-own { background: #c3c9c4; border: 3px solid var(--brand); }
+    .calendar .slot-event, .key-event { background: #f4bfdc; border: 1px solid #c2408a; }
+    .calendar .slot-closed { background: repeating-linear-gradient(45deg, #c3c9c4 0 4px, #e3e7e3 4px 8px); }
+    .calendar .slot-past { background: transparent; border: 0; }
 }
 
 /* Phone: the menu folds behind a hamburger (CSS only, no JavaScript) */
