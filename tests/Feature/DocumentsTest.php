@@ -2,85 +2,69 @@
 
 use App\Filament\Pages\SiteSettings;
 use App\Models\User;
-use App\Support\ClubDocuments;
 use App\Support\Settings;
+use App\Support\StandardTexts;
 use Database\Seeders\ClubSeeder;
-use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 
 beforeEach(function () {
     config(['club.admin_password' => 'a-good-password']);
     $this->seed(ClubSeeder::class);
-    array_map([ClubDocuments::class, 'remove'], array_keys(ClubDocuments::ALL));
 });
 
-afterEach(fn () => array_map([ClubDocuments::class, 'remove'], array_keys(ClubDocuments::ALL)));
+it('shows every document as a page with its example text', function (string $url, string $title, string $example) {
+    $this->get($url)->assertOk()->assertSee($title)->assertSee($example);
+})->with([
+    'info' => ['/info', 'Info', 'Club rules for bookings'],
+    'help' => ['/help', 'Help', 'How to book'],
+    'terms' => ['/terms', 'Business Terms', 'One rink per member per day. The member who books'],
+    'privacy' => ['/privacy', 'Privacy Policy', 'Protection of Personal Information Act'],
+]);
 
-function putPdf(string $name): void
-{
-    @mkdir(storage_path('app/documents'), 0775, true);
-    file_put_contents(ClubDocuments::path($name), '%PDF-1.4 '.$name);
-}
+it('shows the club text once saved, and the example again when cleared', function () {
+    app(Settings::class)->set('service.terms', '<p>Our own terms.</p>');
 
-it('serves every document as a PDF once uploaded', function (string $name) {
-    $this->get('/documents/'.$name)->assertNotFound();
+    $this->get('/terms')->assertOk()->assertSee('Our own terms.')->assertDontSee('The member who books');
 
-    putPdf($name);
+    app(Settings::class)->set('service.terms', '<p></p>');
 
-    $this->get('/documents/'.$name)->assertOk()->assertHeader('Content-Type', 'application/pdf');
-})->with(['info', 'help', 'terms', 'privacy']);
+    $this->get('/terms')->assertOk()->assertSee('The member who books');
+});
 
-it('links the info and help PDFs from their pages only when uploaded', function () {
-    $this->get('/info')->assertOk()->assertDontSee('Open the info sheet (PDF)')->assertDontSee('Business Terms');
-    $this->get('/help')->assertOk()->assertDontSee('Open the help guide (PDF)');
-
-    putPdf('info');
-    putPdf('help');
-    putPdf('terms');
+it('links the terms and privacy pages from registration and the Info page', function () {
+    $this->get('/register')->assertOk()
+        ->assertSee(route('terms'), false)
+        ->assertSee(route('privacy'), false);
 
     $this->get('/info')->assertOk()
-        ->assertSee('Open the info sheet (PDF)')
-        ->assertSee('Business Terms')
-        ->assertDontSee('Privacy Policy')
-        ->assertDontSee('has not written this page yet');
-    $this->get('/help')->assertOk()->assertSee('Open the help guide (PDF)');
+        ->assertSee(route('terms'), false)
+        ->assertSee(route('privacy'), false);
 });
 
-it('uploads and removes the PDFs from the settings page', function () {
-    $this->actingAs(User::query()->where('email', 'secretary@example.com')->firstOrFail());
-
-    $base = ['client_name_full' => 'LCE Bowls Club', 'client_name_short' => 'LCE', 'activation' => 'immediate'];
-
-    Livewire::test(SiteSettings::class)
-        ->fillForm($base + [
-            'info_pdf' => UploadedFile::fake()->create('club-info.pdf', 20, 'application/pdf'),
-            'help_pdf' => UploadedFile::fake()->create('how-to.pdf', 20, 'application/pdf'),
-        ])
-        ->call('save')
-        ->assertNotified('Settings saved');
-
-    expect(ClubDocuments::exists('info'))->toBeTrue()
-        ->and(ClubDocuments::exists('help'))->toBeTrue();
-
-    Livewire::test(SiteSettings::class)
-        ->fillForm($base + ['info_pdf' => null])
-        ->call('save')
-        ->assertNotified('Settings saved');
-
-    expect(ClubDocuments::exists('info'))->toBeFalse()
-        ->and(ClubDocuments::exists('help'))->toBeTrue();
-});
-
-it('starts the Info and Help editors from the standard text, or the club text once saved', function () {
+it('edits all four documents on the settings page, starting from the example text', function () {
     $this->actingAs(User::query()->where('email', 'secretary@example.com')->firstOrFail());
 
     $this->get('/admin/site-settings')->assertOk()
         ->assertSee('Club rules for bookings')
-        ->assertSee('How to book');
+        ->assertSee('How to book')
+        ->assertSee('The member who books')
+        ->assertSee('Protection of Personal Information Act');
 
-    app(Settings::class)->set('service.help', '<p>Our own help text.</p>');
+    Livewire::test(SiteSettings::class)
+        ->fillForm([
+            'client_name_full' => 'LCE Bowls Club',
+            'client_name_short' => 'LCE',
+            'activation' => 'immediate',
+            'privacy' => '<p>Our privacy promise.</p><script>alert(1)</script>',
+        ])
+        ->call('save')
+        ->assertNotified('Settings saved');
 
-    $this->get('/admin/site-settings')->assertOk()
-        ->assertSee('Our own help text.')
-        ->assertDontSee('How to book');
+    expect(StandardTexts::for('privacy'))->toContain('Our privacy promise.')->not->toContain('<script');
+
+    $this->get('/privacy')->assertOk()->assertSee('Our privacy promise.');
+});
+
+it('no longer serves PDF documents', function () {
+    $this->get('/documents/terms')->assertNotFound();
 });

@@ -220,7 +220,7 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] WhatsApp share after booking and from the booking pop-up
 - [x] Cancel own booking before the cut-off
 - [x] My bookings; My account (change email or password, delete account, download my data)
-- [x] Info page, help page, Business Terms and Privacy Policy PDFs
+- [x] Info, Help, Business Terms and Privacy Policy pages (edited in Settings, with example text)
 
 **Secretary / admin**
 - [x] Open or close a green per day
@@ -229,7 +229,7 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Members: search, create, edit, activate, set a temporary password, privileges
 - [x] Bookings: list, create for a member, edit, cancel, delete
 - [x] Events: for a rink, a green or all rinks; list, edit, delete
-- [x] Settings: names and text, info and help pages, rinks, behaviour, terms and privacy uploads
+- [x] Settings: names and text, the four document pages, rinks, behaviour
 
 **New club setup**
 - [x] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
@@ -285,8 +285,8 @@ widths. *(Passing: `scripts/e2e.sh`, tests/Browser, both widths.)*
   through policies mapped to `admin.user` / `admin.booking` / `admin.event` / `admin.config`).
 - [x] Filament resources: **Members** (with "activate" and "set temporary password" actions), **Bookings**,
   **Events** (rink / green / all rinks selector), **Rinks**.
-- [x] Filament settings page (tabs): names and text, info and help pages (sanitized on save), behaviour,
-  terms and privacy uploads.
+- [x] Filament settings page (tabs): names and text, behaviour, and the Info, Help, Business Terms and
+  Privacy Policy text (sanitized on save; example text until the club writes its own).
 - [x] Green open/close, WhatsApp invite and day sheet (with QR code) on the greens pages.
 - [x] `club:create` command (for paid hosting), plus a **first-run setup page** asking the same questions,
   shown only while there are no users (for hosts without a command line).
@@ -300,8 +300,8 @@ tests/Browser/secretary-day.spec.js at both widths, and ClubSetupTest for the co
 - [x] Security check: section 6 point by point, recorded in docs/SECURITY-CHECK.md; `composer audit`
   clean; security-headers middleware and Dependabot added while checking.
 - [ ] Deploy to Afrihost with the zip build (`scripts/build-afrihost.sh`, verified) — LCE already runs
-  the Phase 1 build there, so this is an update upload plus **Run database updates**; upload Business
-  Terms and Privacy Policy under Settings > Documents.
+  the Phase 1 build there, so this is an update upload plus **Run database updates**; review the example
+  Business Terms and Privacy Policy under Settings > Documents.
 - [ ] Trial with the Secretary and a few members for 1–2 weeks, then invite everyone (WhatsApp invite
   button).
 - [x] Backups: **Download backup** button on the admin panel's Maintenance page (SQL dump), with a

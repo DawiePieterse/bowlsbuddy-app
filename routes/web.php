@@ -23,12 +23,12 @@ Route::get('/greens/{green}/{date?}', [GreensController::class, 'show'])->name('
 Route::get('/setup', [SetupController::class, 'create'])->name('setup');
 Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
 
-Route::view('/info', 'pages.info')->name('info');
-Route::view('/help', 'pages.help')->name('help');
+Route::view('/info', 'pages.document', ['document' => 'info'])->name('info');
+Route::view('/help', 'pages.document', ['document' => 'help'])->name('help');
+Route::view('/terms', 'pages.document', ['document' => 'terms'])->name('terms');
+Route::view('/privacy', 'pages.document', ['document' => 'privacy'])->name('privacy');
 Route::view('/forgot-password', 'auth.forgot-password')->name('password.request');
 Route::get('/logo', [PageController::class, 'logo'])->name('logo');
-Route::get('/documents/{document}', [PageController::class, 'document'])
-    ->where('document', 'info|help|terms|privacy')->name('documents.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');

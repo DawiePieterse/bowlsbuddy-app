@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
-use App\Support\ClubDocuments;
 use App\Support\ClubLogo;
 use App\Support\Settings;
 use App\Support\StandardTexts;
@@ -53,6 +52,8 @@ class SiteSettings extends Page
         'meta_description' => 'service.meta.description',
         'info' => 'service.info',
         'help' => 'service.help',
+        'terms' => 'service.terms',
+        'privacy' => 'service.privacy',
         'activation' => 'service.user.activation',
         'max_active_bookings' => 'service.user.default.max_active_bookings',
     ];
@@ -76,15 +77,10 @@ class SiteSettings extends Page
             $data[$field] = $settings->get($key);
         }
 
-        foreach (array_keys(ClubDocuments::ALL) as $document) {
-            if (ClubDocuments::exists($document)) {
-                $data[$document.'_pdf'] = [$document.'.pdf'];
-            }
-        }
-
         $data['playing_days'] = self::playingDays($settings);
-        $data['info'] = StandardTexts::for('info');
-        $data['help'] = StandardTexts::for('help');
+        foreach (array_keys(StandardTexts::DOCUMENTS) as $document) {
+            $data[$document] = StandardTexts::for($document);
+        }
 
         if (($logo = ClubLogo::path()) !== null) {
             $data['logo'] = [basename($logo)];
@@ -124,24 +120,17 @@ class SiteSettings extends Page
                     TextInput::make('max_active_bookings')->label('Open bookings per member (0 = no limit)')
                         ->numeric()->minValue(0)->maxValue(50),
                 ]),
-                Tab::make('Documents')->schema([
-                    Section::make('Info page')->description('The text on the Info page, and an optional PDF members can open from it.')->schema([
-                        RichEditor::make('info')->label('Info page text')
-                            ->helperText('Clear the text to go back to the standard text.')
-                            ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                        self::pdfUpload('info', 'Info sheet (PDF)'),
-                    ]),
-                    Section::make('Help page')->description('The text on the Help page, and an optional PDF members can open from it.')->schema([
-                        RichEditor::make('help')->label('Help page text')
-                            ->helperText('Clear the text to go back to the standard text.')
-                            ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                        self::pdfUpload('help', 'Help guide (PDF)'),
-                    ]),
-                    Section::make('Terms and privacy')->description('PDF files members see when registering and on the Info page.')->schema([
-                        self::pdfUpload('terms', 'Business Terms (PDF)'),
-                        self::pdfUpload('privacy', 'Privacy Policy (PDF)'),
-                    ]),
-                ]),
+                Tab::make('Documents')->schema(array_map(
+                    fn (string $document, string $title) => Section::make($title)
+                        ->description("The text members read on the {$title} page.")
+                        ->schema([
+                            RichEditor::make($document)->hiddenLabel()
+                                ->helperText('Starts with example text: adapt it for your club. Clear it to go back to the example.')
+                                ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
+                        ]),
+                    array_keys(StandardTexts::DOCUMENTS),
+                    StandardTexts::DOCUMENTS,
+                )),
             ]),
         ])->statePath('data');
     }
@@ -153,7 +142,7 @@ class SiteSettings extends Page
         foreach (self::KEYS as $field => $key) {
             $value = $state[$field] ?? null;
 
-            if (in_array($field, ['info', 'help'], true) && filled($value)) {
+            if (array_key_exists($field, StandardTexts::DOCUMENTS) && filled($value)) {
                 $value = $this->sanitize((string) $value);
             }
 
@@ -161,12 +150,6 @@ class SiteSettings extends Page
         }
 
         self::storePlayingDays($settings, (array) ($state['playing_days'] ?? []));
-
-        foreach (array_keys(ClubDocuments::ALL) as $document) {
-            if (blank($state[$document.'_pdf'] ?? null)) {
-                ClubDocuments::remove($document);
-            }
-        }
 
         ClubLogo::keepOnly(blank($state['logo'] ?? null) ? null : basename((string) $state['logo']));
 
@@ -225,14 +208,5 @@ class SiteSettings extends Page
         $hidden = array_values(array_diff(self::WEEKDAYS, $playing));
 
         $settings->set(self::DAY_EXCEPTIONS, implode("\n", [...$hidden, ...$dates]));
-    }
-
-    private static function pdfUpload(string $document, string $label): FileUpload
-    {
-        return FileUpload::make($document.'_pdf')->label($label)
-            ->disk('documents')
-            ->acceptedFileTypes(['application/pdf'])
-            ->maxSize(10240)
-            ->getUploadedFileNameForStorageUsing(fn () => $document.'.pdf');
     }
 }
