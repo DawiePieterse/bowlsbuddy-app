@@ -86,6 +86,8 @@ a { color: var(--link); }
 .green-pill .events { display: block; color: var(--purple); font-size: 13px; }
 .green-pill .direction { display: block; color: var(--muted); font-size: 12px; }
 .direction-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+.arrow { width: 20px; height: 20px; color: var(--brand); vertical-align: -5px; margin-right: 2px; }
+.arrow-ns { transform: rotate(90deg); }
 .direction-form { display: flex; gap: 6px; align-items: center; }
 .direction-form select { width: auto; padding: 8px 10px; font-size: 14px; }
 .direction-form button { padding: 10px 14px; font-size: 14px; }

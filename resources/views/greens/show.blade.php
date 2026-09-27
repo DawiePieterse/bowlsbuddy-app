@@ -21,7 +21,7 @@
         <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
 
         @if ($direction)
-            <p class="direction-note">&#8597; Direction of play: <strong>{{ $direction }}</strong></p>
+            <p class="direction-note"><x-direction-arrow :direction="$direction" /> Direction of play: <strong>{{ $direction }}</strong></p>
         @endif
 
         @if ($hidden)
