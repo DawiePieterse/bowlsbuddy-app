@@ -15,9 +15,12 @@ beforeEach(function () {
 
 afterEach(fn () => ClubLogo::keepOnly(null));
 
-it('serves no logo until one is uploaded, then shows it on every page', function () {
+it('shows the bundled mark until a club logo is uploaded, then that one everywhere', function () {
+    // Before an upload: the bundled Bowls Buddy mark, and no uploaded file to serve
     $this->get('/logo')->assertNotFound();
-    $this->get('/')->assertOk()->assertDontSee('class="logo"', false);
+    $this->get('/')->assertOk()
+        ->assertSee('class="logo"', false)
+        ->assertSee('img/logo.png', false);
 
     @mkdir(storage_path('app/documents'), 0775, true);
     file_put_contents(storage_path('app/documents/logo.png'), UploadedFile::fake()->image('logo.png', 64, 64)->getContent());

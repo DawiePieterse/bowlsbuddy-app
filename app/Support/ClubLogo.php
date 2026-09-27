@@ -31,12 +31,15 @@ class ClubLogo
         return self::path() !== null;
     }
 
-    /** The URL every page uses, cache-busted so a new upload shows right away. */
-    public static function url(): ?string
+    /**
+     * The URL every page uses: the uploaded club logo (cache-busted so a new upload shows right
+     * away), or the bundled Bowls Buddy mark until one is uploaded.
+     */
+    public static function url(): string
     {
         $path = self::path();
 
-        return $path === null ? null : route('logo').'?v='.filemtime($path);
+        return $path === null ? asset('img/logo.png') : route('logo').'?v='.filemtime($path);
     }
 
     public static function mime(): string
