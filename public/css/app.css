@@ -52,7 +52,7 @@ h1 { font-size: 24px; margin: 0 0 16px; }
 h2 { font-size: 18px; margin: 0 0 12px; }
 
 label { display: block; font-size: 14px; margin: 12px 0 4px; }
-input[type=email], input[type=password], input[type=text], select, textarea {
+input[type=email], input[type=password], input[type=text], input[type=tel], select, textarea {
     width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
 }
 .check { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: 14px; }
@@ -82,7 +82,7 @@ a { color: var(--link); }
 .green-pill .slots { font-weight: 600; }
 .green-pill.closed { background: var(--red-soft); border-color: var(--red); }
 .green-pill.event { background: var(--purple-soft); border-color: var(--purple); }
-.green-pill.full { background: #edf1ed; border-color: var(--line); color: var(--muted); }
+.green-pill.full { background: #dfe4e0; border-color: #9aa39c; color: var(--muted); }
 .green-pill .events { display: block; color: var(--purple); font-size: 13px; }
 .green-pill .direction { display: block; color: var(--muted); font-size: 12px; }
 .direction-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
