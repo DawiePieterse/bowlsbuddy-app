@@ -83,3 +83,16 @@ it('removes the stored logo when the upload is cleared', function () {
 
     $this->get('/logo')->assertNotFound();
 });
+
+it('shows the Bowls Buddy brand beside the logo in the admin panel and on its login page', function () {
+    $this->get('/admin/login')->assertOk()
+        ->assertSee('Bowls Buddy')
+        ->assertSee('LCE Bowls Club')
+        ->assertSee('img/logo.png', false);
+
+    $this->actingAs(User::query()->where('email', 'secretary@example.com')->firstOrFail())
+        ->get('/admin')
+        ->assertOk()
+        ->assertSee('Bowls Buddy')
+        ->assertSee('img/logo.png', false);
+});

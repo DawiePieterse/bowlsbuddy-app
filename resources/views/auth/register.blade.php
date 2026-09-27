@@ -34,8 +34,8 @@
 
             <label class="check">
                 <input type="checkbox" name="accept_terms" value="1" @checked(old('accept_terms'))>
-                <span>I accept the <a href="{{ route('documents.show', 'terms') }}" target="_blank">Business Terms</a>
-                and the <a href="{{ route('documents.show', 'privacy') }}" target="_blank">Privacy Policy</a>.</span>
+                <span>I accept the <a href="{{ route('terms') }}" target="_blank">Business Terms</a>
+                and the <a href="{{ route('privacy') }}" target="_blank">Privacy Policy</a>.</span>
             </label>
             @error('accept_terms') <div class="error">{{ $message }}</div> @enderror
 

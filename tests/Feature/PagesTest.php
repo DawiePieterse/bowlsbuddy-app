@@ -9,11 +9,15 @@ beforeEach(function () {
 });
 
 it('shows the info page with the Secretary text when set', function () {
-    $this->get('/info')->assertOk()->assertSee('has not written this page yet');
+    $this->get('/info')->assertOk()->assertSee('Club rules for bookings');
 
     app(Settings::class)->set('service.info', '<p>Roll-ups every weekday.</p>');
 
-    $this->get('/info')->assertOk()->assertSee('Roll-ups every weekday.');
+    $this->get('/info')->assertOk()->assertSee('Roll-ups every weekday.')->assertDontSee('Club rules for bookings');
+
+    // An emptied editor brings the standard text back
+    app(Settings::class)->set('service.info', '<p></p>');
+    $this->get('/info')->assertOk()->assertSee('Club rules for bookings');
 });
 
 it('shows the help page with a default guide', function () {
@@ -22,21 +26,4 @@ it('shows the help page with a default guide', function () {
 
 it('shows the forgot password page pointing to the Secretary', function () {
     $this->get('/forgot-password')->assertOk()->assertSee('Club Secretary');
-});
-
-it('serves the terms and privacy PDFs once uploaded', function () {
-    $this->get('/documents/terms')->assertNotFound();
-
-    @mkdir(storage_path('app/documents'), 0775, true);
-    file_put_contents(storage_path('app/documents/terms.pdf'), '%PDF-1.4 test');
-
-    try {
-        $this->get('/documents/terms')
-            ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
-    } finally {
-        unlink(storage_path('app/documents/terms.pdf'));
-    }
-
-    $this->get('/documents/other')->assertNotFound();
 });

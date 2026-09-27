@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Bowls Buddy' }} - {{ app(\App\Support\Settings::class)->get('client.name.full', 'Bowls Buddy') }}</title>
+    <title>{{ $title ?? 'Greens' }} - Bowls Buddy - {{ app(\App\Support\Settings::class)->get('client.name.full') }}</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     @if ($clubLogo = \App\Support\ClubLogo::url())
         <link rel="icon" href="{{ $clubLogo }}">

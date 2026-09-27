@@ -31,8 +31,8 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile(EditProfile::class, isSimple: false)
             ->brandName('Bowls Buddy')
-            ->brandLogo(fn () => ClubLogo::url())
-            ->brandLogoHeight('2.25rem')
+            ->brandLogo(fn () => view('filament.brand'))
+            ->brandLogoHeight('2.5rem')
             ->favicon(fn () => ClubLogo::url())
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->colors([

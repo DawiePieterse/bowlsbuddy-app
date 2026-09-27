@@ -5,12 +5,13 @@ namespace App\Filament\Pages;
 use App\Models\User;
 use App\Support\ClubLogo;
 use App\Support\Settings;
+use App\Support\StandardTexts;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -51,10 +52,15 @@ class SiteSettings extends Page
         'meta_description' => 'service.meta.description',
         'info' => 'service.info',
         'help' => 'service.help',
+        'terms' => 'service.terms',
+        'privacy' => 'service.privacy',
         'activation' => 'service.user.activation',
-        'day_exceptions' => 'service.calendar.day-exceptions',
         'max_active_bookings' => 'service.user.default.max_active_bookings',
     ];
+
+    private const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    private const DAY_EXCEPTIONS = 'service.calendar.day-exceptions';
 
     public static function canAccess(): bool
     {
@@ -71,10 +77,9 @@ class SiteSettings extends Page
             $data[$field] = $settings->get($key);
         }
 
-        foreach (['terms', 'privacy'] as $document) {
-            if (is_file(storage_path('app/documents/'.$document.'.pdf'))) {
-                $data[$document] = [$document.'.pdf'];
-            }
+        $data['playing_days'] = self::playingDays($settings);
+        foreach (array_keys(StandardTexts::DOCUMENTS) as $document) {
+            $data[$document] = StandardTexts::for($document);
         }
 
         if (($logo = ClubLogo::path()) !== null) {
@@ -102,36 +107,30 @@ class SiteSettings extends Page
                         )
                         ->helperText('Shown in the header of every page, on the day sheet and in this panel.'),
                 ]),
-                Tab::make('Info and help pages')->schema([
-                    RichEditor::make('info')->label('Info page')
-                        ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                    RichEditor::make('help')->label('Help page')
-                        ->helperText('Leave empty for the built-in guide.')
-                        ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                ]),
                 Tab::make('Behaviour')->schema([
                     Select::make('activation')->label('New registrations')->options([
                         'immediate' => 'Active immediately',
                         'manual' => 'Activated by the Secretary',
                     ])->required(),
-                    Textarea::make('day_exceptions')->label('Days hidden from the calendar')
-                        ->rows(3)
-                        ->helperText('Weekday names or dates (2026-12-25), one per line. "+2026-10-13" re-allows a date whose weekday is hidden.'),
+                    CheckboxList::make('playing_days')->label('Playing days')
+                        ->options(array_combine(self::WEEKDAYS, self::WEEKDAYS))
+                        ->columns(7)
+                        ->required()
+                        ->helperText('Members can book on the ticked days. Close a green for a single day on its calendar page.'),
                     TextInput::make('max_active_bookings')->label('Open bookings per member (0 = no limit)')
                         ->numeric()->minValue(0)->maxValue(50),
                 ]),
-                Tab::make('Documents')->schema([
-                    Section::make()->description('PDF files members see when registering and on the Info page.')->schema([
-                        FileUpload::make('terms')->label('Business Terms (PDF)')
-                            ->disk('documents')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->getUploadedFileNameForStorageUsing(fn () => 'terms.pdf'),
-                        FileUpload::make('privacy')->label('Privacy Policy (PDF)')
-                            ->disk('documents')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->getUploadedFileNameForStorageUsing(fn () => 'privacy.pdf'),
-                    ]),
-                ]),
+                Tab::make('Documents')->schema(array_map(
+                    fn (string $document, string $title) => Section::make($title)
+                        ->description("The text members read on the {$title} page.")
+                        ->schema([
+                            RichEditor::make($document)->hiddenLabel()
+                                ->helperText('Starts with example text: adapt it for your club. Clear it to go back to the example.')
+                                ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
+                        ]),
+                    array_keys(StandardTexts::DOCUMENTS),
+                    StandardTexts::DOCUMENTS,
+                )),
             ]),
         ])->statePath('data');
     }
@@ -143,12 +142,14 @@ class SiteSettings extends Page
         foreach (self::KEYS as $field => $key) {
             $value = $state[$field] ?? null;
 
-            if (in_array($field, ['info', 'help'], true) && filled($value)) {
+            if (array_key_exists($field, StandardTexts::DOCUMENTS) && filled($value)) {
                 $value = $this->sanitize((string) $value);
             }
 
             $settings->set($key, filled($value) ? (string) $value : null);
         }
+
+        self::storePlayingDays($settings, (array) ($state['playing_days'] ?? []));
 
         ClubLogo::keepOnly(blank($state['logo'] ?? null) ? null : basename((string) $state['logo']));
 
@@ -171,5 +172,41 @@ class SiteSettings extends Page
         );
 
         return $sanitizer->sanitize($html);
+    }
+
+    /**
+     * The weekdays members can book: every weekday not hidden by service.calendar.day-exceptions.
+     *
+     * @return list<string>
+     */
+    private static function playingDays(Settings $settings): array
+    {
+        $hidden = array_map(
+            fn (string $entry) => strtolower(trim($entry)),
+            preg_split('/[\n,]/', (string) $settings->get(self::DAY_EXCEPTIONS, '')) ?: [],
+        );
+
+        return array_values(array_filter(
+            self::WEEKDAYS,
+            fn (string $weekday) => ! in_array(strtolower($weekday), $hidden, true),
+        ));
+    }
+
+    /**
+     * Stores the unticked weekdays as hidden. Date entries an older setup may hold (a single date,
+     * or "+date") are kept as they are.
+     *
+     * @param  list<string>  $playing
+     */
+    private static function storePlayingDays(Settings $settings, array $playing): void
+    {
+        $dates = array_filter(
+            array_map('trim', preg_split('/[\n,]/', (string) $settings->get(self::DAY_EXCEPTIONS, '')) ?: []),
+            fn (string $entry) => $entry !== '' && ! in_array(strtolower($entry), array_map('strtolower', self::WEEKDAYS), true),
+        );
+
+        $hidden = array_values(array_diff(self::WEEKDAYS, $playing));
+
+        $settings->set(self::DAY_EXCEPTIONS, implode("\n", [...$hidden, ...$dates]));
     }
 }
