@@ -29,7 +29,7 @@
         @endif
         <div style="flex: 1;">
             <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
-            <p class="sub">{{ app(\App\Support\Settings::class)->get('client.name.full') }} &middot; day sheet</p>
+            <p class="sub">{{ app(\App\Support\Settings::class)->get('client.name.full') }} &middot; day sheet{{ $direction ? ' · play '.$direction : '' }}</p>
             @if ($sheet['closed'])
                 <p class="sub"><strong>Green {{ $green }} is closed on this day.</strong></p>
             @endif

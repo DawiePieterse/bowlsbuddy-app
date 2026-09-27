@@ -80,6 +80,11 @@ a { color: #0066cc; }
 .green-pill.event { background: var(--purple-soft); border-color: var(--purple); }
 .green-pill.full { background: #ececf0; border-color: var(--line); color: var(--muted); }
 .green-pill .events { display: block; color: var(--purple); font-size: 13px; }
+.green-pill .direction { display: block; color: var(--muted); font-size: 12px; }
+.direction-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+.direction-form { display: flex; gap: 6px; align-items: center; }
+.direction-form select { width: auto; padding: 8px 10px; font-size: 14px; }
+.direction-form button { padding: 10px 14px; font-size: 14px; }
 
 /* Green calendar */
 .calendar { width: 100%; border-collapse: collapse; font-size: 14px; }

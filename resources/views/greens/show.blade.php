@@ -20,6 +20,10 @@
 
         <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
 
+        @if ($direction)
+            <p class="direction-note">&#8597; Direction of play: <strong>{{ $direction }}</strong></p>
+        @endif
+
         @if ($hidden)
             <p class="muted">This day is not open for booking.</p>
         @elseif ($closed)
@@ -41,6 +45,16 @@
                             <button type="submit" class="danger" style="margin-top: 0;">Close green {{ $green }} on this day</button>
                         </form>
                     @endif
+                    <form method="POST" action="{{ route('greens.direction', [$green, $day->format('Y-m-d')]) }}" class="direction-form">
+                        @csrf
+                        <select name="direction">
+                            <option value="">Direction of play...</option>
+                            @foreach (\App\Services\GreenService::DIRECTIONS as $value => $label)
+                                <option value="{{ $value }}" @selected(app(\App\Services\GreenService::class)->direction($green, $day) === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="subtle" style="margin-top: 0;">Set</button>
+                    </form>
                     <a class="button subtle" style="margin-top: 0;" target="_blank"
                        href="{{ route('greens.sheet', [$green, $day->format('Y-m-d')]) }}">Day sheet</a>
                 </div>

@@ -63,6 +63,7 @@ class GreensController extends Controller
             'day' => $day,
             'rinks' => $rinks,
             'closed' => $this->greens->isClosed($green, $day),
+            'direction' => $this->greens->directionLabel($green, $day),
             'hidden' => $this->rules->isDayHidden($day),
             'grid' => $this->grid($request, $rinks, $day, $this->greens->isClosed($green, $day)),
             'previousDay' => $dayIndex !== false && $dayIndex > 0 ? $days[$dayIndex - 1] : null,
@@ -82,6 +83,25 @@ class GreensController extends Controller
 
         return redirect()->route('greens.show', [$green, $date])
             ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M').'.');
+    }
+
+    /**
+     * The Secretary indicates the direction of play (North-South or East-West) for the day.
+     */
+    public function direction(Request $request, string $green, string $date): RedirectResponse
+    {
+        $day = $this->greenDay($request, $green, $date);
+
+        $direction = (string) $request->input('direction');
+
+        abort_unless($direction === '' || array_key_exists($direction, GreenService::DIRECTIONS), 422);
+
+        $this->greens->setDirection($green, $day, $direction === '' ? null : $direction);
+
+        return redirect()->route('greens.show', [$green, $date])
+            ->with('status', $direction === ''
+                ? 'The direction of play on green '.$green.' is cleared for '.$day->format('D j M').'.'
+                : 'Green '.$green.' plays '.GreenService::DIRECTIONS[$direction].' on '.$day->format('D j M').'.');
     }
 
     public function open(Request $request, string $green, string $date): RedirectResponse
@@ -111,6 +131,7 @@ class GreensController extends Controller
         return view('greens.sheet', [
             'green' => $green,
             'day' => $day,
+            'direction' => $this->greens->directionLabel($green, $day),
             'sheet' => $sheet,
             'liveUrl' => $liveUrl,
             'qrSvg' => $this->qrSvg($liveUrl),

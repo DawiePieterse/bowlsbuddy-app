@@ -15,6 +15,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/greens/{green}/{date}/sheet', [GreensController::class, 'sheet'])->name('greens.sheet');
     Route::post('/greens/{green}/{date}/close', [GreensController::class, 'close'])->name('greens.close');
     Route::post('/greens/{green}/{date}/open', [GreensController::class, 'open'])->name('greens.open');
+    Route::post('/greens/{green}/{date}/direction', [GreensController::class, 'direction'])->name('greens.direction');
 });
 
 Route::get('/greens/{green}/{date?}', [GreensController::class, 'show'])->name('greens.show');
