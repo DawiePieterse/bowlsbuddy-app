@@ -234,6 +234,10 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Utilisation: heatmap of hours booked per rink over the last week, month, quarter or year, one per
   direction of play (North-South, East-West, not indicated)
 
+**Modules and licences** (docs/MODULES.md)
+- [x] Signed licence per install: modules, greens paid for, expiry with 14 days' grace, then read-only
+- [x] Licence page for the Secretary, expiry banner, `licence:*` commands, green limit when adding a green
+
 **New club setup**
 - [x] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
   slot length and players per rink, then creates everything

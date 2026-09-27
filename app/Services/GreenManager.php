@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\Event;
 use App\Models\Rink;
+use App\Support\Licensing\Modules;
 use App\Support\Settings;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,10 @@ use RuntimeException;
  */
 class GreenManager
 {
-    public function __construct(private readonly Settings $settings) {}
+    public function __construct(
+        private readonly Settings $settings,
+        private readonly Modules $modules,
+    ) {}
 
     /**
      * Every green, hidden rinks included (the member pages use GreenService::greens(), which
@@ -49,6 +53,16 @@ class GreenManager
 
         if (array_key_exists($green, $this->all())) {
             throw new RuntimeException("Green {$green} already exists.");
+        }
+
+        // The subscription is per green, so the licence caps how many there are. Greens already there
+        // stay, even when a licence covers fewer (docs/MODULES.md section 5).
+        $paid = $this->modules->greens();
+
+        if ($paid !== null && count($this->all()) >= $paid) {
+            throw new RuntimeException(
+                "Your plan covers {$paid} ".str('green')->plural($paid).'. Contact Bowls Buddy to add another.'
+            );
         }
 
         DB::transaction(function () use ($green, $count) {

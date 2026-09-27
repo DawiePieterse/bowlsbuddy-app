@@ -4,6 +4,8 @@ use App\Models\Booking;
 use App\Models\Event;
 use App\Models\Rink;
 use App\Models\User;
+use App\Support\Licensing\Licence;
+use App\Support\Licensing\Modules;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -98,4 +100,41 @@ function blockedBy(?string $on, string $start, string $end, string $name = 'Club
     }
 
     return $event;
+}
+
+/**
+ * A signed licence key for this install (docs/MODULES.md section 9). The test key pair is made once per
+ * run and trusted as key id "test"; pass another $club to test a key for someone else's install.
+ *
+ * @param  list<string>  $modules
+ */
+function licenceKey(array $modules = [], ?string $expires = null, ?int $greens = null, ?string $club = null, bool $trial = false): string
+{
+    static $pair = null;
+    $pair ??= sodium_crypto_sign_keypair();
+
+    config(['modules.public_keys' => ['test' => base64_encode(sodium_crypto_sign_publickey($pair))]]);
+
+    $licence = new Licence(
+        keyId: 'test',
+        club: $club ?? Modules::host(),
+        plan: 'club',
+        modules: $modules,
+        greens: $greens,
+        issued: Carbon::today(),
+        expires: Carbon::parse($expires ?? '+1 year')->startOfDay(),
+        trial: $trial,
+    );
+
+    return $licence->sign(sodium_crypto_sign_secretkey($pair));
+}
+
+/**
+ * Installs a licence with these modules, so each module's tests switch it on explicitly.
+ *
+ * @param  list<string>  $modules
+ */
+function withModules(array $modules, ?string $expires = null, ?int $greens = null): Licence
+{
+    return app(Modules::class)->install(licenceKey($modules, $expires, $greens));
 }

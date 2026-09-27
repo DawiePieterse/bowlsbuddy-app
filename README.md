@@ -54,8 +54,21 @@ MariaDB, the dependencies and `.env` automatically in Claude Code on the web.
 | `app/Support/Settings.php` | Cached site settings from `bs_options` |
 | `app/Filament` | Admin panel (Secretary), including the Maintenance page |
 | `config/club.php` | Starting setup for a new club |
+| `config/modules.php`, `app/Support/Licensing` | Modules and signed licences (see Modules and licences below) |
 | `scripts/build-infinityfree.sh` | Builds the zip files to upload to InfinityFree |
 | `scripts/build-afrihost.sh` | Builds the zip file to upload to Afrihost (one folder per club) |
+
+## Modules and licences
+
+Every club runs the same code; a licence signed by Bowls Buddy switches modules on per install and sets the
+greens paid for. Without one, bookings work as normal. See `docs/MODULES.md`.
+
+```bash
+php artisan licence:keygen 2026-1          # once, on your machine: a signing key pair
+php artisan licence:issue --club=lce.bowlsbuddy.co.za --modules=rollups --greens=2 --expires=2027-09-30
+php artisan licence:install <key>          # on the club's install, or paste it on the Licence page
+php artisan licence:show
+```
 
 ## Licence
 

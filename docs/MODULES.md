@@ -7,7 +7,7 @@ decides what each install switches on.
 **Starting point:** bookings are complete (`docs/PLAN.md` section 7). There is one install per club (its own
 subdomain, folder and database on Afrihost), all running the same code. Billing is not built yet.
 
-**Status:** proposal. Nothing in this plan is built yet.
+**Status:** phase A (the module framework) is built; no paid module yet.
 
 ---
 
@@ -52,8 +52,8 @@ subdomain, folder and database on Afrihost), all running the same code. Billing 
                         ┌──────────────┬───────────────┬───┴──────────┬──────────────┐
                         ▼              ▼               ▼              ▼              ▼
                   Filament pages   Member routes   Blade menus    Scheduled jobs  Green limit
-                  canAccess()      module:x        @module('x')   skip if off     GreenManager,
-                  navigation       middleware                                     club:create
+                  canAccess()      module:x        @module('x')   skip if off     GreenManager
+                  navigation       middleware
 ```
 
 Later (section 7, phase 2) a small licence service replaces the manual steps: it reads paid invoices from the
@@ -154,7 +154,7 @@ No new table is needed.
 | Active | Valid licence includes the module and is not expired | Fully on |
 | Grace | Expired less than 14 days ago | Fully on, plus a banner for the Secretary in the panel |
 | Read-only | Expired more than 14 days ago | Screens show but can't be changed; jobs and notices stop |
-| Locked | Not in the licence | Hidden from members; greyed out in the admin menu with a "Contact us to add this" page |
+| Locked | Not in the licence | Hidden from members and the admin menu; listed on the Licence page with what it does and who to contact |
 | Invalid | Bad signature or wrong host | Treated as no licence, and the Licence page says why |
 
 **No licence or invalid licence:** members can still book, and the admin panel keeps bookings, members and
@@ -172,15 +172,17 @@ keep working and the Licence page shows the difference to invoice. Members are n
 | Piece | Where | Does |
 |---|---|---|
 | Module registry | `config/modules.php` | Key, name, description, dependencies, public keys, grace days. The only place a new module is added. |
-| Licence value object | `app/Support/Licence.php` | Parses and verifies a key and returns the payload or the reason it is invalid. Pure, easy to unit test. |
-| Modules service | `app/Support/Modules.php` | `enabled('x')`, `state('x')`, `readOnly('x')`, `greens()`, `expiresAt()`. Reads `service.licence` through `Settings`, caches the result (cleared whenever the licence is saved), checks dependencies. |
-| Filament gate | each module's pages and resources | `canAccess()` also checks `Modules::enabled(...)`; `shouldRegisterNavigation()` shows locked modules greyed out; forms and actions are disabled when read-only. A small shared trait (`Concerns/BelongsToModule`) keeps this to one line per class. |
+| Licence value object | `app/Support/Licensing/Licence.php` | Parses and verifies a key (`InvalidLicence` with a plain reason otherwise) and signs new ones. Pure, easy to unit test. |
+| Module states | `app/Support/Licensing/ModuleState.php` | Active, Grace, ReadOnly, Locked, with `visible()` and `writable()`. |
+| Modules service | `app/Support/Licensing/Modules.php` | `enabled('x')`, `writable('x')`, `state('x')`, `greens()`, `expiresAt()`, `install()`, `uninstall()`. Reads `service.licence` through `Settings`, once per request, checks the host and dependencies. |
+| Filament gate | each module's pages and resources | `canAccess()` also checks `app(Modules::class)->enabled('x')`, which hides locked modules from the menu; actions that change data add `->disabled(fn () => ! app(Modules::class)->writable('x'))`. |
 | Route middleware | `module:competitions` | Returns 404 for members when a module is locked, and blocks writes when it is read-only. |
 | Blade directive | `@module('comms') ... @endmodule` | Menu items and links on member pages. |
-| Jobs and notices | scheduler | Each job checks `Modules::enabled()` before running. |
+| Jobs and notices | scheduler | Each job checks `writable('x')` before running. |
 | Licence page | `app/Filament/Pages/Licence.php`, needs `admin.config` | Paste a key; shows plan, modules, expiry, greens in use against greens paid for, and locked modules with what they do. |
-| Commands | `licence:install <key>`, `licence:show`, `licence:issue` | Install and inspect on a club server; issue only where the private key is set. |
-| Expiry banner | panel render hook | Shown to `admin.see-menu` users during grace and read-only. |
+| Commands | `licence:install <key>`, `licence:show`, `licence:issue`, `licence:keygen` | Install and inspect on a club server; issue and make keys only where the private key is set. |
+| Expiry banner | `resources/views/filament/licence-banner.blade.php`, panel render hook | Shown to everyone in the panel during grace and read-only, with a link to the Licence page for `admin.config`. |
+| Green limit | `app/Services/GreenManager.php` | `add()` refuses a green beyond the licence's `greens`. `club:create` and the setup page run before a licence exists, so they don't check. |
 
 **Database for new modules:** each module brings its own migrations. New tables use the `bs_` prefix to match
 the existing ones (for example `bs_competitions`, `bs_competition_entries`). Migrations always run, whether or
@@ -263,14 +265,15 @@ module and does not bring back the old tables.
 ## 8. Phases
 
 **Phase A: module framework** (about 2 days). Build this before any module.
-- [ ] `config/modules.php` registry, with `bookings` as the always-on base
-- [ ] `Licence` value object: parse, verify signature, check host and expiry, rotate keys by `kid`
-- [ ] `Modules` service with caching and dependency checks
-- [ ] Filament trait, `module:` middleware, `@module` directive
-- [ ] Licence page in Settings, the expiry banner, and the "Contact us to add this" page for locked modules
-- [ ] `licence:install`, `licence:show`, `licence:issue` commands
-- [ ] Green limit in `GreenManager` and `club:create`
-- [ ] Tests (section 9), `docs/PLAN.md` section 7 updated, README section on licences
+- [x] `config/modules.php` registry, with `bookings` as the always-on base
+- [x] `Licence` value object: parse, verify signature, check host and expiry, rotate keys by `kid`
+- [x] `Modules` service with caching and dependency checks
+- [x] `module:` middleware, `@module` directive, and the Filament gate (`canAccess()` plus `writable()`)
+- [x] Licence page (with the modules not included and who to contact) and the expiry banner
+- [x] `licence:install`, `licence:show`, `licence:issue`, `licence:keygen` commands
+- [x] Green limit in `GreenManager`
+- [x] Tests (section 9), `docs/PLAN.md` section 7 updated, README section on licences
+- [ ] Bowls Buddy's own signing key: run `licence:keygen`, add the public key to `config/modules.php`
 - [ ] LCE issued a licence for the Club bundle as the first real user
 
 **Phase B: first modules** (estimates are part-time with AI assistance)
@@ -309,8 +312,8 @@ module and does not bring back the old tables.
    key and stores it, so each module's tests switch it on explicitly.
 4. **Gates:** a dataset test over every gated Filament page and route: 403 or 404 without the module,
    read-only after grace. Keep the "one panel request after a 403 per test" rule from `CLAUDE.md`.
-5. **Green limit:** adding a green beyond the licence refused, in `GreenManager` and `club:create`; existing
-   greens unaffected by a lower limit.
+5. **Green limit:** adding a green beyond the licence refused in `GreenManager`; existing greens unaffected
+   by a lower limit.
 6. **Browser:** the Licence page flow (paste a key, see the modules switch on) at phone and desktop widths.
 
 ---

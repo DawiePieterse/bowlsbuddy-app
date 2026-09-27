@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Support\Licensing\Modules;
 use App\Support\Settings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(Settings::class);
+        $this->app->singleton(Modules::class);
     }
 
     public function boot(): void
@@ -30,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        // @module('competitions') ... @endmodule shows its content only when the club has that module.
+        Blade::if('module', fn (string $module) => $this->app->make(Modules::class)->enabled($module));
 
         Password::defaults(fn () => Password::min(8));
 

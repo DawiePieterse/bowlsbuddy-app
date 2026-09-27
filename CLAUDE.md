@@ -11,6 +11,7 @@ checklist (section 7) and the decisions (section 12). Tick new features off in `
 | `app/Models` | `User`, `Rink` (`bs_squares`, key `sid`), `Booking` (`bid`), `Reservation` (`rid`, date and times of a booking), `Event` (`eid`, blocked time), `Option` (`bs_options`). Meta via `Concerns/HasMeta` (`meta()`, `setMeta()`). |
 | `app/Services` | Business logic: `BookingRules`, `BookingService`, `GreenService` (greens, closed days, direction of play), `GreenManager` (add/rename/delete greens), `DaySheet`, `GreensOverview`, `RinkUtilisation`. |
 | `app/Support/Settings.php` | Cached site settings from `bs_options`. Always read and write settings through it. |
+| `app/Support/Licensing` | Modules and signed licences (`docs/MODULES.md`): `Modules` says what is on; registry in `config/modules.php`. Gate every page, route and job of a module with it; bookings are always on. Tests switch modules on with `withModules([...])`. |
 | `app/Filament` | Secretary / admin panel at `/admin`: resources (Members, Bookings, Events, Rinks) and pages (Greens, Utilisation, SiteSettings, Maintenance). Pages and resources are auto-discovered. |
 | `app/Http/Controllers` | Member pages (custom Blade), plus the Secretary's close/open green, direction and day sheet. |
 | `resources/views/filament/pages` | Blade views of the Filament pages. |
@@ -68,7 +69,7 @@ scripts/e2e.sh                                           # Playwright, own datab
 - Tests seed `Database\Seeders\ClubSeeder` (greens A and B, rinks A-1 to B-6, 12:00 to 17:00 in 1-hour
   slots) and freeze time with `Carbon::setTestNow()`.
 - Helpers in `tests/Pest.php`: `rink('A-1')`, `member()`, `staff('admin.see-menu', ...)`, `booked(...)`,
-  `blockedBy(...)`, `slot(...)`.
+  `blockedBy(...)`, `slot(...)`, `withModules([...], expires: ..., greens: ...)`, `licenceKey(...)`.
 - Filament pages and actions: `Livewire::test(Page::class)->call(...)->assertSet(...)`, or
   `->callAction('name')->assertNotified('Title')`.
 - Only one successful `actingAs(...)->get('/admin/...')` per test after a forbidden one: a second
