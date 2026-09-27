@@ -44,7 +44,7 @@ class ClubSetup
                 'subject.square.unit.plural' => 'Players',
                 'subject.type' => 'our club',
                 'service.user.registration' => 'true',
-                'service.user.activation' => 'immediate',
+                'service.user.activation' => 'manual',
                 'service.calendar.days' => '1',
                 'service.calendar.day-exceptions' => '',
                 'service.greens.closed' => '',

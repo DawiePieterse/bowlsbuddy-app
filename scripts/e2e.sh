@@ -20,6 +20,8 @@ mysql -h "$DB_HOST" -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "CREATE DATABASE IF NO
 
 php artisan migrate:fresh --force --no-interaction
 php artisan db:seed --class=Database\\Seeders\\ClubSeeder --force --no-interaction
+# The booking flow registers members and books straight away, so skip the Secretary's approval.
+php artisan tinker --execute="app(App\\Support\\Settings::class)->set('service.user.activation', 'immediate');"
 
 PORT="${E2E_PORT:-8901}"
 php artisan serve --host=127.0.0.1 --port="$PORT" >storage/logs/e2e-serve.log 2>&1 &

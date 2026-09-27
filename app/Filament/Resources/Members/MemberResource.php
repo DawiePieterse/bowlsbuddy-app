@@ -39,6 +39,24 @@ class MemberResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'alias';
 
+    /** New registrations waiting for the Secretary, shown as a count on the Members menu item. */
+    public static function getNavigationBadge(): ?string
+    {
+        $waiting = User::query()->where('status', 'disabled')->count();
+
+        return $waiting > 0 ? (string) $waiting : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Waiting for approval';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -57,7 +75,7 @@ class MemberResource extends Resource
                     ->requiredWithout('phone')
                     ->helperText('Only needed for accounts without a cellphone number.'),
                 Select::make('status')->options([
-                    'disabled' => 'Not active (new or blocked)',
+                    'disabled' => 'Waiting for approval / not active',
                     'enabled' => 'Member',
                     'assist' => 'Assistant (privileges below)',
                     'admin' => 'Admin (all privileges)',
@@ -90,12 +108,21 @@ class MemberResource extends Resource
                 TextColumn::make('phone')->label('Cellphone')->searchable()
                     ->formatStateUsing(fn (?string $state) => Phone::pretty($state)),
                 TextColumn::make('email')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status')->badge()->color(fn (string $state): string => match ($state) {
-                    'admin' => 'danger',
-                    'assist' => 'warning',
-                    'enabled' => 'success',
-                    default => 'gray',
-                }),
+                TextColumn::make('status')->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'disabled' => 'Waiting for approval',
+                        'enabled' => 'Member',
+                        'assist' => 'Assistant',
+                        'admin' => 'Admin',
+                        default => User::STATUSES[$state] ?? $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'danger',
+                        'assist' => 'warning',
+                        'enabled' => 'success',
+                        'disabled' => 'warning',
+                        default => 'gray',
+                    }),
                 TextColumn::make('last_activity')->dateTime('j M Y H:i')->label('Last active')->sortable(),
             ])
             ->defaultSort('alias')
@@ -104,14 +131,21 @@ class MemberResource extends Resource
             ])
             ->recordActions([
                 Action::make('activate')
+                    ->label('Approve')
+                    ->button()
+                    ->color('primary')
                     ->visible(fn (User $record): bool => $record->status === 'disabled')
                     ->icon(Heroicon::OutlinedCheckCircle)
                     ->requiresConfirmation()
-                    ->modalHeading('Activate this member?')
+                    ->modalIcon(Heroicon::OutlinedCheckCircle)
+                    ->modalHeading(fn (User $record): string => 'Approve '.$record->alias.'?')
+                    ->modalDescription('They can log in and book rinks straight away.')
+                    ->modalSubmitActionLabel('Approve')
                     ->action(function (User $record): void {
                         $record->update(['status' => 'enabled']);
                     })
-                    ->successNotificationTitle('Member activated'),
+                    ->successNotificationTitle('Member approved')
+                    ->successRedirectUrl(fn (): string => static::getUrl()),
                 Action::make('temporaryPassword')
                     ->label('Set temporary password')
                     ->visible(fn (User $record): bool => $record->uid !== auth()->id())

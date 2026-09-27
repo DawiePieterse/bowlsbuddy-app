@@ -34,7 +34,9 @@ it('shows the registration form with the cellphone field and no email field', fu
         ->assertSee('Privacy Policy');
 });
 
-it('registers a member by cellphone number and logs them in', function () {
+it('registers a member by cellphone number and logs them in when activation is immediate', function () {
+    app(Settings::class)->set('service.user.activation', 'immediate');
+
     $this->post('/register', registrationInput())
         ->assertRedirect(route('home'));
 
@@ -76,11 +78,12 @@ it('refuses a duplicate cellphone number', function () {
         ->assertSessionHasErrors('phone');
 });
 
-it('waits for the Secretary when activation is not immediate', function () {
-    app(Settings::class)->set('service.user.activation', 'manual');
+it('waits for the Secretary to approve new members by default', function () {
+    expect(app(Settings::class)->get('service.user.activation'))->toBe('manual');
 
     $this->post('/register', registrationInput())
-        ->assertRedirect(route('login'));
+        ->assertRedirect(route('login'))
+        ->assertSessionHas('status', 'Thank you! The Club Secretary will activate your account.');
 
     expect(User::query()->where('phone', '+27821234567')->firstOrFail()->status)->toBe('disabled')
         ->and(auth()->check())->toBeFalse();

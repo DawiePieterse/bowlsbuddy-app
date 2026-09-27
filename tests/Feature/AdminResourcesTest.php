@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\Bookings\Pages\CreateBooking;
 use App\Filament\Resources\Events\Pages\CreateEvent;
+use App\Filament\Resources\Members\MemberResource;
 use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
@@ -83,6 +84,32 @@ it('edits privileges without losing the password', function () {
         ->and(Hash::check('keep-this-pass', $assist->pw))->toBeTrue();
 });
 
+it('shows members waiting for approval on the menu and in their own tab', function () {
+    $waiting = User::factory()->withStatus('disabled')->create();
+    $member = User::factory()->create();
+
+    $this->actingAs($this->admin);
+
+    expect(MemberResource::getNavigationBadge())->toBe('1');
+
+    Livewire::test(ListMembers::class)
+        ->assertSet('activeTab', 'waiting')
+        ->assertCanSeeTableRecords([$waiting])
+        ->assertCanNotSeeTableRecords([$member])
+        ->assertTableActionVisible('activate', $waiting)
+        ->set('activeTab', 'all')
+        ->assertCanSeeTableRecords([$waiting, $member])
+        ->assertTableActionHidden('activate', $member);
+});
+
+it('shows no approval badge when nobody is waiting', function () {
+    $this->actingAs($this->admin);
+
+    expect(MemberResource::getNavigationBadge())->toBeNull();
+
+    Livewire::test(ListMembers::class)->assertSet('activeTab', 'all');
+});
+
 it('activates a member and sets a temporary password from the list', function () {
     $new = User::factory()->withStatus('disabled')->create(['pw' => 'first-password']);
 
@@ -90,7 +117,8 @@ it('activates a member and sets a temporary password from the list', function ()
 
     Livewire::test(ListMembers::class)
         ->callTableAction('activate', $new)
-        ->assertNotified();
+        ->assertNotified('Member approved')
+        ->assertRedirect(MemberResource::getUrl());
 
     expect($new->fresh()->status)->toBe('enabled');
 
