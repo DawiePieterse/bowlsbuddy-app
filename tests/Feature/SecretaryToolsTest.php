@@ -95,7 +95,7 @@ it('saves the settings and cleans the info page HTML', function () {
             'client_name_full' => 'LCE Bowls Club',
             'client_name_short' => 'LCE',
             'activation' => 'manual',
-            'day_exceptions' => 'Tuesday',
+            'playing_days' => ['Monday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             'max_active_bookings' => '2',
             'info' => '<p>Welcome!</p><script>alert(1)</script>',
         ])
@@ -109,6 +109,31 @@ it('saves the settings and cleans the info page HTML', function () {
         ->and($settings->get('service.user.default.max_active_bookings'))->toBe('2')
         ->and($settings->get('service.info'))->toContain('Welcome!')
         ->and($settings->get('service.info'))->not->toContain('<script');
+});
+
+it('shows the playing days as ticked weekdays and keeps older date entries', function () {
+    $settings = app(Settings::class);
+    $settings->set('service.calendar.day-exceptions', "Tuesday\nthursday\n2026-12-25\n+2026-10-13");
+
+    $this->actingAs($this->admin);
+
+    Livewire::test(SiteSettings::class)
+        ->assertFormSet(['playing_days' => ['Monday', 'Wednesday', 'Friday', 'Saturday', 'Sunday']])
+        ->fillForm(['playing_days' => ['Monday', 'Wednesday', 'Friday']])
+        ->call('save')
+        ->assertNotified('Settings saved');
+
+    expect($settings->get('service.calendar.day-exceptions'))
+        ->toBe("Tuesday\nThursday\nSaturday\nSunday\n2026-12-25\n+2026-10-13");
+});
+
+it('needs at least one playing day', function () {
+    $this->actingAs($this->admin);
+
+    Livewire::test(SiteSettings::class)
+        ->fillForm(['playing_days' => []])
+        ->call('save')
+        ->assertHasFormErrors(['playing_days' => 'required']);
 });
 
 it('keeps staff without admin.config out of the settings page', function () {

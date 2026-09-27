@@ -7,10 +7,10 @@ use App\Support\ClubLogo;
 use App\Support\Settings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -52,9 +52,12 @@ class SiteSettings extends Page
         'info' => 'service.info',
         'help' => 'service.help',
         'activation' => 'service.user.activation',
-        'day_exceptions' => 'service.calendar.day-exceptions',
         'max_active_bookings' => 'service.user.default.max_active_bookings',
     ];
+
+    private const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    private const DAY_EXCEPTIONS = 'service.calendar.day-exceptions';
 
     public static function canAccess(): bool
     {
@@ -76,6 +79,8 @@ class SiteSettings extends Page
                 $data[$document] = [$document.'.pdf'];
             }
         }
+
+        $data['playing_days'] = self::playingDays($settings);
 
         if (($logo = ClubLogo::path()) !== null) {
             $data['logo'] = [basename($logo)];
@@ -114,9 +119,11 @@ class SiteSettings extends Page
                         'immediate' => 'Active immediately',
                         'manual' => 'Activated by the Secretary',
                     ])->required(),
-                    Textarea::make('day_exceptions')->label('Days hidden from the calendar')
-                        ->rows(3)
-                        ->helperText('Weekday names or dates (2026-12-25), one per line. "+2026-10-13" re-allows a date whose weekday is hidden.'),
+                    CheckboxList::make('playing_days')->label('Playing days')
+                        ->options(array_combine(self::WEEKDAYS, self::WEEKDAYS))
+                        ->columns(7)
+                        ->required()
+                        ->helperText('Members can book on the ticked days. Close a green for a single day on its calendar page.'),
                     TextInput::make('max_active_bookings')->label('Open bookings per member (0 = no limit)')
                         ->numeric()->minValue(0)->maxValue(50),
                 ]),
@@ -150,6 +157,8 @@ class SiteSettings extends Page
             $settings->set($key, filled($value) ? (string) $value : null);
         }
 
+        self::storePlayingDays($settings, (array) ($state['playing_days'] ?? []));
+
         ClubLogo::keepOnly(blank($state['logo'] ?? null) ? null : basename((string) $state['logo']));
 
         Notification::make()->title('Settings saved')->success()->send();
@@ -171,5 +180,41 @@ class SiteSettings extends Page
         );
 
         return $sanitizer->sanitize($html);
+    }
+
+    /**
+     * The weekdays members can book: every weekday not hidden by service.calendar.day-exceptions.
+     *
+     * @return list<string>
+     */
+    private static function playingDays(Settings $settings): array
+    {
+        $hidden = array_map(
+            fn (string $entry) => strtolower(trim($entry)),
+            preg_split('/[\n,]/', (string) $settings->get(self::DAY_EXCEPTIONS, '')) ?: [],
+        );
+
+        return array_values(array_filter(
+            self::WEEKDAYS,
+            fn (string $weekday) => ! in_array(strtolower($weekday), $hidden, true),
+        ));
+    }
+
+    /**
+     * Stores the unticked weekdays as hidden. Date entries an older setup may hold (a single date,
+     * or "+date") are kept as they are.
+     *
+     * @param  list<string>  $playing
+     */
+    private static function storePlayingDays(Settings $settings, array $playing): void
+    {
+        $dates = array_filter(
+            array_map('trim', preg_split('/[\n,]/', (string) $settings->get(self::DAY_EXCEPTIONS, '')) ?: []),
+            fn (string $entry) => $entry !== '' && ! in_array(strtolower($entry), array_map('strtolower', self::WEEKDAYS), true),
+        );
+
+        $hidden = array_values(array_diff(self::WEEKDAYS, $playing));
+
+        $settings->set(self::DAY_EXCEPTIONS, implode("\n", [...$hidden, ...$dates]));
     }
 }
