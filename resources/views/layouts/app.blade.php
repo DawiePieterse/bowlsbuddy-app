@@ -16,8 +16,8 @@
                 <img class="logo" src="{{ $clubLogo }}" alt="">
             @endif
             <span>
-                <span class="club">{{ app(\App\Support\Settings::class)->get('client.name.full') }}</span>
                 <span class="name">Bowls Buddy</span>
+                <span class="club">{{ app(\App\Support\Settings::class)->get('client.name.full') }}</span>
             </span>
         </a>
         <nav class="site">
