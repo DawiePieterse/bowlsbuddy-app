@@ -3,6 +3,12 @@
 // Runs at 390px (phone) and 1200px (desktop) via the projects in playwright.config.js.
 import { test, expect } from '@playwright/test';
 
+// On phone widths the menu sits behind the hamburger.
+async function openMenu(page) {
+    const toggle = page.locator('label.nav-button');
+    if (await toggle.isVisible()) await toggle.click();
+}
+
 function randomPhone() {
     return '07' + String(Math.floor(Math.random() * 1e8)).padStart(8, '0');
 }
@@ -16,6 +22,7 @@ test('a member registers, books a rink for two and cancels it', async ({ page },
     await expect(page.locator('.green-pill').first()).toBeVisible();
 
     // Register (the form has an anti-bot delay, so wait before submitting)
+    await openMenu(page);
     await page.getByRole('link', { name: 'Register' }).first().click();
     await page.getByLabel('First name').fill('Playwright');
     await page.getByLabel('Surname').fill('Tester');
@@ -51,6 +58,7 @@ test('a member registers, books a rink for two and cancels it', async ({ page },
     await expect(page.locator('.slot-own').first()).toContainText('Playwright Tester');
 
     // My bookings lists it; cancel it
+    await openMenu(page);
     await page.getByRole('link', { name: 'My bookings' }).first().click();
     await expect(page.getByText('Rink A-')).toBeVisible();
     page.once('dialog', (dialog) => dialog.accept());

@@ -20,6 +20,8 @@
                 <span class="club">{{ app(\App\Support\Settings::class)->get('client.name.full') }}</span>
             </span>
         </a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+        <label for="nav-toggle" class="nav-button" aria-label="Menu">&#9776;</label>
         <nav class="site">
             <a href="{{ route('home') }}">Greens</a>
             <a href="{{ route('info') }}">Info</a>

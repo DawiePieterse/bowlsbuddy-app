@@ -38,9 +38,10 @@ header.site .club { color: #b9d0bd; font-size: 13px; }
 header.site .name { font-size: 20px; font-weight: 700; }
 header.site a { color: #fff; text-decoration: none; }
 nav.site { display: flex; gap: 14px; align-items: center; font-size: 14px; flex-wrap: wrap; }
-nav.site a { color: #d5e4d7; }
-nav.site form { margin: 0; }
-nav.site button { background: none; border: 0; color: #d5e4d7; font-size: 14px; cursor: pointer; padding: 0; }
+nav.site a, nav.site button { color: #d5e4d7; line-height: 1.3; padding: 0; margin: 0; display: block; }
+nav.site form { margin: 0; display: flex; align-items: center; }
+nav.site button { background: none; border: 0; font-size: 14px; font-family: inherit; cursor: pointer; }
+.nav-toggle, .nav-button { display: none; }
 
 main { max-width: 900px; margin: 24px auto; padding: 0 16px; }
 main.narrow { max-width: 480px; }
@@ -117,4 +118,15 @@ a { color: var(--link); }
     main { margin: 16px auto; }
     .card { padding: 16px; border-radius: 10px; }
     .overview-day .date { flex-basis: 100%; }
+}
+
+/* Phone: the menu folds behind a hamburger (CSS only, no JavaScript) */
+@media (max-width: 700px) {
+    .nav-button {
+        display: block; font-size: 26px; line-height: 1; color: #fff; cursor: pointer;
+        padding: 4px 6px; margin-left: auto; user-select: none;
+    }
+    nav.site { display: none; flex-basis: 100%; flex-direction: column; align-items: flex-start; gap: 12px; padding: 10px 0 4px; }
+    .nav-toggle:checked ~ nav.site { display: flex; }
+    nav.site a, nav.site button { font-size: 16px; }
 }
