@@ -70,8 +70,9 @@ test('the Secretary adds an event and resets a password in the admin panel', asy
     await page.goto('/admin/members');
     await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
     await page.getByRole('searchbox', { name: 'Search', exact: true }).fill('Playwright');
-    await expect(page.getByRole('button', { name: 'Set temporary password' }).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Set temporary password' }).first().click();
+    await expect(page.locator('tbody tr').filter({ hasNotText: 'Playwright' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Password and edit' }).first().click();
+    await page.getByRole('button', { name: 'Set temporary password' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByText('Temporary password set')).toBeVisible();
     await expect(page.getByText('Give the member this password:')).toBeVisible();

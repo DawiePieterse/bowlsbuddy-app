@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\Phone;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -123,7 +124,7 @@ class MemberResource extends Resource
                         'disabled' => 'warning',
                         default => 'gray',
                     }),
-                TextColumn::make('last_activity')->dateTime('j M Y H:i')->label('Last active')->sortable(),
+                TextColumn::make('last_activity')->dateTime('j M Y, H:i')->label('Last active')->sortable()->visibleFrom('xl'),
             ])
             ->defaultSort('alias')
             ->filters([
@@ -146,26 +147,28 @@ class MemberResource extends Resource
                     })
                     ->successNotificationTitle('Member approved')
                     ->successRedirectUrl(fn (): string => static::getUrl()),
-                Action::make('temporaryPassword')
-                    ->label('Set temporary password')
-                    ->visible(fn (User $record): bool => $record->uid !== auth()->id())
-                    ->icon(Heroicon::OutlinedKey)
-                    ->requiresConfirmation()
-                    ->modalHeading('Set a temporary password?')
-                    ->modalDescription('The member logs in with it and picks a new one under My account.')
-                    ->action(function (User $record): void {
-                        $password = Str::password(10, symbols: false);
+                ActionGroup::make([
+                    Action::make('temporaryPassword')
+                        ->label('Set temporary password')
+                        ->visible(fn (User $record): bool => $record->uid !== auth()->id())
+                        ->icon(Heroicon::OutlinedKey)
+                        ->requiresConfirmation()
+                        ->modalHeading('Set a temporary password?')
+                        ->modalDescription('The member logs in with it and picks a new one under My account.')
+                        ->action(function (User $record): void {
+                            $password = Str::password(10, symbols: false);
 
-                        $record->update(['pw' => $password]);
+                            $record->update(['pw' => $password]);
 
-                        Notification::make()
-                            ->title('Temporary password set')
-                            ->body("Give the member this password: {$password}")
-                            ->success()
-                            ->persistent()
-                            ->send();
-                    }),
-                EditAction::make(),
+                            Notification::make()
+                                ->title('Temporary password set')
+                                ->body("Give the member this password: {$password}")
+                                ->success()
+                                ->persistent()
+                                ->send();
+                        }),
+                    EditAction::make(),
+                ])->label('Password and edit')->tooltip('Password and edit'),
             ])
             ->toolbarActions([]);
     }

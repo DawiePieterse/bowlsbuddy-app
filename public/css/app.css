@@ -107,6 +107,7 @@ a { color: var(--link); }
 .calendar .slot-past { background: transparent; color: var(--line); }
 .calendar-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .calendar-nav .spacer { flex: 1; }
+.calendar-nav .button { margin-top: 0; }
 
 /* Bookings list */
 .booking-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
@@ -128,6 +129,9 @@ a { color: var(--link); }
     .calendar-key { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
     .calendar-key span { display: inline-flex; align-items: center; gap: 5px; }
     .calendar-key .key { display: inline-block; width: 16px; height: 16px; border-radius: 4px; }
+    .calendar-nav { flex-wrap: nowrap; gap: 6px; }
+    .calendar-nav .spacer { display: none; }
+    .calendar-nav .button { flex: 1 1 auto; padding: 9px 6px; font-size: 14px; white-space: nowrap; }
     .calendar td { height: 40px; padding: 4px; }
     .calendar .slot-text {
         position: absolute; width: 1px; height: 1px; overflow: hidden;
