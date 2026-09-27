@@ -5,6 +5,7 @@ namespace App\Filament\Auth;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use SensitiveParameter;
 
@@ -14,6 +15,18 @@ use SensitiveParameter;
  */
 class EditProfile extends BaseEditProfile
 {
+    public function form(Schema $schema): Schema
+    {
+        // The current password comes before the new details, so the form reads top to bottom.
+        return $schema->components([
+            $this->getNameFormComponent(),
+            $this->getEmailFormComponent(),
+            $this->getCurrentPasswordFormComponent(),
+            $this->getPasswordFormComponent(),
+            $this->getPasswordConfirmationFormComponent(),
+        ]);
+    }
+
     protected function getNameFormComponent(): Component
     {
         return TextInput::make('alias')
