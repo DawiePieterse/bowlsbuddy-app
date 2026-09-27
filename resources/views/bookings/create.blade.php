@@ -39,8 +39,14 @@
                     @error('accept_rules') <div class="error">{{ $message }}</div> @enderror
                 @endif
 
-                <p class="muted">One rink per member per day. You can cancel up to
-                    {{ (int) round(($rink->range_cancel ?? 0) / 3600) }} hours before the start.</p>
+                <p class="muted">One rink per member per day.
+                    @if ($rink->range_cancel === null)
+                        Bookings cannot be cancelled online.
+                    @elseif ((int) $rink->range_cancel === 0)
+                        You can cancel until the slot starts.
+                    @else
+                        You can cancel up to {{ (int) round($rink->range_cancel / 3600) }} hours before the start.
+                    @endif</p>
 
                 <button type="submit" class="full">Book this rink</button>
             </form>

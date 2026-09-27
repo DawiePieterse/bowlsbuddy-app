@@ -64,7 +64,8 @@ class BookingRules
 
     /**
      * Staff with calendar.cancel-single-bookings may cancel any booking. Members may cancel their own until
-     * range_cancel seconds before it starts; with no range_cancel set on the rink, not at all.
+     * range_cancel seconds before it starts - with 0 right up to the moment it starts, and with no
+     * range_cancel set on the rink (null, as in the original app), not at all.
      */
     public function canCancel(Booking $booking, ?User $user): bool
     {
@@ -80,9 +81,9 @@ class BookingRules
             return false;
         }
 
-        $rangeCancel = (int) $booking->rink->range_cancel;
+        $rangeCancel = $booking->rink->range_cancel;
 
-        if ($rangeCancel === 0) {
+        if ($rangeCancel === null) {
             return false;
         }
 
@@ -92,7 +93,7 @@ class BookingRules
             return true;
         }
 
-        return $this->startOf($first)->greaterThan(Carbon::now()->addSeconds($rangeCancel));
+        return $this->startOf($first)->greaterThan(Carbon::now()->addSeconds((int) $rangeCancel));
     }
 
     /**

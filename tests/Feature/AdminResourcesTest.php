@@ -177,7 +177,7 @@ it('edits a rink in minutes, days and hours', function () {
     $this->actingAs($this->admin);
 
     Livewire::test(EditRink::class, ['record' => $rink->sid])
-        ->assertFormSet(['slot_minutes' => 60, 'booking_range_days' => 14, 'cancel_range_hours' => 24])
+        ->assertFormSet(['slot_minutes' => 60, 'booking_range_days' => 14, 'cancel_range_hours' => 0])
         ->fillForm(['slot_minutes' => 90, 'cancel_range_hours' => 12])
         ->call('save')
         ->assertHasNoFormErrors();

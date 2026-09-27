@@ -17,7 +17,7 @@ return [
     'slot_minutes' => (int) env('CLUB_SLOT_MINUTES', 60),
     'players_per_rink' => (int) env('CLUB_PLAYERS_PER_RINK', 2),
     'booking_range_days' => (int) env('CLUB_BOOKING_RANGE_DAYS', 14),
-    'cancel_range_hours' => (int) env('CLUB_CANCEL_RANGE_HOURS', 24),
+    'cancel_range_hours' => (int) env('CLUB_CANCEL_RANGE_HOURS', 0), // 0 = cancellable until the slot starts
 
     // First admin (the Club Secretary). Without a password, a random one is printed by the seeder.
     'admin_email' => env('CLUB_ADMIN_EMAIL', 'secretary@example.com'),

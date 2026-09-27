@@ -50,7 +50,8 @@ class RinkResource extends Resource
                     ->regex('/^\d{1,2}:\d{2}(:\d{2})?$/'),
                 TextInput::make('slot_minutes')->label('Slot length (minutes)')->numeric()->minValue(15)->maxValue(240)->required(),
                 TextInput::make('booking_range_days')->label('Bookable ahead (days)')->numeric()->minValue(1)->maxValue(60)->required(),
-                TextInput::make('cancel_range_hours')->label('Cancel cut-off (hours)')->numeric()->minValue(0)->maxValue(168)->required(),
+                TextInput::make('cancel_range_hours')->label('Cancel cut-off (hours)')->numeric()->minValue(0)->maxValue(168)->required()
+                    ->helperText('0 lets members cancel right up to the start of the slot.'),
             ])->columns(2),
         ]);
     }

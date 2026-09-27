@@ -47,6 +47,7 @@ it('refuses a booking the rules do not allow, and saves nothing', function () {
 });
 
 it('cancels a booking before the cut-off only', function () {
+    rink('A-1')->update(['range_cancel' => 24 * 3600]);
     $member = member();
     $service = app(BookingService::class);
     $booking = $service->book($member, rink('A-1'), ...slot('2026-10-07 12:00'));

@@ -48,7 +48,7 @@ it('creates the club from the command line', function () {
         ->expectsQuestion('Slot length in minutes', '60')
         ->expectsQuestion('Players per rink', '2')
         ->expectsQuestion('Bookable ahead (days)', '14')
-        ->expectsQuestion('Cancel cut-off (hours)', '24')
+        ->expectsQuestion('Cancel cut-off (hours, 0 = until the slot starts)', '0')
         ->expectsQuestion('Secretary email address', 'sec@cli.example')
         ->expectsConfirmation('Create CLI Bowls Club with 1 greens x 2 rinks?', 'yes')
         ->assertSuccessful();

@@ -36,7 +36,7 @@ class ClubCreate extends Command
             'slot_minutes' => (int) text('Slot length in minutes', default: '60', required: true),
             'players_per_rink' => (int) text('Players per rink', default: '2', required: true),
             'booking_range_days' => (int) text('Bookable ahead (days)', default: '14', required: true),
-            'cancel_range_hours' => (int) text('Cancel cut-off (hours)', default: '24', required: true),
+            'cancel_range_hours' => (int) text('Cancel cut-off (hours, 0 = until the slot starts)', default: '0', required: true),
             'admin_email' => text('Secretary email address', required: true, validate: fn (string $value) => filter_var($value, FILTER_VALIDATE_EMAIL) ? null : 'Not a valid email address.'),
             'admin_password' => null,
         ];
