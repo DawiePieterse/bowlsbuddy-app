@@ -35,7 +35,7 @@ it('refuses to add a green that exists or has a bad name', function () {
         ->and(fn () => $this->manager->add('X-1', 2))->toThrow(RuntimeException::class, 'letters and numbers');
 });
 
-it('renames a green everywhere: rinks, green events and closed days', function () {
+it('renames a green everywhere: rinks, green events, closed days and directions of play', function () {
     $event = Event::query()->create([
         'sid' => null, 'status' => 'enabled',
         'datetime_start' => '2026-10-06 12:00:00', 'datetime_end' => '2026-10-06 17:00:00',
@@ -43,6 +43,8 @@ it('renames a green everywhere: rinks, green events and closed days', function (
     $event->setMeta('green', 'A');
     app(GreenService::class)->setClosed('A', now()->addDays(3), true);
     app(GreenService::class)->setClosed('B', now()->addDays(3), true);
+    app(GreenService::class)->setDirection('A', now()->subDays(3), 'NS');
+    app(GreenService::class)->setDirection('B', now()->subDays(3), 'EW');
 
     $this->manager->rename('A', 'Main');
 
@@ -50,7 +52,10 @@ it('renames a green everywhere: rinks, green events and closed days', function (
         ->and(Rink::query()->where('name', 'MAIN-1')->exists())->toBeTrue()
         ->and($event->fresh()->meta('green'))->toBe('MAIN')
         ->and(app(GreenService::class)->isClosed('MAIN', now()->addDays(3)))->toBeTrue()
-        ->and(app(GreenService::class)->isClosed('B', now()->addDays(3)))->toBeTrue();
+        ->and(app(GreenService::class)->isClosed('B', now()->addDays(3)))->toBeTrue()
+        ->and(app(GreenService::class)->direction('MAIN', now()->subDays(3)))->toBe('NS')
+        ->and(app(GreenService::class)->direction('A', now()->subDays(3)))->toBeNull()
+        ->and(app(GreenService::class)->direction('B', now()->subDays(3)))->toBe('EW');
 });
 
 it('keeps bookings attached to their renamed rinks', function () {
@@ -73,19 +78,23 @@ it('hides a green from members and shows it again', function () {
     expect(array_keys(app(GreenService::class)->greens()))->toBe(['A', 'B']);
 });
 
-it('deletes an empty green with its events and closed days', function () {
+it('deletes an empty green with its events, closed days and directions of play', function () {
     $event = Event::query()->create([
         'sid' => Rink::query()->where('name', 'B-2')->firstOrFail()->sid,
         'status' => 'enabled',
         'datetime_start' => '2026-10-06 12:00:00', 'datetime_end' => '2026-10-06 17:00:00',
     ]);
     app(GreenService::class)->setClosed('B', now()->addDays(3), true);
+    app(GreenService::class)->setDirection('A', now()->subDays(3), 'NS');
+    app(GreenService::class)->setDirection('B', now()->subDays(3), 'EW');
 
     $this->manager->delete('B');
 
     expect(array_keys($this->manager->all()))->toBe(['A'])
         ->and(Event::query()->whereKey($event->eid)->exists())->toBeFalse()
-        ->and((string) app(Settings::class)->get(GreenService::CLOSED_OPTION))->not->toContain(':B');
+        ->and((string) app(Settings::class)->get(GreenService::CLOSED_OPTION))->not->toContain(':B')
+        ->and((string) app(Settings::class)->get(GreenService::DIRECTION_OPTION))->not->toContain(':B:')
+        ->and(app(GreenService::class)->direction('A', now()->subDays(3)))->toBe('NS');
 });
 
 it('refuses to delete a green with bookings, or the last green', function () {

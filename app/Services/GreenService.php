@@ -12,7 +12,8 @@ use Illuminate\Support\Collection;
  * Greens and the days they are closed. A rink belongs to the green named by the prefix of its name ("A-1" is
  * on green "A"). Closed days are kept in the service.greens.closed setting as "YYYY-MM-DD:A" lines, and the
  * direction of play the Secretary indicates per day in service.greens.direction as "YYYY-MM-DD:A:NS" lines
- * (NS for North-South, EW for East-West).
+ * (NS for North-South, EW for East-West). Direction entries are kept for the past year, so the utilisation
+ * heatmap can tell in which direction each rink was played.
  *
  * Ported from Square\Manager\GreenManager in the original app.
  */
@@ -23,6 +24,9 @@ class GreenService
     public const DIRECTION_OPTION = 'service.greens.direction';
 
     public const DIRECTIONS = ['NS' => 'North-South', 'EW' => 'East-West'];
+
+    /** Days of direction history kept: a year for the utilisation heatmap, plus a margin. */
+    public const DIRECTION_HISTORY_DAYS = 400;
 
     public function __construct(private readonly Settings $settings) {}
 
@@ -95,15 +99,33 @@ class GreenService
      */
     public function direction(string $green, CarbonInterface $date): ?string
     {
-        foreach ($this->directionEntries() as $entry) {
-            if (str_starts_with($entry, $date->toDateString().':'.$green.':')) {
-                $direction = substr($entry, strlen($date->toDateString().':'.$green.':'));
+        return $this->directions()[$date->toDateString().':'.$green] ?? null;
+    }
 
-                return array_key_exists($direction, self::DIRECTIONS) ? $direction : null;
+    /**
+     * Every indicated direction of play, past days included.
+     *
+     * @return array<string, string> "YYYY-MM-DD:A" => "NS" or "EW"
+     */
+    public function directions(): array
+    {
+        $directions = [];
+
+        foreach ($this->directionEntries() as $entry) {
+            $at = strrpos($entry, ':');
+
+            if ($at === false) {
+                continue;
+            }
+
+            $direction = substr($entry, $at + 1);
+
+            if (array_key_exists($direction, self::DIRECTIONS)) {
+                $directions[substr($entry, 0, $at)] = $direction;
             }
         }
 
-        return null;
+        return $directions;
     }
 
     /** "North-South", "East-West" or null. */
@@ -113,8 +135,8 @@ class GreenService
     }
 
     /**
-     * Indicates (or with null clears) the direction of play for a green on a day. Entries for
-     * days before today are dropped at the same time.
+     * Indicates (or with null clears) the direction of play for a green on a day. Entries older
+     * than the direction history (a year and a bit) are dropped at the same time.
      */
     public function setDirection(string $green, CarbonInterface $date, ?string $direction): void
     {
@@ -123,11 +145,11 @@ class GreenService
         }
 
         $prefix = $date->toDateString().':'.$green.':';
-        $today = Carbon::today()->toDateString();
+        $oldest = Carbon::today()->subDays(self::DIRECTION_HISTORY_DAYS)->toDateString();
 
         $entries = array_filter(
             $this->directionEntries(),
-            fn (string $existing) => ! str_starts_with($existing, $prefix) && substr($existing, 0, 10) >= $today,
+            fn (string $existing) => ! str_starts_with($existing, $prefix) && substr($existing, 0, 10) >= $oldest,
         );
 
         if ($direction !== null) {

@@ -117,6 +117,15 @@ class GreenManager
                     (string) $this->settings->get(GreenService::CLOSED_OPTION, ''),
                 ),
             );
+
+            $this->settings->set(
+                GreenService::DIRECTION_OPTION,
+                preg_replace(
+                    '/^(\d{4}-\d{2}-\d{2}):'.preg_quote($old, '/').':(\w+)$/m',
+                    '$1:'.$new.':$2',
+                    (string) $this->settings->get(GreenService::DIRECTION_OPTION, ''),
+                ),
+            );
         });
     }
 
@@ -165,6 +174,15 @@ class GreenManager
                     '/^(\d{4}-\d{2}-\d{2}):'.preg_quote($green, '/').'$/m',
                     '',
                     (string) $this->settings->get(GreenService::CLOSED_OPTION, ''),
+                ),
+            );
+
+            $this->settings->set(
+                GreenService::DIRECTION_OPTION,
+                preg_replace(
+                    '/^(\d{4}-\d{2}-\d{2}):'.preg_quote($green, '/').':\w+$/m',
+                    '',
+                    (string) $this->settings->get(GreenService::DIRECTION_OPTION, ''),
                 ),
             );
         });
