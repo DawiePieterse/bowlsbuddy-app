@@ -69,7 +69,7 @@ it('shows the calendar with free slots to guests without names', function () {
         ->assertSee('Green A')
         ->assertSee('A-1')
         ->assertSee('A-6')
-        ->assertSee('Booked')
+        ->assertSee('<span class="slot-text">Booked</span>', false)
         ->assertDontSee('Jane')
         ->assertDontSee('Pat Partner')
         ->assertSee('Log in');
@@ -90,6 +90,21 @@ it('shows player names and own bookings to members', function () {
         ->assertSee('Pat Partner')
         ->assertSee('slot-own', false)
         ->assertSee('Book');
+});
+
+it('keeps the slot text for screen readers and shows a colour key for phones', function () {
+    pageBooking(User::factory()->create(), 'A-1', '2026-10-06', '14:00:00', '15:00:00');
+
+    $this->get('/greens/A/2026-10-06')
+        ->assertOk()
+        ->assertSee('class="calendar-key"', false)
+        ->assertSeeInOrder(['key-free', 'Free', 'key-booked', 'Booked', 'key-event', 'Event'], false)
+        ->assertDontSee('key-own', false)
+        ->assertSee('<span class="slot-text">Free</span>', false);
+
+    $this->actingAs(User::factory()->create())->get('/greens/A/2026-10-06')
+        ->assertSee('key-own', false)
+        ->assertSee('<span class="slot-text">Book</span>', false);
 });
 
 it('marks event slots purple with the event name', function () {

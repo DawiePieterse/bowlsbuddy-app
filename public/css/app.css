@@ -122,6 +122,26 @@ a { color: var(--link); }
     .overview-day .date { flex-basis: 100%; }
 }
 
+/* Phone: the green's calendar shows colours only - green free, grey booked, pink event */
+.calendar-key { display: none; }
+@media (max-width: 700px) {
+    .calendar-key { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+    .calendar-key span { display: inline-flex; align-items: center; gap: 5px; }
+    .calendar-key .key { display: inline-block; width: 16px; height: 16px; border-radius: 4px; }
+    .calendar td { height: 40px; padding: 4px; }
+    .calendar .slot-text {
+        position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    .calendar a.slot-free, .calendar .slot-busy { min-height: 30px; padding: 0; }
+    .calendar a.slot-free, .key-free { background: #b9dfbb; border: 1px solid var(--green); }
+    .calendar .slot-busy, .key-booked { background: #c3c9c4; border: 1px solid #9aa39c; }
+    .calendar .slot-own, .key-own { background: #c3c9c4; border: 3px solid var(--brand); }
+    .calendar .slot-event, .key-event { background: #f4bfdc; border: 1px solid #c2408a; }
+    .calendar .slot-closed { background: repeating-linear-gradient(45deg, #c3c9c4 0 4px, #e3e7e3 4px 8px); }
+    .calendar .slot-past { background: transparent; border: 0; }
+}
+
 /* Phone: the menu folds behind a hamburger (CSS only, no JavaScript) */
 @media (max-width: 700px) {
     .nav-button {
