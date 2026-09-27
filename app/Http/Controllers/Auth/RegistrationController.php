@@ -15,8 +15,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * Members register with their cellphone (WhatsApp) number, not an email address: the club runs
- * on WhatsApp and the app sends no email.
+ * Members register with their cellphone (WhatsApp) number, an email address, or both. Most clubs
+ * run on WhatsApp, but some members have no smartphone and only use email. Either one logs in.
  */
 class RegistrationController extends Controller
 {
@@ -35,26 +35,42 @@ class RegistrationController extends Controller
         $input = $request->validate([
             'firstname' => ['required', 'string', 'max:100'],
             'lastname' => ['required', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:32'],
+            'phone' => ['nullable', 'required_without:email', 'string', 'max:32'],
+            'email' => ['nullable', 'required_without:phone', 'string', 'email', 'max:128'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'accept_terms' => ['accepted'],
             'opened_at' => ['required', 'string'],
             'website' => ['prohibited'], // honeypot: humans never see it
         ], [
             'accept_terms.accepted' => 'Please accept the Business Terms and the Privacy Policy.',
+            'phone.required_without' => 'Please give a cellphone number or an email address.',
+            'email.required_without' => 'Please give a cellphone number or an email address.',
+            'email.email' => 'Please give a valid email address, like jane@example.com.',
         ]);
 
-        $phone = Phone::normalize($input['phone']);
+        $phone = null;
 
-        if ($phone === null) {
-            throw ValidationException::withMessages([
-                'phone' => 'Please give a South African cellphone number, like 082 123 4567.',
-            ]);
+        if (filled($input['phone'] ?? null)) {
+            $phone = Phone::normalize($input['phone']);
+
+            if ($phone === null) {
+                throw ValidationException::withMessages([
+                    'phone' => 'Please give a South African cellphone number, like 082 123 4567.',
+                ]);
+            }
+
+            if (User::query()->where('phone', $phone)->exists()) {
+                throw ValidationException::withMessages([
+                    'phone' => 'An account with this cellphone number already exists.',
+                ]);
+            }
         }
 
-        if (User::query()->where('phone', $phone)->exists()) {
+        $email = filled($input['email'] ?? null) ? mb_strtolower(trim($input['email'])) : null;
+
+        if ($email !== null && User::query()->where('email', $email)->exists()) {
             throw ValidationException::withMessages([
-                'phone' => 'An account with this cellphone number already exists.',
+                'email' => 'An account with this email address already exists.',
             ]);
         }
 
@@ -76,6 +92,7 @@ class RegistrationController extends Controller
             'alias' => trim($input['firstname'].' '.$input['lastname']),
             'status' => $immediate ? 'enabled' : 'disabled',
             'phone' => $phone,
+            'email' => $email,
             'pw' => $input['password'],
         ]);
 

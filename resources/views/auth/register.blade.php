@@ -20,10 +20,17 @@
             <input id="lastname" type="text" name="lastname" value="{{ old('lastname') }}" required>
             @error('lastname') <div class="error">{{ $message }}</div> @enderror
 
+            <p class="muted">Give your cellphone number, your email address, or both. You log in with either.</p>
+
             <label for="phone">Cellphone number (WhatsApp)</label>
-            <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required
+            <input id="phone" type="tel" name="phone" value="{{ old('phone') }}"
                    autocomplete="tel" inputmode="tel" placeholder="082 123 4567">
             @error('phone') <div class="error">{{ $message }}</div> @enderror
+
+            <label for="email">Email address</label>
+            <input id="email" type="email" name="email" value="{{ old('email') }}"
+                   autocomplete="email" placeholder="jane@example.com">
+            @error('email') <div class="error">{{ $message }}</div> @enderror
 
             <label for="password">Password</label>
             <input id="password" type="password" name="password" required autocomplete="new-password">

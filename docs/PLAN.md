@@ -212,7 +212,8 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 ## 7. Feature checklist (definition of done)
 
 **Members**
-- [x] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
+- [x] Registration: first name, surname, cellphone number or email (or both; either logs in), password, terms
+  and privacy acceptance, anti-bot delay
 - [x] Log in and log out; "forgot password" page pointing to the Secretary
 - [x] Greens overview: 14 playing days, free slots, closed (red), events (purple)
 - [x] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
@@ -234,6 +235,10 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Settings: names and text, the four document pages, rinks, behaviour
 - [x] Utilisation: heatmap of hours booked per rink over the last week, month, quarter or year, one per
   direction of play (North-South, East-West, not indicated)
+
+**Modules and licences** (docs/MODULES.md)
+- [x] Signed licence per install: modules, greens paid for, expiry with 14 days' grace, then read-only
+- [x] Licence page for the Secretary, expiry banner, `licence:*` commands, green limit when adding a green
 
 **New club setup**
 - [x] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
