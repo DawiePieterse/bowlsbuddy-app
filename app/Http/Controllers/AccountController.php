@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -23,18 +25,30 @@ class AccountController extends Controller
         return view('account.edit');
     }
 
-    public function updateEmail(Request $request): RedirectResponse
+    public function updatePhone(Request $request): RedirectResponse
     {
         $input = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:bs_users,email,'.$request->user()->uid.',uid'],
+            'phone' => ['required', 'string', 'max:32'],
             'current_password' => ['required', 'current_password'],
-        ], [
-            'email.unique' => 'An account with this email address already exists.',
         ]);
 
-        $request->user()->update(['email' => $input['email']]);
+        $phone = Phone::normalize($input['phone']);
 
-        return back()->with('status', 'Your email address has been changed.');
+        if ($phone === null) {
+            throw ValidationException::withMessages([
+                'phone' => 'Please give a South African cellphone number, like 082 123 4567.',
+            ]);
+        }
+
+        if (User::query()->where('phone', $phone)->where('uid', '!=', $request->user()->uid)->exists()) {
+            throw ValidationException::withMessages([
+                'phone' => 'An account with this cellphone number already exists.',
+            ]);
+        }
+
+        $request->user()->update(['phone' => $phone]);
+
+        return back()->with('status', 'Your cellphone number has been changed.');
     }
 
     public function updatePassword(Request $request): RedirectResponse
@@ -75,6 +89,7 @@ class AccountController extends Controller
 
         return response()->json([
             'name' => trim($user->firstName().' '.$user->lastName()) ?: $user->alias,
+            'cellphone' => $user->phone,
             'email' => $user->email,
             'status' => $user->status,
             'member_since' => $user->created?->format('Y-m-d'),

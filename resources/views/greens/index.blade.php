@@ -25,6 +25,9 @@
                                href="{{ route('greens.show', [$green, $day['date']->format('Y-m-d')]) }}">
                                 Green {{ $green }}
                                 <span class="slots">{{ $day['free'][$green] }} of {{ $total }} free</span>
+                                @if ($direction = app(\App\Services\GreenService::class)->directionLabel($green, $day['date']))
+                                    <span class="direction">&#8597; {{ $direction }}</span>
+                                @endif
                                 @if ($day['events'][$green])
                                     <span class="events">{{ implode(', ', $day['events'][$green]) }}</span>
                                 @endif

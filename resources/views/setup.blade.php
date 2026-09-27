@@ -45,7 +45,7 @@
             <input id="booking_range_days" type="text" inputmode="numeric" name="booking_range_days" value="{{ old('booking_range_days', $defaults['booking_range_days']) }}" required>
             @error('booking_range_days') <div class="error">{{ $message }}</div> @enderror
 
-            <label for="cancel_range_hours">Cancel cut-off (hours)</label>
+            <label for="cancel_range_hours">Cancel cut-off (hours, 0 = until the slot starts)</label>
             <input id="cancel_range_hours" type="text" inputmode="numeric" name="cancel_range_hours" value="{{ old('cancel_range_hours', $defaults['cancel_range_hours']) }}" required>
             @error('cancel_range_hours') <div class="error">{{ $message }}</div> @enderror
 

@@ -5,13 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Bowls Buddy' }} - {{ app(\App\Support\Settings::class)->get('client.name.full', 'Bowls Buddy') }}</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @if ($clubLogo = \App\Support\ClubLogo::url())
+        <link rel="icon" href="{{ $clubLogo }}">
+    @endif
 </head>
 <body>
     <header class="site">
-        <a href="{{ route('home') }}">
-            <div class="club">{{ app(\App\Support\Settings::class)->get('client.name.full') }}</div>
-            <div class="name">Bowls Buddy</div>
+        <a href="{{ route('home') }}" class="brand">
+            @if ($clubLogo)
+                <img class="logo" src="{{ $clubLogo }}" alt="">
+            @endif
+            <span>
+                <span class="name">Bowls Buddy</span>
+                <span class="club">{{ app(\App\Support\Settings::class)->get('client.name.full') }}</span>
+            </span>
         </a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+        <label for="nav-toggle" class="nav-button" aria-label="Menu">&#9776;</label>
         <nav class="site">
             <a href="{{ route('home') }}">Greens</a>
             <a href="{{ route('info') }}">Info</a>

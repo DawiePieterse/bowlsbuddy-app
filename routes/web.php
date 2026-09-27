@@ -15,6 +15,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/greens/{green}/{date}/sheet', [GreensController::class, 'sheet'])->name('greens.sheet');
     Route::post('/greens/{green}/{date}/close', [GreensController::class, 'close'])->name('greens.close');
     Route::post('/greens/{green}/{date}/open', [GreensController::class, 'open'])->name('greens.open');
+    Route::post('/greens/{green}/{date}/direction', [GreensController::class, 'direction'])->name('greens.direction');
 });
 
 Route::get('/greens/{green}/{date?}', [GreensController::class, 'show'])->name('greens.show');
@@ -25,6 +26,7 @@ Route::post('/setup', [SetupController::class, 'store'])->name('setup.store');
 Route::view('/info', 'pages.info')->name('info');
 Route::view('/help', 'pages.help')->name('help');
 Route::view('/forgot-password', 'auth.forgot-password')->name('password.request');
+Route::get('/logo', [PageController::class, 'logo'])->name('logo');
 Route::get('/documents/{document}', [PageController::class, 'document'])
     ->where('document', 'terms|privacy')->name('documents.show');
 
@@ -45,7 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
 
     Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
-    Route::put('/account/email', [AccountController::class, 'updateEmail'])->name('account.email');
+    Route::put('/account/phone', [AccountController::class, 'updatePhone'])->name('account.phone');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
     Route::get('/account/data', [AccountController::class, 'download'])->name('account.data');
     Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Members\Pages;
 
 use App\Filament\Resources\Members\MemberResource;
 use App\Models\User;
+use App\Support\Phone;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -25,6 +26,7 @@ class EditMember extends EditRecord
         $user = $this->getRecord();
 
         $data['firstname'] = $user->firstName();
+        $data['phone'] = Phone::pretty($user->phone);
         $data['lastname'] = $user->lastName();
         $data['privileges'] = array_values(array_filter(
             array_keys(User::PRIVILEGES),
@@ -37,7 +39,7 @@ class EditMember extends EditRecord
     /** @param  array<string, mixed>  $data */
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        return MemberResource::mapFormData($data);
+        return MemberResource::mapFormData($data, (int) $this->getRecord()->getKey());
     }
 
     protected function afterSave(): void

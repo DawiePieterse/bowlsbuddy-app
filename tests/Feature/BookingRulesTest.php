@@ -288,6 +288,7 @@ describe('when several rules apply', function () {
 
 describe('rule 7: cancelling', function () {
     it('lets members cancel their own booking until range_cancel hours before it starts', function () {
+        rink('A-1')->update(['range_cancel' => 24 * 3600]);
         $member = member();
         $booking = booked($member, 'A-1', '2026-10-06 12:00');
         $rules = app(BookingRules::class);
@@ -298,6 +299,19 @@ describe('rule 7: cancelling', function () {
             ->and($rules->canCancel($booking, null))->toBeFalse();
 
         $this->travelTo(Carbon::parse('2026-10-05 12:00'));
+        expect($rules->canCancel($booking, $member))->toBeFalse();
+    });
+
+    it('lets members cancel until the moment the slot starts when the cut-off is 0', function () {
+        // The LCE default: range_cancel 0 means a rink can be freed right before the match.
+        $member = member();
+        $booking = booked($member, 'A-1', '2026-10-06 12:00');
+        $rules = app(BookingRules::class);
+
+        $this->travelTo(Carbon::parse('2026-10-06 11:59:59'));
+        expect($rules->canCancel($booking, $member))->toBeTrue();
+
+        $this->travelTo(Carbon::parse('2026-10-06 12:00:00'));
         expect($rules->canCancel($booking, $member))->toBeFalse();
     });
 

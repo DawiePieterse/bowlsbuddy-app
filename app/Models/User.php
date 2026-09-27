@@ -18,6 +18,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property int $uid
  * @property string $alias
  * @property string $status
+ * @property ?string $phone
  * @property string|null $email
  * @property string|null $pw
  */
@@ -64,7 +65,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     protected $authPasswordName = 'pw';
 
-    protected $fillable = ['alias', 'status', 'email', 'pw'];
+    protected $fillable = ['alias', 'status', 'email', 'phone', 'pw'];
 
     protected $attributes = ['remember_token' => null];
 

@@ -43,6 +43,7 @@ it('creates a member with names, privileges and password', function () {
         ->fillForm([
             'firstname' => 'Alice',
             'lastname' => 'Assistant',
+            'phone' => '082 999 8877',
             'email' => 'alice@example.com',
             'status' => 'assist',
             'password' => 'a-good-password',
@@ -54,6 +55,7 @@ it('creates a member with names, privileges and password', function () {
     $alice = User::query()->where('email', 'alice@example.com')->firstOrFail();
 
     expect($alice->alias)->toBe('Alice Assistant')
+        ->and($alice->phone)->toBe('+27829998877')
         ->and($alice->firstName())->toBe('Alice')
         ->and($alice->hasPrivilege('admin.booking'))->toBeTrue()
         ->and($alice->hasPrivilege('admin.event'))->toBeFalse()
@@ -175,7 +177,7 @@ it('edits a rink in minutes, days and hours', function () {
     $this->actingAs($this->admin);
 
     Livewire::test(EditRink::class, ['record' => $rink->sid])
-        ->assertFormSet(['slot_minutes' => 60, 'booking_range_days' => 14, 'cancel_range_hours' => 24])
+        ->assertFormSet(['slot_minutes' => 60, 'booking_range_days' => 14, 'cancel_range_hours' => 0])
         ->fillForm(['slot_minutes' => 90, 'cancel_range_hours' => 12])
         ->call('save')
         ->assertHasNoFormErrors();

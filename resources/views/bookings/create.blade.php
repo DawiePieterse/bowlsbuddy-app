@@ -5,6 +5,10 @@
         <h1>Book rink {{ $rink->name }}</h1>
         <p><strong>{{ $start->format('l j F Y') }}</strong>, {{ $start->format('H:i') }}&ndash;{{ $end->format('H:i') }}</p>
 
+        @if ($direction = app(\App\Services\GreenService::class)->directionLabel($rink->green(), $start))
+            <p class="muted">&#8597; Direction of play: <strong>{{ $direction }}</strong></p>
+        @endif
+
         @if ($reason !== null)
             <div class="flash warning">{{ $reason }}</div>
             <a class="button subtle" href="{{ route('greens.show', [$rink->green(), $start->format('Y-m-d')]) }}">Back to Green {{ $rink->green() }}</a>
@@ -35,8 +39,14 @@
                     @error('accept_rules') <div class="error">{{ $message }}</div> @enderror
                 @endif
 
-                <p class="muted">One rink per member per day. You can cancel up to
-                    {{ (int) round(($rink->range_cancel ?? 0) / 3600) }} hours before the start.</p>
+                <p class="muted">One rink per member per day.
+                    @if ($rink->range_cancel === null)
+                        Bookings cannot be cancelled online.
+                    @elseif ((int) $rink->range_cancel === 0)
+                        You can cancel until the slot starts.
+                    @else
+                        You can cancel up to {{ (int) round($rink->range_cancel / 3600) }} hours before the start.
+                    @endif</p>
 
                 <button type="submit" class="full">Book this rink</button>
             </form>

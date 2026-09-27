@@ -6,6 +6,7 @@ use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
 use App\Models\User;
+use App\Support\Phone;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -21,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The Secretary's member management (PLAN.md section 7): search, create, edit, activate, set a
@@ -43,7 +45,17 @@ class MemberResource extends Resource
             Section::make('Member')->schema([
                 TextInput::make('firstname')->label('First name')->required()->maxLength(100),
                 TextInput::make('lastname')->label('Surname')->required()->maxLength(100),
-                TextInput::make('email')->email()->required()->unique('bs_users', 'email', ignoreRecord: true),
+                TextInput::make('phone')->label('Cellphone (WhatsApp)')->tel()
+                    ->placeholder('082 123 4567')
+                    ->rule(fn () => function (string $attribute, mixed $value, \Closure $fail) {
+                        if (filled($value) && Phone::normalize((string) $value) === null) {
+                            $fail('Please give a South African cellphone number, like 082 123 4567.');
+                        }
+                    })
+                    ->requiredWithout('email'),
+                TextInput::make('email')->email()->unique('bs_users', 'email', ignoreRecord: true)
+                    ->requiredWithout('phone')
+                    ->helperText('Only needed for accounts without a cellphone number.'),
                 Select::make('status')->options([
                     'disabled' => 'Not active (new or blocked)',
                     'enabled' => 'Member',
@@ -75,7 +87,9 @@ class MemberResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('alias')->label('Name')->searchable()->sortable(),
-                TextColumn::make('email')->searchable()->sortable(),
+                TextColumn::make('phone')->label('Cellphone')->searchable()
+                    ->formatStateUsing(fn (?string $state) => Phone::pretty($state)),
+                TextColumn::make('email')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')->badge()->color(fn (string $state): string => match ($state) {
                     'admin' => 'danger',
                     'assist' => 'warning',
@@ -137,9 +151,24 @@ class MemberResource extends Resource
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public static function mapFormData(array $data): array
+    public static function mapFormData(array $data, ?int $ignoreUid = null): array
     {
         $data['alias'] = trim(($data['firstname'] ?? '').' '.($data['lastname'] ?? ''));
+
+        $data['phone'] = filled($data['phone'] ?? null) ? Phone::normalize((string) $data['phone']) : null;
+
+        if ($data['phone'] !== null && User::query()
+            ->where('phone', $data['phone'])
+            ->when($ignoreUid !== null, fn ($query) => $query->where('uid', '!=', $ignoreUid))
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'data.phone' => 'An account with this cellphone number already exists.',
+            ]);
+        }
+
+        if (blank($data['email'] ?? null)) {
+            $data['email'] = null;
+        }
 
         if (filled($data['password'] ?? null)) {
             $data['pw'] = $data['password'];

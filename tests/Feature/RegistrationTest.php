@@ -15,7 +15,7 @@ function registrationInput(array $overrides = []): array
     return array_merge([
         'firstname' => 'Jane',
         'lastname' => 'Bowler',
-        'email' => 'jane@example.com',
+        'phone' => '082 123 4567',
         'password' => 'a-good-password',
         'password_confirmation' => 'a-good-password',
         'accept_terms' => '1',
@@ -23,27 +23,57 @@ function registrationInput(array $overrides = []): array
     ], $overrides);
 }
 
-it('shows the registration form', function () {
+it('shows the registration form with the cellphone field and no email field', function () {
     $this->get('/register')
         ->assertOk()
         ->assertSee('First name')
         ->assertSee('Surname')
+        ->assertSee('Cellphone number (WhatsApp)')
+        ->assertDontSee('Email address')
         ->assertSee('Business Terms')
         ->assertSee('Privacy Policy');
 });
 
-it('registers a member and logs them in', function () {
+it('registers a member by cellphone number and logs them in', function () {
     $this->post('/register', registrationInput())
         ->assertRedirect(route('home'));
 
-    $user = User::query()->where('email', 'jane@example.com')->firstOrFail();
+    $user = User::query()->where('phone', '+27821234567')->firstOrFail();
 
     expect($user->status)->toBe('enabled')
         ->and($user->alias)->toBe('Jane Bowler')
+        ->and($user->email)->toBeNull()
         ->and($user->firstName())->toBe('Jane')
-        ->and($user->lastName())->toBe('Bowler')
         ->and($user->meta('terms-accepted'))->not->toBeNull()
         ->and(auth()->check())->toBeTrue();
+});
+
+it('normalises the number however it is typed', function (string $typed) {
+    $this->post('/register', registrationInput(['phone' => $typed]));
+
+    expect(User::query()->where('phone', '+27821234567')->exists())->toBeTrue();
+})->with([
+    'plain' => '0821234567',
+    'international' => '+27 82 123 4567',
+    'no plus' => '27821234567',
+]);
+
+it('refuses a number that is not a South African cellphone', function (string $typed) {
+    $this->post('/register', registrationInput(['phone' => $typed]))
+        ->assertSessionHasErrors('phone');
+
+    expect(User::query()->where('alias', 'Jane Bowler')->exists())->toBeFalse();
+})->with([
+    'landline' => '011 612 7200',
+    'too short' => '082 123',
+    'words' => 'not a number',
+]);
+
+it('refuses a duplicate cellphone number', function () {
+    User::factory()->create(['phone' => '+27821234567']);
+
+    $this->post('/register', registrationInput())
+        ->assertSessionHasErrors('phone');
 });
 
 it('waits for the Secretary when activation is not immediate', function () {
@@ -52,7 +82,7 @@ it('waits for the Secretary when activation is not immediate', function () {
     $this->post('/register', registrationInput())
         ->assertRedirect(route('login'));
 
-    expect(User::query()->where('email', 'jane@example.com')->firstOrFail()->status)->toBe('disabled')
+    expect(User::query()->where('phone', '+27821234567')->firstOrFail()->status)->toBe('disabled')
         ->and(auth()->check())->toBeFalse();
 });
 
@@ -60,30 +90,23 @@ it('requires accepting the terms', function () {
     $this->post('/register', registrationInput(['accept_terms' => null]))
         ->assertSessionHasErrors('accept_terms');
 
-    expect(User::query()->where('email', 'jane@example.com')->exists())->toBeFalse();
+    expect(User::query()->where('phone', '+27821234567')->exists())->toBeFalse();
 });
 
 it('refuses a submission faster than the anti-bot delay', function () {
     $this->post('/register', registrationInput([
         'opened_at' => Crypt::encryptString((string) now()->getTimestamp()),
-    ]))->assertSessionHasErrors('email');
+    ]))->assertSessionHasErrors('phone');
 
-    expect(User::query()->where('email', 'jane@example.com')->exists())->toBeFalse();
+    expect(User::query()->where('phone', '+27821234567')->exists())->toBeFalse();
 });
 
 it('refuses a tampered timer and a filled honeypot', function () {
     $this->post('/register', registrationInput(['opened_at' => 'not-encrypted']))
-        ->assertSessionHasErrors('email');
+        ->assertSessionHasErrors('phone');
 
     $this->post('/register', registrationInput(['website' => 'https://spam.example']))
         ->assertSessionHasErrors('website');
 
-    expect(User::query()->where('email', 'jane@example.com')->exists())->toBeFalse();
-});
-
-it('refuses a duplicate email address', function () {
-    User::factory()->create(['email' => 'jane@example.com']);
-
-    $this->post('/register', registrationInput())
-        ->assertSessionHasErrors('email');
+    expect(User::query()->where('phone', '+27821234567')->exists())->toBeFalse();
 });

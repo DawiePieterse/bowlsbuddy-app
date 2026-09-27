@@ -24,9 +24,12 @@
     @php($time = fn (int $seconds) => sprintf('%02d:%02d', intdiv($seconds, 3600), intdiv($seconds % 3600, 60)))
 
     <div class="top">
-        <div>
+        @if ($clubLogo = \App\Support\ClubLogo::url())
+            <img src="{{ $clubLogo }}" alt="" style="height: 56px; width: 56px; object-fit: contain;">
+        @endif
+        <div style="flex: 1;">
             <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
-            <p class="sub">{{ app(\App\Support\Settings::class)->get('client.name.full') }} &middot; day sheet</p>
+            <p class="sub">{{ app(\App\Support\Settings::class)->get('client.name.full') }} &middot; day sheet{{ $direction ? ' · play '.$direction : '' }}</p>
             @if ($sheet['closed'])
                 <p class="sub"><strong>Green {{ $green }} is closed on this day.</strong></p>
             @endif
@@ -56,13 +59,15 @@
                         @php($cell = $row['cells'][$index])
                         <td @class(['has-event' => $cell['events'] !== []])>
                             @foreach ($cell['events'] as $eventName)
-                                {{ $eventName }}@if (! $loop->last || $cell['bookings']), @endif
+                                <div>{{ $eventName }}</div>
                             @endforeach
                             @foreach ($cell['bookings'] as $booking)
-                                {{ implode(', ', array_merge(
+                                @foreach (array_merge(
                                     [trim($booking->user->firstName().' '.$booking->user->lastName()) ?: $booking->user->alias],
                                     $booking->playerNames(),
-                                )) }}@if (! $loop->last), @endif
+                                ) as $name)
+                                    <div>{{ $name }}</div>
+                                @endforeach
                             @endforeach
                             @if ($sheet['closed'] && ! $cell['events'] && ! $cell['bookings'])
                                 Closed

@@ -29,7 +29,7 @@ it('shows the booking form for a free slot', function () {
         ->assertSee('14:00')
         ->assertSee("partner's full name", false)
         ->assertSee('One rink per member per day')
-        ->assertSee('24 hours before the start');
+        ->assertSee('You can cancel until the slot starts.');
 });
 
 it('shows the refusal instead of the form on an unbookable slot', function () {
@@ -178,6 +178,7 @@ it('lists bookings with a cancel button inside the cut-off', function () {
 });
 
 it('refuses to cancel past the cut-off but keeps staff able to', function () {
+    $this->rink->update(['range_cancel' => 24 * 3600]);
     $booking = pageFlowBook($this->member, '2026-10-05'); // today 14:00, only an hour away, cut-off 24 h
 
     $this->actingAs($this->member)

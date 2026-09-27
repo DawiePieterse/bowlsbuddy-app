@@ -4,24 +4,25 @@
     <div class="card">
         <h1>My account</h1>
         <p>{{ trim(auth()->user()->firstName().' '.auth()->user()->lastName()) ?: auth()->user()->alias }}
-            <span class="muted">&middot; {{ auth()->user()->email }}</span></p>
+            <span class="muted">&middot; {{ auth()->user()->phone ? \App\Support\Phone::pretty(auth()->user()->phone) : auth()->user()->email }}</span></p>
     </div>
 
     <div class="card">
-        <h2>Change email address</h2>
-        <form method="POST" action="{{ route('account.email') }}">
+        <h2>Change cellphone number</h2>
+        <form method="POST" action="{{ route('account.phone') }}">
             @csrf
             @method('PUT')
 
-            <label for="email">New email address</label>
-            <input id="email" type="email" name="email" value="{{ old('email', auth()->user()->email) }}" required>
-            @error('email') <div class="error">{{ $message }}</div> @enderror
-
-            <label for="current_password_email">Current password</label>
-            <input id="current_password_email" type="password" name="current_password" required autocomplete="current-password">
+            <label for="current_password_phone">Current password</label>
+            <input id="current_password_phone" type="password" name="current_password" required autocomplete="current-password">
             @error('current_password') <div class="error">{{ $message }}</div> @enderror
 
-            <button type="submit">Change email</button>
+            <label for="phone">New cellphone number (WhatsApp)</label>
+            <input id="phone" type="tel" name="phone" inputmode="tel" placeholder="082 123 4567"
+                   value="{{ old('phone', \App\Support\Phone::pretty(auth()->user()->phone)) }}" required>
+            @error('phone') <div class="error">{{ $message }}</div> @enderror
+
+            <button type="submit">Change number</button>
         </form>
     </div>
 
@@ -31,16 +32,16 @@
             @csrf
             @method('PUT')
 
+            <label for="current_password_pw">Current password</label>
+            <input id="current_password_pw" type="password" name="current_password" required autocomplete="current-password">
+            @error('current_password') <div class="error">{{ $message }}</div> @enderror
+
             <label for="password">New password</label>
             <input id="password" type="password" name="password" required autocomplete="new-password">
             @error('password') <div class="error">{{ $message }}</div> @enderror
 
             <label for="password_confirmation">New password again</label>
             <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
-
-            <label for="current_password_pw">Current password</label>
-            <input id="current_password_pw" type="password" name="current_password" required autocomplete="current-password">
-            @error('current_password') <div class="error">{{ $message }}</div> @enderror
 
             <button type="submit">Change password</button>
         </form>

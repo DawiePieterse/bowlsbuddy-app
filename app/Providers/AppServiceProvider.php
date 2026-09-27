@@ -33,9 +33,9 @@ class AppServiceProvider extends ServiceProvider
 
         Password::defaults(fn () => Password::min(8));
 
-        // Five login attempts per minute per email address and IP.
+        // Five login attempts per minute per identifier (cellphone number or email) and IP.
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(
-            Str::lower((string) $request->input('email')).'|'.$request->ip()
+            Str::lower((string) $request->input('login')).'|'.$request->ip()
         ));
     }
 }

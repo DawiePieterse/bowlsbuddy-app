@@ -15,7 +15,7 @@ the files named below.
 | Output escaped by default; rich text cleaned on save | Done | Blade `{{ }}`; info/help sanitized with symfony/html-sanitizer in SiteSettings, tested in SecretaryToolsTest |
 | APP_DEBUG=false in production, errors logged | Done | .env.afrihost.example (`APP_DEBUG=false`, `LOG_LEVEL=error`) |
 | composer audit and Dependabot | Done | `composer audit` clean (26 Sep 2026, in CI on every push); .github/dependabot.yml weekly |
-| POPIA: minimal data, download and delete my data, resets via the Secretary | Done | Registration stores name+email only; /account/data download and account deletion (AccountPagesTest); no email anywhere |
+| POPIA: minimal data, download and delete my data, resets via the Secretary | Done | Registration stores name + cellphone (WhatsApp) number only; /account/data download and account deletion (AccountPagesTest); the app sends no email or SMS |
 
 Extras noticed and covered while checking:
 
