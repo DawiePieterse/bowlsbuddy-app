@@ -27,6 +27,28 @@ class RinkUtilisation
 
     public function __construct(private readonly GreenService $greens) {}
 
+    /**
+     * The first and last day of a period, both included: the last 7 days, or a month, quarter or year
+     * back from today.
+     *
+     * @return array{CarbonImmutable, CarbonImmutable}
+     */
+    public static function range(string $period, ?CarbonInterface $today = null): array
+    {
+        if (! array_key_exists($period, self::PERIODS)) {
+            throw new \InvalidArgumentException('The period is week, month, quarter or year.');
+        }
+
+        $until = CarbonImmutable::instance($today ?? CarbonImmutable::today())->startOfDay();
+
+        return [match ($period) {
+            'week' => $until->subDays(6),
+            'month' => $until->subMonthNoOverflow()->addDay(),
+            'quarter' => $until->subMonthsNoOverflow(3)->addDay(),
+            default => $until->subYearNoOverflow()->addDay(),
+        }, $until];
+    }
+
     public static function directionLabel(string $direction): string
     {
         return GreenService::DIRECTIONS[$direction] ?? 'Direction not indicated';
@@ -46,17 +68,7 @@ class RinkUtilisation
      */
     public function for(string $period, ?CarbonInterface $today = null): array
     {
-        if (! array_key_exists($period, self::PERIODS)) {
-            throw new \InvalidArgumentException('The period is week, month, quarter or year.');
-        }
-
-        $until = CarbonImmutable::instance($today ?? CarbonImmutable::today())->startOfDay();
-        $from = match ($period) {
-            'week' => $until->subDays(6),
-            'month' => $until->subMonthNoOverflow()->addDay(),
-            'quarter' => $until->subMonthsNoOverflow(3)->addDay(),
-            default => $until->subYearNoOverflow()->addDay(),
-        };
+        [$from, $until] = self::range($period, $today);
 
         $columns = $this->columns($period, $from, $until);
         $directions = $this->greens->directions();

@@ -227,6 +227,8 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Invite members via WhatsApp
 - [x] Printable day sheet with QR code to live bookings
 - [x] Members: search, create, edit, activate, set a temporary password, privileges
+- [x] Members: "Use of rinks" tab ranking members by hours booked over the last week, month, quarter or year,
+  with bookings and share of the total
 - [x] Bookings: list, create for a member, edit, cancel, delete
 - [x] Events: for a rink, a green or all rinks; list, edit, delete
 - [x] Settings: names and text, the four document pages, rinks, behaviour

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Members;
 
+use App\Filament\Pages\Utilisation;
 use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
@@ -22,6 +23,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -108,8 +111,25 @@ class MemberResource extends Resource
                 TextColumn::make('alias')->label('Name')->searchable()->sortable(),
                 TextColumn::make('contact')->label('Cellphone or email')
                     ->state(fn (User $record): ?string => $record->phone ? Phone::pretty($record->phone) : $record->email)
-                    ->searchable(['phone', 'email']),
+                    ->searchable(['phone', 'email'])
+                    ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
+                TextColumn::make('usage_hours')->label('Hours')
+                    ->formatStateUsing(fn ($state): string => Utilisation::formatHours((float) $state))
+                    ->alignEnd()
+                    ->sortable()
+                    ->visible(fn ($livewire): bool => self::showingUsage($livewire)),
+                TextColumn::make('usage_bookings')->label('Bookings')
+                    ->alignEnd()
+                    ->sortable()
+                    ->visibleFrom('md')
+                    ->visible(fn ($livewire): bool => self::showingUsage($livewire)),
+                TextColumn::make('usage_share')->label('Share of total')
+                    ->state(fn (User $record, $livewire): float => $livewire->usageShare((float) $record->getAttribute('usage_hours')))
+                    ->formatStateUsing(fn (float $state): string => number_format($state, 1).'%')
+                    ->alignEnd()
+                    ->visible(fn ($livewire): bool => self::showingUsage($livewire)),
                 TextColumn::make('status')->badge()
+                    ->hidden(fn ($livewire): bool => self::showingUsage($livewire))
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'disabled' => 'Waiting for approval',
                         'enabled' => 'Member',
@@ -124,9 +144,16 @@ class MemberResource extends Resource
                         'disabled' => 'warning',
                         default => 'gray',
                     }),
-                TextColumn::make('last_activity')->dateTime('j M Y, H:i')->label('Last active')->sortable()->visibleFrom('xl'),
+                TextColumn::make('last_activity')->dateTime('j M Y, H:i')->label('Last active')->sortable()->visibleFrom('xl')
+                    ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
             ])
-            ->defaultSort('alias')
+            ->header(fn ($livewire): ?View => self::showingUsage($livewire)
+                ? view('filament.members.usage-header', ['page' => $livewire])
+                : null)
+            // The use of rinks tab ranks members from most to fewest hours; the others go by name.
+            ->defaultSort(fn (Builder $query, $livewire): Builder => self::showingUsage($livewire)
+                ? $query->orderByDesc('usage_hours')->orderBy('alias')
+                : $query->orderBy('alias'))
             ->filters([
                 SelectFilter::make('status')->options(User::STATUSES),
             ])
@@ -171,6 +198,12 @@ class MemberResource extends Resource
                 ])->label('Password and edit')->tooltip('Password and edit'),
             ])
             ->toolbarActions([]);
+    }
+
+    /** Whether the table shows the "Use of rinks" tab of the Members list. */
+    private static function showingUsage(mixed $livewire): bool
+    {
+        return $livewire instanceof ListMembers && $livewire->isShowingUsage();
     }
 
     public static function getPages(): array
