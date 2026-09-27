@@ -40,6 +40,11 @@ composer check      # Pint (style), Larastan (static analysis), Pest (tests)
 
 GitHub Actions runs the same checks, plus `composer audit`, on every push.
 
+Browser tests (Playwright, phone and desktop widths) run with `scripts/e2e.sh`.
+
+For Claude Code sessions, `CLAUDE.md` holds the working notes and `.claude/hooks/session-start.sh` sets up
+MariaDB, the dependencies and `.env` automatically in Claude Code on the web.
+
 ## Structure
 
 | Where | What |
