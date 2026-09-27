@@ -88,7 +88,9 @@ class BookingResource extends Resource
                 TextColumn::make('rink.name')->label('Rink')->sortable(),
                 TextColumn::make('user.alias')->label('Member')->searchable()->sortable(),
                 TextColumn::make('quantity')->label('Players'),
-                TextColumn::make('status')->badge()->color(fn (string $state): string => $state === 'cancelled' ? 'gray' : 'success'),
+                TextColumn::make('status')->badge()
+                    ->formatStateUsing(fn (string $state): string => $state === 'cancelled' ? 'Cancelled' : 'Booked')
+                    ->color(fn (string $state): string => $state === 'cancelled' ? 'gray' : 'success'),
             ])
             ->defaultSort('bid', 'desc')
             ->filters([
