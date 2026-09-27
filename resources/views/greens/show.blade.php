@@ -73,10 +73,14 @@
                                         @else
                                             <a class="slot-free" href="{{ route('login') }}">Free</a>
                                         @endauth
-                                    @elseif ($cell['state'] === 'own')
-                                        <span class="slot-busy slot-own">{{ $cell['label'] }}</span>
-                                    @elseif ($cell['state'] === 'booked')
-                                        <span class="slot-busy">{{ $cell['label'] }}</span>
+                                    @elseif ($cell['state'] === 'own' || $cell['state'] === 'booked')
+                                        <span class="slot-busy {{ $cell['state'] === 'own' ? 'slot-own' : '' }}">
+                                            @forelse ($cell['names'] as $name)
+                                                <span class="player">{{ $name }}</span>
+                                            @empty
+                                                Booked
+                                            @endforelse
+                                        </span>
                                     @elseif ($cell['state'] === 'event')
                                         <span class="slot-busy slot-event">{{ $cell['label'] }}</span>
                                     @elseif ($cell['state'] === 'closed')

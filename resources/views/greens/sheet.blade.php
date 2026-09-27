@@ -59,13 +59,15 @@
                         @php($cell = $row['cells'][$index])
                         <td @class(['has-event' => $cell['events'] !== []])>
                             @foreach ($cell['events'] as $eventName)
-                                {{ $eventName }}@if (! $loop->last || $cell['bookings']), @endif
+                                <div>{{ $eventName }}</div>
                             @endforeach
                             @foreach ($cell['bookings'] as $booking)
-                                {{ implode(', ', array_merge(
+                                @foreach (array_merge(
                                     [trim($booking->user->firstName().' '.$booking->user->lastName()) ?: $booking->user->alias],
                                     $booking->playerNames(),
-                                )) }}@if (! $loop->last), @endif
+                                ) as $name)
+                                    <div>{{ $name }}</div>
+                                @endforeach
                             @endforeach
                             @if ($sheet['closed'] && ! $cell['events'] && ! $cell['bookings'])
                                 Closed

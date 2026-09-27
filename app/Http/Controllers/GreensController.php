@@ -244,7 +244,7 @@ class GreensController extends Controller
 
             return [
                 'state' => $user !== null && $booking->uid === $user->uid ? 'own' : 'booked',
-                'label' => $names ? implode(', ', $names) : 'Booked',
+                'names' => $names,
             ];
         }
 

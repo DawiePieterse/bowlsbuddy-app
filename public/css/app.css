@@ -89,7 +89,8 @@ a { color: #0066cc; }
 .calendar td { height: 44px; }
 .calendar a.slot-free { display: block; min-height: 32px; line-height: 32px; border-radius: 6px; background: #fff; border: 1px dashed var(--line); color: var(--blue); text-decoration: none; }
 .calendar a.slot-free:hover { border-color: var(--blue); }
-.calendar .slot-busy { display: block; min-height: 32px; border-radius: 6px; background: #ececf0; padding: 2px 4px; color: var(--muted); overflow-wrap: anywhere; }
+.calendar .slot-busy { display: block; min-height: 32px; border-radius: 6px; background: #ececf0; padding: 4px; color: var(--muted); overflow-wrap: anywhere; }
+.calendar .slot-busy .player { display: block; line-height: 1.35; }
 .calendar .slot-own { background: var(--green-soft); border: 1px solid var(--green); color: var(--text); }
 .calendar .slot-event { background: var(--purple-soft); border: 1px solid var(--purple); color: var(--purple); }
 .calendar .slot-past { background: transparent; color: var(--line); }
