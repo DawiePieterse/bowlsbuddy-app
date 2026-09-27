@@ -107,13 +107,6 @@ class SiteSettings extends Page
                         )
                         ->helperText('Shown in the header of every page, on the day sheet and in this panel.'),
                 ]),
-                Tab::make('Info and help pages')->schema([
-                    RichEditor::make('info')->label('Info page')
-                        ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                    RichEditor::make('help')->label('Help page')
-                        ->helperText('Leave empty for the built-in guide.')
-                        ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                ]),
                 Tab::make('Behaviour')->schema([
                     Select::make('activation')->label('New registrations')->options([
                         'immediate' => 'Active immediately',
@@ -128,7 +121,14 @@ class SiteSettings extends Page
                         ->numeric()->minValue(0)->maxValue(50),
                 ]),
                 Tab::make('Documents')->schema([
-                    Section::make()->description('PDF files members see when registering and on the Info page.')->schema([
+                    Section::make('Info and help pages')->description('The text members see on the Info and Help pages.')->schema([
+                        RichEditor::make('info')->label('Info page')
+                            ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
+                        RichEditor::make('help')->label('Help page')
+                            ->helperText('Leave empty for the built-in guide.')
+                            ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
+                    ]),
+                    Section::make('Terms and privacy')->description('PDF files members see when registering and on the Info page.')->schema([
                         FileUpload::make('terms')->label('Business Terms (PDF)')
                             ->disk('documents')
                             ->acceptedFileTypes(['application/pdf'])
