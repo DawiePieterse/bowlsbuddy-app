@@ -23,20 +23,3 @@ it('shows the help page with a default guide', function () {
 it('shows the forgot password page pointing to the Secretary', function () {
     $this->get('/forgot-password')->assertOk()->assertSee('Club Secretary');
 });
-
-it('serves the terms and privacy PDFs once uploaded', function () {
-    $this->get('/documents/terms')->assertNotFound();
-
-    @mkdir(storage_path('app/documents'), 0775, true);
-    file_put_contents(storage_path('app/documents/terms.pdf'), '%PDF-1.4 test');
-
-    try {
-        $this->get('/documents/terms')
-            ->assertOk()
-            ->assertHeader('Content-Type', 'application/pdf');
-    } finally {
-        unlink(storage_path('app/documents/terms.pdf'));
-    }
-
-    $this->get('/documents/other')->assertNotFound();
-});

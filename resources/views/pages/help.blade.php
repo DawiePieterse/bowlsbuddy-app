@@ -15,5 +15,8 @@
             <h2>Forgot your password?</h2>
             <p>Ask the Club Secretary to set a temporary one for you.</p>
         @endif
+        @if (\App\Support\ClubDocuments::exists('help'))
+            <a class="button subtle" href="{{ route('documents.show', 'help') }}" target="_blank">Open the help guide (PDF)</a>
+        @endif
     </div>
 @endsection

@@ -28,7 +28,7 @@ Route::view('/help', 'pages.help')->name('help');
 Route::view('/forgot-password', 'auth.forgot-password')->name('password.request');
 Route::get('/logo', [PageController::class, 'logo'])->name('logo');
 Route::get('/documents/{document}', [PageController::class, 'document'])
-    ->where('document', 'terms|privacy')->name('documents.show');
+    ->where('document', 'info|help|terms|privacy')->name('documents.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');

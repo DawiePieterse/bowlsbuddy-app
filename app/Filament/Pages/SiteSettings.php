@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
+use App\Support\ClubDocuments;
 use App\Support\ClubLogo;
 use App\Support\Settings;
 use BackedEnum;
@@ -74,9 +75,9 @@ class SiteSettings extends Page
             $data[$field] = $settings->get($key);
         }
 
-        foreach (['terms', 'privacy'] as $document) {
-            if (is_file(storage_path('app/documents/'.$document.'.pdf'))) {
-                $data[$document] = [$document.'.pdf'];
+        foreach (array_keys(ClubDocuments::ALL) as $document) {
+            if (ClubDocuments::exists($document)) {
+                $data[$document.'_pdf'] = [$document.'.pdf'];
             }
         }
 
@@ -121,22 +122,20 @@ class SiteSettings extends Page
                         ->numeric()->minValue(0)->maxValue(50),
                 ]),
                 Tab::make('Documents')->schema([
-                    Section::make('Info and help pages')->description('The text members see on the Info and Help pages.')->schema([
-                        RichEditor::make('info')->label('Info page')
+                    Section::make('Info page')->description('The text on the Info page, and an optional PDF members can open from it.')->schema([
+                        RichEditor::make('info')->label('Info page text')
                             ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
-                        RichEditor::make('help')->label('Help page')
+                        self::pdfUpload('info', 'Info sheet (PDF)'),
+                    ]),
+                    Section::make('Help page')->description('The text on the Help page, and an optional PDF members can open from it.')->schema([
+                        RichEditor::make('help')->label('Help page text')
                             ->helperText('Leave empty for the built-in guide.')
                             ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
+                        self::pdfUpload('help', 'Help guide (PDF)'),
                     ]),
                     Section::make('Terms and privacy')->description('PDF files members see when registering and on the Info page.')->schema([
-                        FileUpload::make('terms')->label('Business Terms (PDF)')
-                            ->disk('documents')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->getUploadedFileNameForStorageUsing(fn () => 'terms.pdf'),
-                        FileUpload::make('privacy')->label('Privacy Policy (PDF)')
-                            ->disk('documents')
-                            ->acceptedFileTypes(['application/pdf'])
-                            ->getUploadedFileNameForStorageUsing(fn () => 'privacy.pdf'),
+                        self::pdfUpload('terms', 'Business Terms (PDF)'),
+                        self::pdfUpload('privacy', 'Privacy Policy (PDF)'),
                     ]),
                 ]),
             ]),
@@ -158,6 +157,12 @@ class SiteSettings extends Page
         }
 
         self::storePlayingDays($settings, (array) ($state['playing_days'] ?? []));
+
+        foreach (array_keys(ClubDocuments::ALL) as $document) {
+            if (blank($state[$document.'_pdf'] ?? null)) {
+                ClubDocuments::remove($document);
+            }
+        }
 
         ClubLogo::keepOnly(blank($state['logo'] ?? null) ? null : basename((string) $state['logo']));
 
@@ -216,5 +221,14 @@ class SiteSettings extends Page
         $hidden = array_values(array_diff(self::WEEKDAYS, $playing));
 
         $settings->set(self::DAY_EXCEPTIONS, implode("\n", [...$hidden, ...$dates]));
+    }
+
+    private static function pdfUpload(string $document, string $label): FileUpload
+    {
+        return FileUpload::make($document.'_pdf')->label($label)
+            ->disk('documents')
+            ->acceptedFileTypes(['application/pdf'])
+            ->maxSize(10240)
+            ->getUploadedFileNameForStorageUsing(fn () => $document.'.pdf');
     }
 }
