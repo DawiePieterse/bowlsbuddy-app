@@ -23,13 +23,13 @@ function registrationInput(array $overrides = []): array
     ], $overrides);
 }
 
-it('shows the registration form with the cellphone field and no email field', function () {
+it('shows the registration form with the cellphone and email fields', function () {
     $this->get('/register')
         ->assertOk()
         ->assertSee('First name')
         ->assertSee('Surname')
         ->assertSee('Cellphone number (WhatsApp)')
-        ->assertDontSee('Email address')
+        ->assertSee('Email address')
         ->assertSee('Business Terms')
         ->assertSee('Privacy Policy');
 });
@@ -48,6 +48,61 @@ it('registers a member by cellphone number and logs them in when activation is i
         ->and($user->firstName())->toBe('Jane')
         ->and($user->meta('terms-accepted'))->not->toBeNull()
         ->and(auth()->check())->toBeTrue();
+});
+
+it('registers a member by email address only', function () {
+    app(Settings::class)->set('service.user.activation', 'immediate');
+
+    $this->post('/register', registrationInput(['phone' => '', 'email' => ' Jane@Example.com ']))
+        ->assertRedirect(route('home'));
+
+    $user = User::query()->where('email', 'jane@example.com')->firstOrFail();
+
+    expect($user->phone)->toBeNull()
+        ->and($user->status)->toBe('enabled');
+});
+
+it('registers a member with both a cellphone number and an email address', function () {
+    $this->post('/register', registrationInput(['email' => 'jane@example.com']));
+
+    $user = User::query()->where('phone', '+27821234567')->firstOrFail();
+
+    expect($user->email)->toBe('jane@example.com');
+});
+
+it('lets a member registered by email log in with it', function () {
+    app(Settings::class)->set('service.user.activation', 'immediate');
+    $this->post('/register', registrationInput(['phone' => '', 'email' => 'jane@example.com']));
+    auth()->logout();
+
+    $this->post('/login', ['login' => 'jane@example.com', 'password' => 'a-good-password'])
+        ->assertRedirect();
+
+    expect(auth()->user()?->email)->toBe('jane@example.com');
+});
+
+it('asks for a cellphone number or an email address when both are missing', function () {
+    $this->post('/register', registrationInput(['phone' => '', 'email' => '']))
+        ->assertSessionHasErrors([
+            'phone' => 'Please give a cellphone number or an email address.',
+            'email' => 'Please give a cellphone number or an email address.',
+        ]);
+
+    expect(User::query()->where('alias', 'Jane Bowler')->exists())->toBeFalse();
+});
+
+it('refuses an invalid email address', function () {
+    $this->post('/register', registrationInput(['phone' => '', 'email' => 'not-an-email']))
+        ->assertSessionHasErrors('email');
+
+    expect(User::query()->where('alias', 'Jane Bowler')->exists())->toBeFalse();
+});
+
+it('refuses a duplicate email address, whatever its case', function () {
+    User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->post('/register', registrationInput(['phone' => '', 'email' => 'JANE@example.com']))
+        ->assertSessionHasErrors('email');
 });
 
 it('normalises the number however it is typed', function (string $typed) {

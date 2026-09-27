@@ -212,7 +212,8 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 ## 7. Feature checklist (definition of done)
 
 **Members**
-- [x] Registration: first name, surname, email, password, terms and privacy acceptance, anti-bot delay
+- [x] Registration: first name, surname, cellphone number or email (or both; either logs in), password, terms
+  and privacy acceptance, anti-bot delay
 - [x] Log in and log out; "forgot password" page pointing to the Secretary
 - [x] Greens overview: 14 playing days, free slots, closed (red), events (purple)
 - [x] Green calendar: rinks by hourly slots, player names for logged-in members, own bookings in green
