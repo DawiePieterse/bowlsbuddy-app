@@ -105,9 +105,9 @@ class MemberResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('alias')->label('Name')->searchable()->sortable(),
-                TextColumn::make('phone')->label('Cellphone')->searchable()
-                    ->formatStateUsing(fn (?string $state) => Phone::pretty($state)),
-                TextColumn::make('email')->searchable()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('contact')->label('Cellphone or email')
+                    ->state(fn (User $record): ?string => $record->phone ? Phone::pretty($record->phone) : $record->email)
+                    ->searchable(['phone', 'email']),
                 TextColumn::make('status')->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'disabled' => 'Waiting for approval',

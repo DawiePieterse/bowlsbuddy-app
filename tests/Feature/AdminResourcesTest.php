@@ -102,6 +102,19 @@ it('shows members waiting for approval on the menu and in their own tab', functi
         ->assertTableActionHidden('activate', $member);
 });
 
+it('shows the cellphone number, or the email when a member has no number', function () {
+    $member = User::factory()->create(['phone' => '+27821234567', 'email' => null]);
+
+    $this->actingAs($this->admin);
+
+    Livewire::test(ListMembers::class)
+        ->assertTableColumnStateSet('contact', '082 123 4567', $member)
+        ->assertTableColumnStateSet('contact', 'secretary@example.com', $this->admin)
+        ->searchTable('secretary@')
+        ->assertCanSeeTableRecords([$this->admin])
+        ->assertCanNotSeeTableRecords([$member]);
+});
+
 it('shows no approval badge when nobody is waiting', function () {
     $this->actingAs($this->admin);
 
