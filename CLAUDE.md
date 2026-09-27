@@ -9,7 +9,7 @@ checklist (section 7) and the decisions (section 12). Tick new features off in `
 | Where | What |
 |---|---|
 | `app/Models` | `User`, `Rink` (`bs_squares`, key `sid`), `Booking` (`bid`), `Reservation` (`rid`, date and times of a booking), `Event` (`eid`, blocked time), `Option` (`bs_options`). Meta via `Concerns/HasMeta` (`meta()`, `setMeta()`). |
-| `app/Services` | Business logic: `BookingRules`, `BookingService`, `GreenService` (greens, closed days, direction of play), `GreenManager` (add/rename/delete greens), `DaySheet`, `GreensOverview`, `RinkUtilisation`. |
+| `app/Services` | Business logic: `BookingRules`, `BookingService`, `GreenService` (greens, closed days, direction of play), `GreenManager` (add/rename/delete greens), `DaySheet`, `GreensOverview`, `RinkUtilisation` (heatmap, and `range()` for the week/month/quarter/year periods), `MemberUsage` (hours per member for the Members "Use of rinks" tab). |
 | `app/Support/Settings.php` | Cached site settings from `bs_options`. Always read and write settings through it. |
 | `app/Filament` | Secretary / admin panel at `/admin`: resources (Members, Bookings, Events, Rinks) and pages (Greens, Utilisation, SiteSettings, Maintenance). Pages and resources are auto-discovered. |
 | `app/Http/Controllers` | Member pages (custom Blade), plus the Secretary's close/open green, direction and day sheet. |
@@ -81,6 +81,9 @@ scripts/e2e.sh                                           # Playwright, own datab
   custom page views. Use Filament components (`x-filament::section`, `x-filament::button`) and a small
   scoped `<style>` block for anything else (see `utilisation.blade.php`), with `.dark` variants.
 - Import classes in Blade with `@use('App\\...')` at the top of the view, not `use` inside `@php`.
+- A tab that needs its own columns (Members "Use of rinks"): the tab's `modifyQueryUsing` adds the data, and
+  columns use `->visible()`/`->hidden()` closures on `$livewire`; see `MemberResource::showingUsage()`.
+- Livewire `assertSee()` fails on text that Blade breaks across source lines; assert the parts.
 - Check a new page visually: `php artisan serve`, log in at `/admin` as `secretary@example.com` (password
   from `CLUB_ADMIN_PASSWORD` when seeding), and screenshot with Playwright at 390 px and desktop width, light
   and dark.
