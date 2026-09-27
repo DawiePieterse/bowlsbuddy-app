@@ -3,6 +3,7 @@
 use App\Filament\Pages\SiteSettings;
 use App\Models\User;
 use App\Support\ClubDocuments;
+use App\Support\Settings;
 use Database\Seeders\ClubSeeder;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -68,4 +69,18 @@ it('uploads and removes the PDFs from the settings page', function () {
 
     expect(ClubDocuments::exists('info'))->toBeFalse()
         ->and(ClubDocuments::exists('help'))->toBeTrue();
+});
+
+it('starts the Info and Help editors from the standard text, or the club text once saved', function () {
+    $this->actingAs(User::query()->where('email', 'secretary@example.com')->firstOrFail());
+
+    $this->get('/admin/site-settings')->assertOk()
+        ->assertSee('Club rules for bookings')
+        ->assertSee('How to book');
+
+    app(Settings::class)->set('service.help', '<p>Our own help text.</p>');
+
+    $this->get('/admin/site-settings')->assertOk()
+        ->assertSee('Our own help text.')
+        ->assertDontSee('How to book');
 });

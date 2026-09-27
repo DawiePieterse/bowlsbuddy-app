@@ -3,11 +3,7 @@
 @section('content')
     <div class="card">
         <h1>Info</h1>
-        @if ($text = app(\App\Support\Settings::class)->get('service.info'))
-            {!! $text !!}
-        @elseif (! \App\Support\ClubDocuments::exists('info'))
-            <p class="muted">The Club Secretary has not written this page yet.</p>
-        @endif
+        {!! \App\Support\StandardTexts::for('info') !!}
         @if (\App\Support\ClubDocuments::exists('info'))
             <a class="button subtle" href="{{ route('documents.show', 'info') }}" target="_blank">Open the info sheet (PDF)</a>
         @endif

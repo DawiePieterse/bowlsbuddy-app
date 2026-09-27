@@ -9,11 +9,15 @@ beforeEach(function () {
 });
 
 it('shows the info page with the Secretary text when set', function () {
-    $this->get('/info')->assertOk()->assertSee('has not written this page yet');
+    $this->get('/info')->assertOk()->assertSee('Club rules for bookings');
 
     app(Settings::class)->set('service.info', '<p>Roll-ups every weekday.</p>');
 
-    $this->get('/info')->assertOk()->assertSee('Roll-ups every weekday.');
+    $this->get('/info')->assertOk()->assertSee('Roll-ups every weekday.')->assertDontSee('Club rules for bookings');
+
+    // An emptied editor brings the standard text back
+    app(Settings::class)->set('service.info', '<p></p>');
+    $this->get('/info')->assertOk()->assertSee('Club rules for bookings');
 });
 
 it('shows the help page with a default guide', function () {

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\ClubDocuments;
 use App\Support\ClubLogo;
 use App\Support\Settings;
+use App\Support\StandardTexts;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -82,6 +83,8 @@ class SiteSettings extends Page
         }
 
         $data['playing_days'] = self::playingDays($settings);
+        $data['info'] = StandardTexts::for('info');
+        $data['help'] = StandardTexts::for('help');
 
         if (($logo = ClubLogo::path()) !== null) {
             $data['logo'] = [basename($logo)];
@@ -124,12 +127,13 @@ class SiteSettings extends Page
                 Tab::make('Documents')->schema([
                     Section::make('Info page')->description('The text on the Info page, and an optional PDF members can open from it.')->schema([
                         RichEditor::make('info')->label('Info page text')
+                            ->helperText('Clear the text to go back to the standard text.')
                             ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
                         self::pdfUpload('info', 'Info sheet (PDF)'),
                     ]),
                     Section::make('Help page')->description('The text on the Help page, and an optional PDF members can open from it.')->schema([
                         RichEditor::make('help')->label('Help page text')
-                            ->helperText('Leave empty for the built-in guide.')
+                            ->helperText('Clear the text to go back to the standard text.')
                             ->toolbarButtons(['bold', 'italic', 'link', 'bulletList', 'orderedList', 'h2', 'h3']),
                         self::pdfUpload('help', 'Help guide (PDF)'),
                     ]),
