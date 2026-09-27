@@ -14,7 +14,7 @@ beforeEach(function () {
     $this->admin = User::query()->where('email', 'secretary@example.com')->firstOrFail();
 });
 
-it('stores the direction of play per green and day, dropping past days', function () {
+it('stores the direction of play per green and day, keeping a year of history', function () {
     $greens = app(GreenService::class);
 
     $greens->setDirection('A', Carbon::parse('2026-10-06'), 'NS');
@@ -31,11 +31,13 @@ it('stores the direction of play per green and day, dropping past days', functio
     $greens->setDirection('A', Carbon::parse('2026-10-06'), null);
     expect($greens->direction('A', Carbon::parse('2026-10-06')))->toBeNull();
 
-    // Stale entries fall away on the next write
-    app(Settings::class)->set(GreenService::DIRECTION_OPTION, "2026-10-01:A:NS\n2026-10-06:B:EW");
+    // Past days stay for the utilisation heatmap; entries older than the history window fall away on the next write
+    app(Settings::class)->set(GreenService::DIRECTION_OPTION, "2025-08-01:A:NS\n2026-10-01:A:NS\n2026-10-06:B:EW");
     $greens->setDirection('A', Carbon::parse('2026-10-08'), 'NS');
 
-    expect(app(Settings::class)->get(GreenService::DIRECTION_OPTION))->toBe("2026-10-06:B:EW\n2026-10-08:A:NS");
+    expect(app(Settings::class)->get(GreenService::DIRECTION_OPTION))->toBe("2026-10-01:A:NS\n2026-10-06:B:EW\n2026-10-08:A:NS")
+        ->and($greens->direction('A', Carbon::parse('2026-10-01')))->toBe('NS')
+        ->and($greens->directions())->toBe(['2026-10-01:A' => 'NS', '2026-10-06:B' => 'EW', '2026-10-08:A' => 'NS']);
 });
 
 it('lets the Secretary set the direction from the calendar, members not', function () {

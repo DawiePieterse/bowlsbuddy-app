@@ -230,6 +230,8 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Bookings: list, create for a member, edit, cancel, delete
 - [x] Events: for a rink, a green or all rinks; list, edit, delete
 - [x] Settings: names and text, the four document pages, rinks, behaviour
+- [x] Utilisation: heatmap of hours booked per rink over the last week, month, quarter or year, one per
+  direction of play (North-South, East-West, not indicated)
 
 **New club setup**
 - [x] `php artisan club:create` asks for the club name, admin email, greens, rinks per green, playing times,
