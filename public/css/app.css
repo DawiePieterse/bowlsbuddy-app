@@ -52,7 +52,7 @@ h1 { font-size: 24px; margin: 0 0 16px; }
 h2 { font-size: 18px; margin: 0 0 12px; }
 
 label { display: block; font-size: 14px; margin: 12px 0 4px; }
-input[type=email], input[type=password], input[type=text], select, textarea {
+input[type=email], input[type=password], input[type=text], input[type=tel], select, textarea {
     width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
 }
 .check { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; font-size: 14px; }
