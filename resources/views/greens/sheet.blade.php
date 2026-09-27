@@ -24,7 +24,10 @@
     @php($time = fn (int $seconds) => sprintf('%02d:%02d', intdiv($seconds, 3600), intdiv($seconds % 3600, 60)))
 
     <div class="top">
-        <div>
+        @if ($clubLogo = \App\Support\ClubLogo::url())
+            <img src="{{ $clubLogo }}" alt="" style="height: 56px; width: 56px; object-fit: contain;">
+        @endif
+        <div style="flex: 1;">
             <h1>Green {{ $green }} &middot; {{ $day->format('l j F Y') }}</h1>
             <p class="sub">{{ app(\App\Support\Settings::class)->get('client.name.full') }} &middot; day sheet</p>
             @if ($sheet['closed'])

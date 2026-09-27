@@ -9,7 +9,7 @@ function isoDate(daysAhead) {
 
 async function logInAsSecretary(page) {
     await page.goto('/login');
-    await page.getByLabel('Email address').fill('secretary@example.com');
+    await page.getByLabel('Cellphone number or email').fill('secretary@example.com');
     await page.getByLabel('Password', { exact: true }).fill('e2e-admin-password');
     await page.getByRole('button', { name: 'Log in' }).click();
     await expect(page.getByRole('link', { name: 'My bookings' })).toBeVisible();

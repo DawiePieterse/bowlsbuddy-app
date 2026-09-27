@@ -43,6 +43,7 @@ it('creates a member with names, privileges and password', function () {
         ->fillForm([
             'firstname' => 'Alice',
             'lastname' => 'Assistant',
+            'phone' => '082 999 8877',
             'email' => 'alice@example.com',
             'status' => 'assist',
             'password' => 'a-good-password',
@@ -54,6 +55,7 @@ it('creates a member with names, privileges and password', function () {
     $alice = User::query()->where('email', 'alice@example.com')->firstOrFail();
 
     expect($alice->alias)->toBe('Alice Assistant')
+        ->and($alice->phone)->toBe('+27829998877')
         ->and($alice->firstName())->toBe('Alice')
         ->and($alice->hasPrivilege('admin.booking'))->toBeTrue()
         ->and($alice->hasPrivilege('admin.event'))->toBeFalse()

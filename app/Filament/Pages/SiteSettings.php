@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
+use App\Support\ClubLogo;
 use App\Support\Settings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -18,6 +19,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 
@@ -71,8 +73,12 @@ class SiteSettings extends Page
 
         foreach (['terms', 'privacy'] as $document) {
             if (is_file(storage_path('app/documents/'.$document.'.pdf'))) {
-                $data[$document] = ['documents/'.$document.'.pdf'];
+                $data[$document] = [$document.'.pdf'];
             }
+        }
+
+        if (($logo = ClubLogo::path()) !== null) {
+            $data['logo'] = [basename($logo)];
         }
 
         $this->form->fill($data);
@@ -86,6 +92,15 @@ class SiteSettings extends Page
                     TextInput::make('client_name_full')->label('Club name')->required()->maxLength(100),
                     TextInput::make('client_name_short')->label('Short name')->required()->maxLength(20),
                     TextInput::make('meta_description')->label('Site description')->maxLength(200),
+                    FileUpload::make('logo')->label('Club logo')
+                        ->disk('documents')
+                        ->image()
+                        ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                        ->maxSize(1024)
+                        ->getUploadedFileNameForStorageUsing(
+                            fn (TemporaryUploadedFile $file) => 'logo.'.strtolower($file->getClientOriginalExtension()),
+                        )
+                        ->helperText('Shown in the header of every page, on the day sheet and in this panel.'),
                 ]),
                 Tab::make('Info and help pages')->schema([
                     RichEditor::make('info')->label('Info page')
@@ -108,11 +123,11 @@ class SiteSettings extends Page
                 Tab::make('Documents')->schema([
                     Section::make()->description('PDF files members see when registering and on the Info page.')->schema([
                         FileUpload::make('terms')->label('Business Terms (PDF)')
-                            ->disk('local')->directory('documents')
+                            ->disk('documents')
                             ->acceptedFileTypes(['application/pdf'])
                             ->getUploadedFileNameForStorageUsing(fn () => 'terms.pdf'),
                         FileUpload::make('privacy')->label('Privacy Policy (PDF)')
-                            ->disk('local')->directory('documents')
+                            ->disk('documents')
                             ->acceptedFileTypes(['application/pdf'])
                             ->getUploadedFileNameForStorageUsing(fn () => 'privacy.pdf'),
                     ]),
@@ -134,6 +149,8 @@ class SiteSettings extends Page
 
             $settings->set($key, filled($value) ? (string) $value : null);
         }
+
+        ClubLogo::keepOnly(blank($state['logo'] ?? null) ? null : basename((string) $state['logo']));
 
         Notification::make()->title('Settings saved')->success()->send();
     }

@@ -30,6 +30,15 @@ return [
 
     'disks' => [
 
+        // The Secretary's uploads (club logo, Business Terms and Privacy Policy PDFs), served
+        // through routes because shared hosts may not allow the storage symlink.
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/documents'),
+            'serve' => false,
+            'throw' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

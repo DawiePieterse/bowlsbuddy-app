@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Phone;
 use App\Support\Settings;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,10 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
+/**
+ * Members register with their cellphone (WhatsApp) number, not an email address: the club runs
+ * on WhatsApp and the app sends no email.
+ */
 class RegistrationController extends Controller
 {
     /** Submissions faster than this are treated as bots (the plan's anti-bot delay). */
@@ -30,15 +35,28 @@ class RegistrationController extends Controller
         $input = $request->validate([
             'firstname' => ['required', 'string', 'max:100'],
             'lastname' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:bs_users,email'],
+            'phone' => ['required', 'string', 'max:32'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'accept_terms' => ['accepted'],
             'opened_at' => ['required', 'string'],
             'website' => ['prohibited'], // honeypot: humans never see it
         ], [
             'accept_terms.accepted' => 'Please accept the Business Terms and the Privacy Policy.',
-            'email.unique' => 'An account with this email address already exists.',
         ]);
+
+        $phone = Phone::normalize($input['phone']);
+
+        if ($phone === null) {
+            throw ValidationException::withMessages([
+                'phone' => 'Please give a South African cellphone number, like 082 123 4567.',
+            ]);
+        }
+
+        if (User::query()->where('phone', $phone)->exists()) {
+            throw ValidationException::withMessages([
+                'phone' => 'An account with this cellphone number already exists.',
+            ]);
+        }
 
         try {
             $openedAt = (int) Crypt::decryptString($input['opened_at']);
@@ -48,7 +66,7 @@ class RegistrationController extends Controller
 
         if ($openedAt <= 0 || now()->getTimestamp() - $openedAt < self::MIN_SECONDS) {
             throw ValidationException::withMessages([
-                'email' => 'That was a little quick. Please try again.',
+                'phone' => 'That was a little quick. Please try again.',
             ]);
         }
 
@@ -57,7 +75,7 @@ class RegistrationController extends Controller
         $user = User::query()->create([
             'alias' => trim($input['firstname'].' '.$input['lastname']),
             'status' => $immediate ? 'enabled' : 'disabled',
-            'email' => $input['email'],
+            'phone' => $phone,
             'pw' => $input['password'],
         ]);
 

@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\EditProfile;
 use App\Filament\AvatarProviders\InitialsAvatarProvider;
+use App\Support\ClubLogo;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,6 +32,9 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile(EditProfile::class, isSimple: false)
             ->brandName('Bowls Buddy')
+            ->brandLogo(fn () => ClubLogo::url())
+            ->brandLogoHeight('2.25rem')
+            ->favicon(fn () => ClubLogo::url())
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->colors([
                 'primary' => Color::Green,
