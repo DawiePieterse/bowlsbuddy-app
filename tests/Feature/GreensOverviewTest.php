@@ -64,9 +64,43 @@ it('leaves out hidden days', function () {
 
     $dates = collect(app(GreensOverview::class)->days())->map(fn (array $day) => $day['date']->toDateString());
 
-    expect($dates)->toHaveCount(13)
+    expect($dates)->toHaveCount(14)
         ->and($dates)->not->toContain('2026-10-11')
-        ->and($dates)->toContain('2026-10-18');
+        ->and($dates)->toContain('2026-10-18')
+        ->and($dates->last())->toBe('2026-10-19');
+});
+
+it('shows 14 playing days when the club plays three days a week', function () {
+    app(Settings::class)->set(BookingRules::DAY_EXCEPTIONS_OPTION, "Tuesday\nThursday\nSaturday\nSunday");
+
+    $days = collect(app(GreensOverview::class)->days());
+    $dates = $days->map(fn (array $day) => $day['date']->toDateString());
+
+    expect($dates)->toHaveCount(14)
+        ->and($dates->first())->toBe('2026-10-05')
+        ->and($dates->last())->toBe('2026-11-04')
+        ->and($days->map(fn (array $day) => $day['date']->englishDayOfWeek)->unique()->values()->all())
+        ->toBe(['Monday', 'Wednesday', 'Friday']);
+});
+
+it('says when booking opens for days beyond the booking range', function () {
+    app(Settings::class)->set(BookingRules::DAY_EXCEPTIONS_OPTION, "Tuesday\nThursday\nSaturday\nSunday");
+
+    $days = collect(app(GreensOverview::class)->days())->keyBy(fn (array $day) => $day['date']->toDateString());
+
+    // The rinks can be booked 14 days ahead, until Mon 19 Oct 13:30: its 12:00 and 13:00 slots are open, Wed 21 Oct isn't yet.
+    expect($days['2026-10-19']['opens'])->toBe(['A' => null, 'B' => null])
+        ->and($days['2026-10-19']['free'])->toBe(['A' => 12, 'B' => 12])
+        ->and($days['2026-10-21']['opens']['A']?->format('Y-m-d H:i'))->toBe('2026-10-07 12:00')
+        ->and($days['2026-10-21']['free'])->toBe(['A' => 0, 'B' => 0]);
+
+    $this->get('/')->assertOk()->assertSee('booking opens Wed 7 Oct, 12:00');
+});
+
+it('shows no days when every day is hidden', function () {
+    app(Settings::class)->set(BookingRules::DAY_EXCEPTIONS_OPTION, 'Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday');
+
+    expect(app(GreensOverview::class)->days())->toBe([]);
 });
 
 it('counts a slot free only when it can still be booked', function () {

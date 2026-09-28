@@ -99,8 +99,10 @@ it('answers like the original app', function (string $name) {
     expect(array_map(null, $scenario['checks'], $answers))->toBe(array_map(null, $scenario['checks'], $expectedAnswers));
 
     if (isset($expected['overview'])) {
-        $overview = array_map(fn (array $day) => ['date' => $day['date']->toDateString()] + array_diff_key($day, ['date' => 0]),
-            app(GreensOverview::class)->days());
+        // The rebuild shows 14 playing days where the original showed 14 calendar days minus the hidden
+        // ones (docs/PLAN.md 5.3), so the original's days are the first ones, and "opens" is new.
+        $overview = array_map(fn (array $day) => ['date' => $day['date']->toDateString()] + array_diff_key($day, ['date' => 0, 'opens' => 0]),
+            array_slice(app(GreensOverview::class)->days(), 0, count($expected['overview'])));
 
         expect($overview)->toBe($expected['overview']);
     }

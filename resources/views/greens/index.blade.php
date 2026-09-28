@@ -21,10 +21,14 @@
                         @if ($day['closed'][$green])
                             <span class="green-pill closed">Green {{ $green }} <span class="slots">closed</span></span>
                         @else
-                            <a class="green-pill {{ $day['events'][$green] ? 'event' : ($day['free'][$green] === 0 ? 'full' : '') }}"
+                            <a class="green-pill {{ $day['events'][$green] ? 'event' : ($day['free'][$green] === 0 && ! $day['opens'][$green] ? 'full' : '') }}"
                                href="{{ route('greens.show', [$green, $day['date']->format('Y-m-d')]) }}">
                                 Green {{ $green }}
-                                <span class="slots">{{ $day['free'][$green] }} of {{ $total }} free</span>
+                                @if ($day['opens'][$green])
+                                    <span class="slots">booking opens {{ $day['opens'][$green]->format('D j M, H:i') }}</span>
+                                @else
+                                    <span class="slots">{{ $day['free'][$green] }} of {{ $total }} free</span>
+                                @endif
                                 @if ($direction = app(\App\Services\GreenService::class)->directionLabel($green, $day['date']))
                                     <span class="direction"><x-direction-arrow :direction="$direction" /> {{ $direction }}</span>
                                 @endif
