@@ -11,7 +11,8 @@ rollback plan. The current code serves as the **reference for how everything sho
 **Decided:** the current app will **not be launched**. It is kept only as the reference, so no fixes are made to it;
 the issues in section 2 are fixed in the rebuild only.
 
-**Status:** Phase 1 (foundation) in progress in this repository.
+**Status:** Phases 1 to 4 done; Phase 5 (launch at LCE) in progress. LCE runs the Phase 1 build on Afrihost
+(`lce.bowlsbuddy.co.za`, live 25 Sep 2026).
 
 ---
 
@@ -244,9 +245,9 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 ## 8. Phases
 
 ### Phase 1: foundation (≈ 1 week)
-- [ ] New GitHub repository for the Laravel 12 + Filament app, private, with this plan copied in as
-  `docs/PLAN.md`. This repository (`bowlsbuddy`) stays as the read-only reference. *(Code ready locally;
-  the repository must be created on GitHub by the owner.)*
+- [x] New GitHub repository for the Laravel 12 + Filament app, private, with this plan copied in as
+  `docs/PLAN.md`: `DawiePieterse/bowlsbuddy-app`. The original repository (`bowlsbuddy`) stays as the
+  read-only reference.
 - [x] Migrations creating the tables in 5.1 with the improvements in 5.2 (plus a unique email and
   `remember_token` on `bs_users`).
 - [x] Models, `HasMeta` trait, relationships, seeders (LCE: greens A and B, 6 rinks each, 12:00–17:00,
@@ -254,12 +255,12 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Auth on `bs_users` (email + `pw`, status checks). CI with Pint, PHPStan and Pest.
 - [x] Filament panel with privileges, local initials avatars (no third-party requests) and the Maintenance
   page (run database updates, clear caches).
-- [ ] *(Build script done and tested in a local copy of the InfinityFree layout; upload to InfinityFree
-  still to do.)* Test deploy of a "hello world" build to **InfinityFree** (section 9.1): zip upload, `public/` into
-  `htdocs/`, database sessions, uploads without a storage symlink, and the maintenance page running
-  migrations.
+- [x] Test deploy of the zip build: zip upload, database sessions, uploads without a storage symlink, and
+  the maintenance page running migrations. *(Planned for InfinityFree (section 9.1); done on Afrihost
+  instead after the move to paid hosting: `scripts/build-afrihost.sh`, LCE live 25 Sep 2026, see
+  docs/DEPLOY-AFRIHOST.md. The InfinityFree build script stays, tested against a local copy of its layout.)*
 
-**Done when:** CI is green, and the seeded app runs on InfinityFree.
+**Done when:** CI is green, and the seeded app runs on the host. *(Done: on Afrihost.)*
 
 ### Phase 2: booking rules (≈ 1–2 weeks)
 - [x] Reference values captured from the current app (5.3): 15 scenarios, 85 answers and 7 greens overviews
