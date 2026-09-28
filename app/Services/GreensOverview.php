@@ -9,16 +9,21 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The greens overview on the home page: for the next 14 days (hidden days left out), per green whether it
- * is closed, how many of its slots are still free out of how many, and the names of the events on it.
+ * The greens overview on the home page: for the next 14 playing days, per green whether it is closed, how
+ * many of its slots are still free out of how many, and the names of the events on it.
  *
- * Ported from greensOverview() in the original app's Frontend\Controller\IndexController. A slot is free
- * when it hasn't started, no event covers it and it has room for another booking. Closing a green doesn't
- * change the numbers; the page shows the green as closed instead.
+ * Ported from greensOverview() in the original app's Frontend\Controller\IndexController, which took the
+ * next 14 calendar days and left the hidden ones out. A club that plays three days a week then saw only six
+ * days, so this counts 14 playing days instead. A slot is free when it hasn't started, is within the rink's
+ * booking range, no event covers it and it has room for another booking. Closing a green doesn't change the
+ * numbers; the page shows the green as closed instead.
  */
 class GreensOverview
 {
     public const DAYS = 14;
+
+    /** How far ahead to look for playing days, so a club with every day hidden still gets an answer. */
+    private const SEARCH_DAYS = 366;
 
     public function __construct(
         private readonly GreenService $greens,
@@ -26,13 +31,41 @@ class GreensOverview
     ) {}
 
     /**
-     * @return list<array{date: CarbonImmutable, closed: array<string, bool>, free: array<string, int>, slots: array<string, int>, events: array<string, list<string>>}>
+     * The next 14 days that aren't hidden from the calendar, starting today.
+     *
+     * @return list<CarbonImmutable>
+     */
+    public function playingDays(): array
+    {
+        $days = [];
+        $today = CarbonImmutable::today();
+
+        for ($day = $today; count($days) < self::DAYS && $day->lessThan($today->addDays(self::SEARCH_DAYS)); $day = $day->addDay()) {
+            if (! $this->rules->isDayHidden($day)) {
+                $days[] = $day;
+            }
+        }
+
+        return $days;
+    }
+
+    /**
+     * Per green, "opens" is when members can start booking that day (the rinks' booking range), or null
+     * when they already can.
+     *
+     * @return list<array{date: CarbonImmutable, closed: array<string, bool>, free: array<string, int>, slots: array<string, int>, events: array<string, list<string>>, opens: array<string, CarbonImmutable|null>}>
      */
     public function days(): array
     {
+        $playingDays = $this->playingDays();
+
+        if ($playingDays === []) {
+            return [];
+        }
+
         $greens = $this->greens->greens();
-        $from = CarbonImmutable::today();
-        $until = $from->addDays(self::DAYS);
+        $from = $playingDays[0];
+        $until = end($playingDays)->addDay();
         $now = CarbonImmutable::now();
 
         $booked = $this->bookedTimes($from, $until);
@@ -47,21 +80,18 @@ class GreensOverview
 
         $days = [];
 
-        for ($day = $from; $day->lessThan($until); $day = $day->addDay()) {
-            if ($this->rules->isDayHidden($day)) {
-                continue;
-            }
-
+        foreach ($playingDays as $day) {
             $dayEvents = $events->filter(fn (Event $event) => $event->datetime_start->lessThan($day->addDay())
                 && $event->datetime_end->greaterThan($day));
 
-            $entry = ['date' => $day, 'closed' => [], 'free' => [], 'slots' => [], 'events' => []];
+            $entry = ['date' => $day, 'closed' => [], 'free' => [], 'slots' => [], 'events' => [], 'opens' => []];
 
             foreach ($greens as $green => $rinks) {
                 $entry['closed'][$green] = $this->greens->isClosed($green, $day);
                 $entry['free'][$green] = 0;
                 $entry['slots'][$green] = 0;
                 $entry['events'][$green] = $this->eventNames($dayEvents, $rinks);
+                $entry['opens'][$green] = $this->opens($rinks, $day, $now);
 
                 foreach ($rinks as $rink) {
                     [$free, $total] = $this->countSlots($rink, $day, $booked[$day->toDateString()][$rink->sid] ?? [], $dayEvents, $now);
@@ -121,6 +151,32 @@ class GreensOverview
     }
 
     /**
+     * The moment the first rink of the green can be booked for the day, or null when it already can.
+     *
+     * @param  Collection<int, Rink>  $rinks
+     */
+    private function opens(Collection $rinks, CarbonImmutable $day, CarbonImmutable $now): ?CarbonImmutable
+    {
+        $opens = null;
+
+        foreach ($rinks as $rink) {
+            if (! $rink->range_book) {
+                return null;
+            }
+
+            $first = $day->addSeconds(BookingRules::seconds($rink->time_start))->subSeconds($rink->range_book);
+
+            if ($first->lessThanOrEqualTo($now)) {
+                return null;
+            }
+
+            $opens = $opens === null || $first->lessThan($opens) ? $first : $opens;
+        }
+
+        return $opens;
+    }
+
+    /**
      * @param  list<array{int, int, int}>  $booked
      * @param  Collection<int, Event>  $events
      * @return array{int, int} free and total slots of the rink that day
@@ -137,6 +193,10 @@ class GreensOverview
             $total++;
 
             if ($day->addSeconds($slotStart)->lessThanOrEqualTo($now)) {
+                continue;
+            }
+
+            if ($rink->range_book && $day->addSeconds($slotStart)->greaterThan($now->addSeconds($rink->range_book))) {
                 continue;
             }
 

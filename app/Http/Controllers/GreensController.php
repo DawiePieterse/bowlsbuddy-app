@@ -141,15 +141,7 @@ class GreensController extends Controller
     /** @return list<CarbonImmutable> the next 14 days that aren't hidden from the calendar */
     private function playingDays(): array
     {
-        $days = [];
-
-        for ($day = CarbonImmutable::today(); $day < CarbonImmutable::today()->addDays(GreensOverview::DAYS); $day = $day->addDay()) {
-            if (! $this->rules->isDayHidden($day)) {
-                $days[] = $day;
-            }
-        }
-
-        return $days;
+        return app(GreensOverview::class)->playingDays();
     }
 
     private function parseDay(string $date): CarbonImmutable

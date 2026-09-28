@@ -179,6 +179,7 @@ through the current app; `tests/Feature/ReferenceValuesTest.php` expects the sam
 | A slot inside the `min_range_book` lead time is "already over" | "Too soon to book" | Clearer message; same slots refused |
 | An event gives "This rink is already occupied" | "This rink is taken by an event" | Clearer message; same slots refused |
 | A member could "cancel" an already cancelled booking | Only bookings that aren't cancelled | |
+| Greens overview: the next 14 calendar days, hidden days left out | The next 14 playing days; a day beyond the booking range says when booking opens, and only slots members can book count as free | A club playing three days a week saw only six days |
 | Availability checked before the booking transaction, without a lock (issue 8) | Member and rink rows locked, rules re-checked inside the transaction | No double bookings |
 
 Locking the member's and the rink's rows (always in that order) instead of the date's reservations also
