@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Auth\Login;
 use App\Filament\Pages\Maintenance;
 use App\Models\User;
 use Livewire\Livewire;
@@ -44,4 +45,43 @@ it('draws avatars locally instead of loading them from another website', functio
         ->assertOk()
         ->assertDontSee('ui-avatars.com')
         ->assertSee('data:image/svg+xml;base64,', false);
+});
+
+it('lets staff log in to the admin panel with a cellphone number', function () {
+    $admin = User::factory()->admin()->create(['phone' => '+27836554092', 'pw' => 'secret123']);
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => '083 655 4092', 'password' => 'secret123'])
+        ->call('authenticate')
+        ->assertHasNoFormErrors();
+
+    $this->assertAuthenticatedAs($admin);
+});
+
+it('still lets staff log in to the admin panel with an email address', function () {
+    $admin = User::factory()->admin()->create(['email' => 'secretary@example.com', 'pw' => 'secret123']);
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => 'secretary@example.com', 'password' => 'secret123'])
+        ->call('authenticate')
+        ->assertHasNoFormErrors();
+
+    $this->assertAuthenticatedAs($admin);
+});
+
+it('refuses a wrong password or a member without admin access at the admin login', function () {
+    User::factory()->admin()->create(['phone' => '+27836554092', 'pw' => 'secret123']);
+    User::factory()->create(['phone' => '+27821234567', 'pw' => 'secret123']);
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => '0836554092', 'password' => 'wrong-password'])
+        ->call('authenticate')
+        ->assertHasFormErrors(['email']);
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => '0821234567', 'password' => 'secret123'])
+        ->call('authenticate')
+        ->assertHasFormErrors(['email']);
+
+    $this->assertGuest();
 });
