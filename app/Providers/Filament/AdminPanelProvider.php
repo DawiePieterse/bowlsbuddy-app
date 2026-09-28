@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\EditProfile;
+use App\Filament\Auth\Login;
 use App\Filament\AvatarProviders\InitialsAvatarProvider;
 use App\Support\ClubLogo;
 use Filament\Http\Middleware\Authenticate;
@@ -28,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->profile(EditProfile::class, isSimple: false)
             ->brandName('Bowls Buddy')
             ->brandLogo(fn () => view('filament.brand'))
