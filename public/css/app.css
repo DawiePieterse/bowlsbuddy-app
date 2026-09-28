@@ -88,6 +88,10 @@ a { color: var(--link); }
 .direction-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
 .arrow { width: 20px; height: 20px; color: var(--brand); vertical-align: -5px; margin-right: 2px; }
 .arrow-ns { transform: rotate(90deg); }
+/* The Secretary's controls on a green's calendar: they wrap onto more rows on a phone */
+.secretary-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.secretary-actions form { margin: 0; }
+.secretary-actions .button { margin-top: 0; white-space: nowrap; }
 .direction-form { display: flex; gap: 6px; align-items: center; }
 .direction-form select { width: auto; padding: 8px 10px; font-size: 14px; }
 .direction-form button { padding: 10px 14px; font-size: 14px; }
@@ -132,6 +136,10 @@ a { color: var(--link); }
     .calendar-nav { flex-wrap: nowrap; gap: 6px; }
     .calendar-nav .spacer { display: none; }
     .calendar-nav .button { flex: 1 1 auto; padding: 9px 6px; font-size: 14px; white-space: nowrap; }
+    .secretary-actions > form:first-child { flex-basis: 100%; }
+    .secretary-actions > form:first-child button { width: 100%; }
+    .secretary-actions .direction-form { flex: 1 1 auto; min-width: 0; }
+    .secretary-actions .direction-form select { flex: 1 1 auto; min-width: 0; }
     .calendar td { height: 40px; padding: 4px; }
     .calendar .slot-text {
         position: absolute; width: 1px; height: 1px; overflow: hidden;

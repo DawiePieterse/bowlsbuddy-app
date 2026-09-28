@@ -32,7 +32,7 @@
 
         @auth
             @if (auth()->user()->hasPrivilege('admin.event'))
-                <div class="calendar-nav">
+                <div class="secretary-actions">
                     @if ($closed)
                         <form method="POST" action="{{ route('greens.open', [$green, $day->format('Y-m-d')]) }}">
                             @csrf

@@ -24,6 +24,11 @@ test('the Secretary closes a green, prints the day sheet and reopens it', async 
     // Close green B four days out (leaving green A free for the booking flows)
     const day = isoDate(4);
     await page.goto(`/greens/B/${day}`);
+
+    // The Secretary's controls fit the screen, also on a phone
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect(page.getByRole('link', { name: 'Day sheet' })).toBeInViewport({ ratio: 1 });
+
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Close green B on this day' }).click();
     await expect(page.getByText(/is now closed/)).toBeVisible();
