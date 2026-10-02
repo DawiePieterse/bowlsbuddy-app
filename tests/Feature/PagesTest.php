@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\ClubSeeder;
 
@@ -26,4 +27,18 @@ it('shows the help page with a default guide', function () {
 
 it('shows the forgot password page pointing to the Secretary', function () {
     $this->get('/forgot-password')->assertOk()->assertSee('Club Secretary');
+});
+
+it('shows the menu the admin panel shows: the current page marked, the admin panel for staff only', function () {
+    $this->get('/help')->assertOk()
+        ->assertSeeInOrder(['/help" class="active"', 'aria-current="page"'], false)
+        ->assertSeeInOrder(['Greens', 'Info', 'Help', 'Log in', 'Register'])
+        ->assertDontSee('Admin panel');
+
+    $this->actingAs(User::factory()->create())->get('/')->assertOk()
+        ->assertSeeInOrder(['Greens', 'My bookings', 'My account', 'Info', 'Help', 'Log out'])
+        ->assertDontSee('Admin panel');
+
+    $this->actingAs(User::factory()->admin()->create())->get('/')->assertOk()
+        ->assertSee('Admin panel');
 });

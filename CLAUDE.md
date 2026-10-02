@@ -28,6 +28,10 @@ Conventions:
   play `service.greens.direction` (`YYYY-MM-DD:A:NS|EW`, a year and a bit of history kept for utilisation).
   `GreenManager` rename/delete must carry both.
 - Write plain, short user-facing text in British English ("utilisation", "colour").
+- One look for both halves (PLAN.md decision 6): member pages mirror the panel's topbar, sidebar and phone
+  drawer (`layouts/app.blade.php`) and use its colours. Colours come from `App\Support\Theme` (panel) and
+  the CSS variables in `public/css/app.css` (members), with `.dark` variants; `ThemeTest` keeps the
+  primary palette in step. Use Heroicons via `svg('heroicon-o-...')` in member views.
 - Docblocks explain *why*; PHPDoc array shapes keep Larastan level 6 happy.
 
 ## Session setup (Claude Code on the web)

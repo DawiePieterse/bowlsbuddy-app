@@ -15,7 +15,7 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
         th, td { border: 1px solid #999; padding: 6px 8px; text-align: center; height: 34px; vertical-align: middle; }
         th { background: #eee; }
-        td.has-event { background: #eadcf5; }
+        td.has-event { background: #ede9fe; }
         .print-button { margin: 16px 0; padding: 10px 18px; font-size: 15px; }
         @media print { .print-button { display: none; } body { margin: 8mm; } }
     </style>

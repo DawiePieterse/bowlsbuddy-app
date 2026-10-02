@@ -1,9 +1,12 @@
 @extends('layouts.app', ['title' => 'Register', 'narrow' => true])
 
 @section('content')
-    <div class="card">
+    <div class="page-header">
         <h1>Register</h1>
+        <p>Create your account to book rinks online.</p>
+    </div>
 
+    <div class="card">
         <form method="POST" action="{{ route('register') }}">
             @csrf
             <input type="hidden" name="opened_at" value="{{ $openedAt }}">
@@ -42,6 +45,6 @@
             <button type="submit" class="full">Create my account</button>
         </form>
 
-        <p class="muted">Already have an account? <a href="{{ route('login') }}">Log in</a>.</p>
+        <p class="links"><span class="muted">Already have an account? <a href="{{ route('login') }}">Log in</a></span></p>
     </div>
 @endsection

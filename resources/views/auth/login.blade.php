@@ -1,9 +1,12 @@
 @extends('layouts.app', ['title' => 'Log in', 'narrow' => true])
 
 @section('content')
-    <div class="card">
+    <div class="page-header">
         <h1>Log in</h1>
+        <p>Book a rink and see who is playing.</p>
+    </div>
 
+    <div class="card">
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
@@ -17,10 +20,12 @@
 
             <label class="check"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
 
-            <button type="submit">Log in</button>
+            <button type="submit" class="full">Log in</button>
         </form>
 
-        <p class="muted"><a href="{{ route('password.request') }}">Forgot your password?</a></p>
-        <p class="muted">New here? <a href="{{ route('register') }}">Register</a>.</p>
+        <p class="links">
+            <a href="{{ route('password.request') }}">Forgot your password?</a>
+            <span class="muted">New here? <a href="{{ route('register') }}">Register</a></span>
+        </p>
     </div>
 @endsection

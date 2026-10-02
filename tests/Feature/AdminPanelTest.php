@@ -85,3 +85,12 @@ it('refuses a wrong password or a member without admin access at the admin login
 
     $this->assertGuest();
 });
+
+it('links back to the member site and says "Log out", as the member pages do', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/admin')
+        ->assertOk()
+        ->assertSee('Member site')
+        ->assertSee('Log out')
+        ->assertDontSee('Sign out');
+});
