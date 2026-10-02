@@ -22,7 +22,7 @@ class InitialsAvatarProvider implements AvatarProvider
             ->join('');
 
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-            .'<rect width="64" height="64" fill="#248a3d"/>'
+            .'<rect width="64" height="64" fill="#047857"/>'
             .'<text x="50%" y="50%" dy=".35em" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" '
             .'font-size="26" font-weight="600" fill="#ffffff">'.e($initials).'</text></svg>';
 

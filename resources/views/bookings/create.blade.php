@@ -1,18 +1,25 @@
 @extends('layouts.app', ['title' => 'Book a rink', 'narrow' => true])
 
 @section('content')
-    <div class="card">
+    <div class="page-header">
         <h1>Book rink {{ $rink->name }}</h1>
-        <p><strong>{{ $start->format('l j F Y') }}</strong>, {{ $start->format('H:i') }}&ndash;{{ $end->format('H:i') }}</p>
+    </div>
 
-        @if ($direction = app(\App\Services\GreenService::class)->directionLabel($rink->green(), $start))
-            <p class="muted"><x-direction-arrow :direction="$direction" /> Direction of play: <strong>{{ $direction }}</strong></p>
-        @endif
+    <div class="card">
+        <ul class="summary">
+            <li>{{ svg('heroicon-o-calendar-days', 'icon') }}<strong>{{ $start->format('l j F Y') }}</strong></li>
+            <li>{{ svg('heroicon-o-clock', 'icon') }}<span>{{ $start->format('H:i') }}&ndash;{{ $end->format('H:i') }} on Green {{ $rink->green() }}</span></li>
+            @if ($direction = app(\App\Services\GreenService::class)->directionLabel($rink->green(), $start))
+                <li><x-direction-arrow :direction="$direction" /><span>Direction of play: <strong>{{ $direction }}</strong></span></li>
+            @endif
+        </ul>
+    </div>
 
-        @if ($reason !== null)
-            <div class="flash warning">{{ $reason }}</div>
-            <a class="button subtle" href="{{ route('greens.show', [$rink->green(), $start->format('Y-m-d')]) }}">Back to Green {{ $rink->green() }}</a>
-        @else
+    @if ($reason !== null)
+        <div class="flash warning">{{ svg('heroicon-o-exclamation-triangle', 'icon') }}<div>{{ $reason }}</div></div>
+        <a class="button subtle" style="margin-top: 0;" href="{{ route('greens.show', [$rink->green(), $start->format('Y-m-d')]) }}">{{ svg('heroicon-o-chevron-left', 'icon') }}Back to Green {{ $rink->green() }}</a>
+    @else
+        <div class="card">
             <form method="POST" action="{{ route('bookings.store') }}">
                 @csrf
                 <input type="hidden" name="rink" value="{{ $rink->sid }}">
@@ -31,7 +38,7 @@
                 @error('partner') <div class="error">{{ $message }}</div> @enderror
 
                 @if ($rulesText)
-                    <div class="card" style="background: var(--bg); box-shadow: none; margin-top: 16px;">{!! $rulesText !!}</div>
+                    <div class="note prose">{!! $rulesText !!}</div>
                     <label class="check">
                         <input type="checkbox" name="accept_rules" value="1" @checked(old('accept_rules'))>
                         I have read and accept the rules above.
@@ -39,7 +46,7 @@
                     @error('accept_rules') <div class="error">{{ $message }}</div> @enderror
                 @endif
 
-                <p class="muted">One rink per member per day.
+                <p class="muted" style="margin-bottom: 0;">One rink per member per day.
                     @if ($rink->range_cancel === null)
                         Bookings cannot be cancelled online.
                     @elseif ((int) $rink->range_cancel === 0)
@@ -50,6 +57,6 @@
 
                 <button type="submit" class="full">Book this rink</button>
             </form>
-        @endif
-    </div>
+        </div>
+    @endif
 @endsection

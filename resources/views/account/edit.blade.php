@@ -1,14 +1,15 @@
 @extends('layouts.app', ['title' => 'My account', 'narrow' => true])
 
 @section('content')
-    <div class="card">
+    <div class="page-header">
         <h1>My account</h1>
         <p>{{ trim(auth()->user()->firstName().' '.auth()->user()->lastName()) ?: auth()->user()->alias }}
-            <span class="muted">&middot; {{ auth()->user()->phone ? \App\Support\Phone::pretty(auth()->user()->phone) : auth()->user()->email }}</span></p>
+            &middot; {{ auth()->user()->phone ? \App\Support\Phone::pretty(auth()->user()->phone) : auth()->user()->email }}</p>
     </div>
 
     <div class="card">
         <h2>Change cellphone number</h2>
+        <p class="muted">The number you log in with.</p>
         <form method="POST" action="{{ route('account.phone') }}">
             @csrf
             @method('PUT')
@@ -28,6 +29,7 @@
 
     <div class="card">
         <h2>Change password</h2>
+        <p class="muted">Use at least 8 characters.</p>
         <form method="POST" action="{{ route('account.password') }}">
             @csrf
             @method('PUT')
@@ -50,10 +52,10 @@
     <div class="card">
         <h2>My data</h2>
         <p class="muted">Download everything we store about you as a file.</p>
-        <a class="button subtle" href="{{ route('account.data') }}">Download my data</a>
+        <a class="button subtle" href="{{ route('account.data') }}">{{ svg('heroicon-o-arrow-down-tray', 'icon') }}Download my data</a>
     </div>
 
-    <div class="card">
+    <div class="card danger-zone">
         <h2>Delete my account</h2>
         <p class="muted">This removes your account and your bookings for good.</p>
         <form method="POST" action="{{ route('account.destroy') }}"

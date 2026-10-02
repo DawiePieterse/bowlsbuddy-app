@@ -1,11 +1,13 @@
 @extends('layouts.app', ['title' => 'Set up your club', 'narrow' => true])
 
 @section('content')
-    <div class="card">
+    <div class="page-header">
         <h1>Set up your club</h1>
-        <p class="muted">A few questions and your booking system is ready. Everything can be changed
+        <p>A few questions and your booking system is ready. Everything can be changed
             later in the admin panel.</p>
+    </div>
 
+    <div class="card">
         <form method="POST" action="{{ route('setup.store') }}">
             @csrf
 

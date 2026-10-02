@@ -6,19 +6,25 @@ use App\Filament\Auth\EditProfile;
 use App\Filament\Auth\Login;
 use App\Filament\AvatarProviders\InitialsAvatarProvider;
 use App\Support\ClubLogo;
+use App\Support\Theme;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -37,21 +43,21 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(fn () => ClubLogo::url())
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->colors([
-                // A dark grass green, anchored so buttons (600) match the member pages' brand.
-                'primary' => [
-                    50 => '#f1f7f1',
-                    100 => '#dcebdd',
-                    200 => '#bcd7bd',
-                    300 => '#93bd96',
-                    400 => '#62996a',
-                    500 => '#2f7a38',
-                    600 => '#1b5e20',
-                    700 => '#164e1c',
-                    800 => '#124117',
-                    900 => '#0e3413',
-                    950 => '#072408',
-                ],
+                // The palette the member pages use too (App\Support\Theme), on cool slate greys.
+                'primary' => Theme::PRIMARY,
+                'gray' => Color::Slate,
             ])
+            ->navigationItems([
+                // The way back to the member pages, where the member pages offer "Admin panel".
+                NavigationItem::make('Member site')
+                    ->url(fn (): string => route('home'))
+                    ->icon(Heroicon::OutlinedHome)
+                    ->sort(200),
+            ])
+            ->renderHook(
+                PanelsRenderHook::STYLES_AFTER,
+                fn (): HtmlString => new HtmlString('<link rel="stylesheet" href="'.e(asset('css/panel.css')).'?v='.@filemtime(public_path('css/panel.css')).'">'),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

@@ -73,7 +73,8 @@ framework.
 - Set up a new club in minutes, on cheap shared PHP hosting (no Node.js or Docker needed in production).
 
 **Non-goals**
-- A visual redesign. The current look and CSS are reused.
+- ~~A visual redesign. The current look and CSS are reused.~~ Done after all, at the club's request: one
+  modern look for the member pages and the admin panel (section 12, decision 6).
 - Online payments, pricing, products, coupons, bills, emails and repeating bookings. Their tables are not
   created now; they can be added later from `data/db/ep3-bs.sql` if a paying club needs them.
 - Many clubs in one install (multi-tenant). One install per club for now (section 9).
@@ -223,6 +224,8 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Cancel own booking before the cut-off
 - [x] My bookings; My account (change email or password, delete account, download my data)
 - [x] Info, Help, Business Terms and Privacy Policy pages (edited in Settings, with example text)
+- [x] One look with the admin panel: same topbar, sidebar menu (a slide-in drawer on phones), Inter font,
+  emerald and slate colours, light and dark mode
 
 **Secretary / admin**
 - [x] Open or close a green per day
@@ -279,7 +282,7 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Layout and CSS: Phase 1's clean layout was kept and extended (`public/css/app.css`) instead of
   carrying over the old jQuery-era stylesheet — the old app never ran live, so there is no look
   members know. The plan's booking colours are honoured: own bookings green, closed greens red,
-  events purple.
+  events purple. Later restyled to match the admin panel (section 12, decision 6).
 - [x] Every "Members" item in section 7 (server-rendered Blade; the booking pop-up became a booking
   page, which needs no JavaScript).
 
@@ -390,3 +393,10 @@ Laravel is set up for this from Phase 1, so moving hosts later needs no code cha
    repeating bookings are not built, and their tables are not created.
 5. ~~**The current app:** keep it only as a reference, or launch it at LCE?~~ **Decided: reference only.** It
    won't be launched or fixed; LCE's first live system will be the rebuild.
+6. ~~**Look?**~~ **Decided: one modern look for both halves.** The member pages copy the admin panel's frame
+   (topbar with the brand, a sidebar menu that becomes a slide-in drawer on phones, Inter, the page heading
+   above white cards) and share its colours: an emerald primary (`App\Support\Theme::PRIMARY`, 600 =
+   `#047857`, dark enough for white text) on slate greys, red for closed greens and danger, violet for
+   events. Dark mode follows the panel's light/dark/system choice. Still plain CSS with no build step
+   (`public/css/app.css`, plus `public/css/panel.css` for the panel's phone topbar); the panel says "Log in"
+   and "Log out" like the member pages (`lang/vendor/filament-panels`).

@@ -21,8 +21,8 @@ class Utilisation extends Page
 
     protected string $view = 'filament.pages.utilisation';
 
-    /** Sequential ramp for the cells: the panel's primary green, 100 to 700. */
-    public const RAMP = ['#dcebdd', '#bcd7bd', '#93bd96', '#62996a', '#2f7a38', '#1b5e20'];
+    /** Sequential ramp for the cells, in the primary emerald: light shades take dark ink, the two darkest white. */
+    public const RAMP = ['#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#047857', '#064e3b'];
 
     #[Url]
     public string $period = 'month';
@@ -79,7 +79,7 @@ class Utilisation extends Page
 
         $step = min(count(self::RAMP) - 1, (int) floor($hours / $max * count(self::RAMP)));
 
-        return ['background' => self::RAMP[$step], 'ink' => $step >= 3 ? '#ffffff' : '#0e3413'];
+        return ['background' => self::RAMP[$step], 'ink' => $step >= 4 ? '#ffffff' : '#022c22'];
     }
 
     public static function formatHours(float $hours): string

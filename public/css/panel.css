@@ -1,0 +1,13 @@
+/*
+ * A few rules on top of the admin panel's precompiled CSS, so its phone topbar matches the member pages':
+ * menu button, brand, avatar. On phones the global search makes way for the brand; members are still
+ * searched on the Members page.
+ */
+@media (max-width: 1023px) {
+    .fi-topbar-start { display: flex; min-width: 0; }
+    .fi-topbar-start .fi-logo { margin-inline-start: 0.25rem; }
+}
+
+@media (max-width: 639px) {
+    .fi-topbar .fi-global-search-ctn { display: none; }
+}
