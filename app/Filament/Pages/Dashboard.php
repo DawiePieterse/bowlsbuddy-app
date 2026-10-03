@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\User;
+use App\Filament\Widgets\BirthdaysWidget;
 use App\Services\Birthdays;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -11,9 +11,7 @@ class Dashboard extends BaseDashboard
 {
     public static function getNavigationBadge(): ?string
     {
-        $user = auth()->user();
-
-        if (! $user instanceof User || ! $user->hasPrivilege('admin.user')) {
+        if (! BirthdaysWidget::canView()) {
             return null;
         }
 

@@ -34,6 +34,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -104,12 +105,12 @@ class MemberResource extends Resource
             ])->columns(2),
 
             Section::make('Membership')->schema([
-                Select::make('membership')->label('Membership type')
+                Select::make(Membership::TYPE)->label('Membership type')
                     ->options(fn (): array => app(Membership::class)->typeOptions())
                     ->placeholder('None'),
-                DatePicker::make('joined')->label('Member of the club since')->maxDate(now()),
-                Select::make('gender')->options(Membership::GENDERS)->placeholder('Not given'),
-                DatePicker::make('birthday')->maxDate(now())
+                DatePicker::make(Membership::JOINED)->label('Member of the club since')->maxDate(now()),
+                Select::make(Membership::GENDER)->label('Gender')->options(Membership::GENDERS)->placeholder('Not given'),
+                DatePicker::make(Membership::BIRTHDAY)->label('Birthday')->maxDate(now())
                     ->helperText('For the birthday wishes on the dashboard.'),
             ])->columns(2),
 
@@ -126,6 +127,11 @@ class MemberResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $membership = app(Membership::class);
+        $year = $membership->currentYear();
+        $paidLabel = 'Paid for '.$membership->currentYearLabel();
+        $types = array_keys($membership->types());
+
         return $table
             ->columns([
                 // The cellphone number (or email) sits under the name, so the list fits on a phone.
@@ -140,7 +146,7 @@ class MemberResource extends Resource
                     ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
                 IconColumn::make('paid_current')
                     ->label('Paid')
-                    ->tooltip(fn (): string => 'Paid for '.app(Membership::class)->yearLabel(app(Membership::class)->currentYear()))
+                    ->tooltip($paidLabel)
                     ->boolean()
                     ->alignCenter()
                     ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
@@ -183,8 +189,7 @@ class MemberResource extends Resource
             // Whether each member has paid for the current membership year, and their details for the columns.
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
                 ->with('metaEntries')
-                ->withExists(['payments as paid_current' => fn (Builder $payments) => $payments
-                    ->where('year', app(Membership::class)->currentYear())]))
+                ->withExists(['payments as paid_current' => fn (Builder $payments) => $payments->where('year', $year)]))
             ->header(fn ($livewire): ?View => self::showingUsage($livewire)
                 ? view('filament.members.usage-header', ['page' => $livewire])
                 : null)
@@ -195,20 +200,20 @@ class MemberResource extends Resource
             ->filters([
                 SelectFilter::make('status')->options(User::STATUSES),
                 SelectFilter::make('membership')->label('Membership type')
-                    ->options(fn (): array => array_combine(array_keys(app(Membership::class)->types()), array_keys(app(Membership::class)->types())))
+                    ->options(array_combine($types, $types))
                     ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
-                        ? $query->whereHas('metaEntries', fn (Builder $meta) => $meta->where('key', Membership::TYPE)->where('value', $data['value']))
+                        ? $query->whereMeta(Membership::TYPE, $data['value'])
                         : $query),
                 TernaryFilter::make('paid')
-                    ->label(fn (): string => 'Paid for '.app(Membership::class)->yearLabel(app(Membership::class)->currentYear()))
+                    ->label($paidLabel)
                     ->queries(
-                        true: fn (Builder $query) => $query->whereHas('payments', fn (Builder $payments) => $payments->where('year', app(Membership::class)->currentYear())),
-                        false: fn (Builder $query) => $query->whereDoesntHave('payments', fn (Builder $payments) => $payments->where('year', app(Membership::class)->currentYear())),
+                        true: fn (Builder $query) => $query->wherePaidFor($year),
+                        false: fn (Builder $query) => $query->wherePaidFor($year, false),
                     ),
                 SelectFilter::make('gender')
                     ->options(Membership::GENDERS)
                     ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
-                        ? $query->whereHas('metaEntries', fn (Builder $meta) => $meta->where('key', Membership::GENDER)->where('value', $data['value']))
+                        ? $query->whereMeta(Membership::GENDER, $data['value'])
                         : $query),
             ])
             ->recordActions([
@@ -318,10 +323,9 @@ class MemberResource extends Resource
             $data['pw'] = $data['password'];
         }
 
-        unset($data['firstname'], $data['lastname'], $data['privileges'], $data['password'],
-            $data['membership'], $data['joined'], $data['gender'], $data['birthday']);
+        unset($data['firstname'], $data['lastname'], $data['privileges'], $data['password']);
 
-        return $data;
+        return Arr::except($data, Membership::DETAILS);
     }
 
     /**
@@ -334,8 +338,8 @@ class MemberResource extends Resource
         $user->setMeta('firstname', trim((string) ($state['firstname'] ?? '')) ?: null);
         $user->setMeta('lastname', trim((string) ($state['lastname'] ?? '')) ?: null);
 
-        foreach ([Membership::TYPE => 'membership', Membership::JOINED => 'joined', Membership::GENDER => 'gender', Membership::BIRTHDAY => 'birthday'] as $key => $field) {
-            $user->setMeta($key, filled($state[$field] ?? null) ? substr((string) $state[$field], 0, 100) : null);
+        foreach (Membership::DETAILS as $key) {
+            $user->setMeta($key, filled($state[$key] ?? null) ? substr((string) $state[$key], 0, 100) : null);
         }
 
         $granted = (array) ($state['privileges'] ?? []);

@@ -25,27 +25,20 @@
     --gray-300: #cbd5e1;
     --gray-400: #94a3b8;
     --gray-500: #64748b;
-    --gray-600: #475569;
     --gray-700: #334155;
-    --gray-800: #1e293b;
     --gray-900: #0f172a;
     --gray-950: #020617;
 
     --red-50: #fef2f2;
-    --red-100: #fee2e2;
     --red-200: #fecaca;
     --red-400: #f87171;
     --red-500: #ef4444;
     --red-600: #dc2626;
     --red-700: #b91c1c;
-    --red-800: #991b1b;
 
     --violet-50: #f5f3ff;
     --violet-100: #ede9fe;
     --violet-200: #ddd6fe;
-    --violet-300: #c4b5fd;
-    --violet-600: #7c3aed;
-    --violet-700: #6d28d9;
     --violet-800: #5b21b6;
 
     --bg: var(--gray-50);
@@ -57,7 +50,9 @@
     --line: var(--gray-200);
     --ring: rgb(2 6 23 / 0.07);
     --input-line: var(--gray-300);
-    --link: var(--primary-600);
+    --accent: var(--primary-600);
+    --danger-ink: var(--red-600);
+    --link: var(--accent);
     --shadow: 0 1px 2px rgb(2 6 23 / 0.05);
 
     /* Green calendar and overview states */
@@ -73,6 +68,7 @@
     --closed-bg: var(--red-50);
     --closed-line: var(--red-200);
     --closed-ink: var(--red-700);
+    --notice-ink: var(--primary-900);
 
     color-scheme: light;
 }
@@ -87,7 +83,8 @@
     --line: rgb(255 255 255 / 0.1);
     --ring: rgb(255 255 255 / 0.1);
     --input-line: rgb(255 255 255 / 0.2);
-    --link: var(--primary-400);
+    --accent: var(--primary-400);
+    --danger-ink: var(--red-400);
     --shadow: none;
 
     --free-bg: rgb(52 211 153 / 0.1);
@@ -101,6 +98,7 @@
     --closed-bg: rgb(239 68 68 / 0.12);
     --closed-line: rgb(248 113 113 / 0.35);
     --closed-ink: #fca5a5;
+    --notice-ink: var(--primary-200);
 
     color-scheme: dark;
 }
@@ -141,7 +139,6 @@ strong { font-weight: 600; }
 .avatar img { display: block; width: 2.25rem; height: 2.25rem; border-radius: 9999px; }
 
 .nav-toggle, .nav-backdrop, .nav-button, .sidebar-head { display: none; }
-.nav-button, .nav-close, .nav-backdrop { margin: 0; }
 .nav-button, .nav-close {
     align-items: center; justify-content: center; flex: none;
     width: 2.5rem; height: 2.5rem; border-radius: 0.5rem;
@@ -168,10 +165,9 @@ nav.site a, nav.site button {
 }
 nav.site .icon { color: var(--gray-400); }
 nav.site a:hover, nav.site button:hover { background: var(--subtle); color: var(--text-soft); text-decoration: none; }
-nav.site a.active { background: var(--subtle); color: var(--primary-600); }
-nav.site a.active .icon { color: var(--primary-600); }
+nav.site a.active, nav.site a.active .icon { color: var(--accent); }
+nav.site a.active { background: var(--subtle); }
 .dark nav.site .icon { color: var(--gray-500); }
-.dark nav.site a.active, .dark nav.site a.active .icon { color: var(--primary-400); }
 
 main { flex: 1; min-width: 0; max-width: 64rem; margin: 0 auto; padding: 2rem 2rem 3rem; }
 @media (min-width: 1024px) {
@@ -185,7 +181,7 @@ h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; letter-spacing
 .page-header p { margin: 0.375rem 0 0; color: var(--muted); }
 .page-header .actions { margin-top: 1rem; }
 h2 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; margin: 0 0 0.25rem; }
-h2 + .muted, h2 + p.muted { margin-top: 0; }
+h2 + .muted { margin-top: 0; }
 
 /* Cards, as the panel's sections */
 .card {
@@ -200,7 +196,7 @@ h2 + .muted, h2 + p.muted { margin-top: 0; }
 .note > :last-child { margin-bottom: 0; }
 
 /* Forms */
-label { display: block; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; margin: 1.125rem 0 0.375rem; }
+main label { display: block; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; margin: 1.125rem 0 0.375rem; }
 form > label:first-of-type { margin-top: 0; }
 input[type=email], input[type=password], input[type=text], input[type=tel], select, textarea {
     display: block; width: 100%; min-height: 2.75rem; padding: 0.5rem 0.75rem;
@@ -238,15 +234,13 @@ button.subtle:hover, .button.subtle:hover { background: var(--subtle); color: va
 button.danger, .button.danger { background: var(--red-600); }
 button.danger:hover, .button.danger:hover { background: var(--red-500); }
 button.small, .button.small { min-height: 2.25rem; margin-top: 0; padding: 0.375rem 0.75rem; font-size: 0.875rem; }
-button.subtle.warn, .button.subtle.warn { color: var(--red-600); }
-.dark button.subtle.warn, .dark .button.subtle.warn { color: var(--red-400); }
+button.subtle.warn, .button.subtle.warn { color: var(--danger-ink); }
 .button.whatsapp { background: #15803d; }
 .button.whatsapp:hover { background: #166534; }
 .dark .button.subtle, .dark button.subtle { background: rgb(255 255 255 / 0.05); }
 .dark .button.subtle:hover, .dark button.subtle:hover { background: rgb(255 255 255 / 0.1); }
 
-.error { color: var(--red-600); font-size: 0.875rem; margin-top: 0.375rem; }
-.dark .error { color: var(--red-400); }
+.error { color: var(--danger-ink); font-size: 0.875rem; margin-top: 0.375rem; }
 .muted { color: var(--muted); font-size: 0.875rem; }
 .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin: 1.25rem 0 0; font-size: 0.875rem; }
 
@@ -255,16 +249,12 @@ button.subtle.warn, .button.subtle.warn { color: var(--red-600); }
     display: flex; align-items: flex-start; gap: 0.75rem;
     padding: 0.875rem 1rem; margin-bottom: 1.5rem; border-radius: 0.75rem;
     font-size: 0.875rem; line-height: 1.25rem;
-    background: var(--primary-50); color: var(--primary-900); box-shadow: inset 0 0 0 1px var(--primary-200);
+    background: var(--free-bg); color: var(--notice-ink); box-shadow: inset 0 0 0 1px var(--free-line);
 }
-.flash .icon { width: 1.25rem; height: 1.25rem; color: var(--primary-600); }
-.flash.warning { background: var(--closed-bg); color: var(--red-800); box-shadow: inset 0 0 0 1px var(--closed-line); }
-.flash.warning .icon { color: var(--red-600); }
+.flash .icon { width: 1.25rem; height: 1.25rem; color: var(--accent); }
+.flash.warning { background: var(--closed-bg); color: var(--closed-ink); box-shadow: inset 0 0 0 1px var(--closed-line); }
+.flash.warning .icon { color: var(--danger-ink); }
 .flash a { color: inherit; text-decoration: underline; }
-.dark .flash { background: rgb(52 211 153 / 0.1); color: var(--primary-200); box-shadow: inset 0 0 0 1px rgb(52 211 153 / 0.25); }
-.dark .flash .icon { color: var(--primary-400); }
-.dark .flash.warning { background: var(--closed-bg); color: var(--closed-ink); box-shadow: inset 0 0 0 1px var(--closed-line); }
-.dark .flash.warning .icon { color: var(--red-400); }
 
 /* A summary of a slot: date, time, rink, direction */
 .summary { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.625rem; }
@@ -276,17 +266,16 @@ button.subtle.warn, .button.subtle.warn { color: var(--red-600); }
 .success-mark {
     display: inline-flex; align-items: center; justify-content: center;
     width: 3rem; height: 3rem; margin-bottom: 1rem; border-radius: 9999px;
-    background: var(--primary-100); color: var(--primary-600);
+    background: var(--primary-100); color: var(--accent);
 }
-.dark .success-mark { background: rgb(52 211 153 / 0.15); color: var(--primary-400); }
+.dark .success-mark { background: rgb(52 211 153 / 0.15); }
 
 /* Greens overview: a row per playing day, a tile per green */
 .overview-day { display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.5rem 1rem; align-items: center; padding: 0.875rem 0; border-bottom: 1px solid var(--line); }
 .overview-day:first-child { padding-top: 0; }
 .overview-day:last-child { border-bottom: 0; padding-bottom: 0; }
 .overview-day .date { font-weight: 600; font-size: 0.875rem; line-height: 1.25rem; }
-.overview-day .date .when { display: block; color: var(--primary-600); font-size: 0.75rem; font-weight: 600; }
-.dark .overview-day .date .when { color: var(--primary-400); }
+.overview-day .date .when { display: block; color: var(--accent); font-size: 0.75rem; font-weight: 600; }
 .overview-day .greens { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.625rem; }
 .overview-day .green-cell { min-width: 0; }
 .green-pill {
@@ -300,8 +289,7 @@ a.green-pill:hover { text-decoration: none; box-shadow: inset 0 0 0 1px var(--pr
 .green-pill .name { font-weight: 600; }
 .green-pill .slots { font-weight: 600; color: var(--free-ink); }
 .green-pill .meter { display: block; height: 0.3125rem; margin: 0.25rem 0 0.125rem; border-radius: 9999px; background: var(--subtle); overflow: hidden; }
-.green-pill .meter > span { display: block; height: 100%; border-radius: inherit; background: var(--primary-500); }
-.dark .green-pill .meter > span { background: var(--primary-400); }
+.green-pill .meter > span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
 .green-pill .direction { display: flex; align-items: center; gap: 0.25rem; color: var(--muted); font-size: 0.75rem; }
 .green-pill .direction .arrow { width: 1rem; height: 1rem; margin: 0; }
 .green-pill .events { display: block; color: var(--event-ink); font-size: 0.75rem; font-weight: 500; }
@@ -314,8 +302,7 @@ a.green-pill:hover { text-decoration: none; box-shadow: inset 0 0 0 1px var(--pr
 .green-pill.opens .slots { color: var(--muted); font-weight: 500; }
 
 .direction-note { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
-.arrow { width: 1.25rem; height: 1.25rem; color: var(--primary-600); vertical-align: -0.3rem; margin-right: 0.125rem; flex: none; }
-.dark .arrow { color: var(--primary-400); }
+.arrow { width: 1.25rem; height: 1.25rem; color: var(--accent); vertical-align: -0.3rem; margin-right: 0.125rem; flex: none; }
 .arrow-ns { transform: rotate(90deg); }
 
 /* Green calendar: day and green switches */
@@ -328,8 +315,7 @@ a.green-pill:hover { text-decoration: none; box-shadow: inset 0 0 0 1px var(--pr
 .tabs { display: inline-flex; gap: 0.25rem; padding: 0.25rem; border-radius: 0.625rem; background: var(--surface); box-shadow: 0 0 0 1px var(--ring), var(--shadow); }
 .tabs a { padding: 0.375rem 0.875rem; border-radius: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; color: var(--text-soft); white-space: nowrap; text-align: center; }
 .tabs a:hover { background: var(--subtle); text-decoration: none; }
-.tabs a.active { background: var(--subtle); color: var(--primary-600); }
-.dark .tabs a.active { color: var(--primary-400); }
+.tabs a.active { background: var(--subtle); color: var(--accent); }
 
 /* The Secretary's controls on a green's calendar: they wrap onto more rows on a phone */
 .secretary-actions {
@@ -417,7 +403,6 @@ a.green-pill:hover { text-decoration: none; box-shadow: inset 0 0 0 1px var(--pr
 /* Phones and tablets: the menu folds into a drawer behind the menu button (CSS only, no JavaScript) */
 @media (max-width: 1023px) {
     .nav-button { display: inline-flex; margin-left: -0.375rem; }
-    .topbar { padding-left: 1rem; }
     .sidebar {
         position: fixed; top: 0; bottom: 0; left: 0; z-index: 50;
         width: min(20rem, 85vw); height: auto;

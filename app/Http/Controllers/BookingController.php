@@ -8,6 +8,7 @@ use App\Services\BookingRefused;
 use App\Services\BookingRules;
 use App\Services\BookingService;
 use App\Support\Settings;
+use App\Support\WhatsApp;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\RedirectResponse;
@@ -90,7 +91,7 @@ class BookingController extends Controller
         $message = sprintf(
             'I booked rink %s at %s for %s, %s-%s.%s',
             $booking->rink->name,
-            $settings->get('client.name.short', $settings->get('client.name.full', 'our club')),
+            $settings->clubName('our club'),
             $start->format('D j M Y'),
             $start->format('H:i'),
             substr($reservation->time_end, 0, 5),
@@ -100,7 +101,7 @@ class BookingController extends Controller
         return view('bookings.confirmation', [
             'booking' => $booking,
             'start' => $start,
-            'whatsappUrl' => 'https://wa.me/?text='.rawurlencode($message),
+            'whatsappUrl' => WhatsApp::share($message),
         ]);
     }
 

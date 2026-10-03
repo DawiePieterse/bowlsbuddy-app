@@ -25,37 +25,35 @@
         @endif
     </div>
 
-    @auth
-        @if (auth()->user()->hasPrivilege('admin.event'))
-            <div class="secretary-actions">
-                <span class="label">{{ svg('heroicon-o-shield-check', 'icon') }} Secretary</span>
-                @if ($closed)
-                    <form method="POST" action="{{ route('greens.open', [$green, $day->format('Y-m-d')]) }}">
-                        @csrf
-                        <button type="submit" class="subtle small">{{ svg('heroicon-o-lock-open', 'icon') }}Open green {{ $green }} on this day</button>
-                    </form>
-                @else
-                    <form method="POST" action="{{ route('greens.close', [$green, $day->format('Y-m-d')]) }}"
-                          onsubmit="return confirm(@js('Close green '.$green.' on '.$day->format('D j M').'?'.($bookedCount > 0 ? ' Its '.$bookedCount.' '.Str::plural('booking', $bookedCount).' will be cancelled.' : '')));">
-                        @csrf
-                        <button type="submit" class="danger small">{{ svg('heroicon-o-lock-closed', 'icon') }}Close green {{ $green }} on this day</button>
-                    </form>
-                @endif
-                <form method="POST" action="{{ route('greens.direction', [$green, $day->format('Y-m-d')]) }}" class="direction-form">
+    @if ($secretary)
+        <div class="secretary-actions">
+            <span class="label">{{ svg('heroicon-o-shield-check', 'icon') }} Secretary</span>
+            @if ($closed)
+                <form method="POST" action="{{ route('greens.open', [$green, $day->format('Y-m-d')]) }}">
                     @csrf
-                    <select name="direction" aria-label="Direction of play">
-                        <option value="">Direction of play...</option>
-                        @foreach (\App\Services\GreenService::DIRECTIONS as $value => $label)
-                            <option value="{{ $value }}" @selected(app(\App\Services\GreenService::class)->direction($green, $day) === $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="subtle small">Set</button>
+                    <button type="submit" class="subtle small">{{ svg('heroicon-o-lock-open', 'icon') }}Open green {{ $green }} on this day</button>
                 </form>
-                <a class="button subtle small" target="_blank"
-                   href="{{ route('greens.sheet', [$green, $day->format('Y-m-d')]) }}">{{ svg('heroicon-o-printer', 'icon') }}Day sheet</a>
-            </div>
-        @endif
-    @endauth
+            @else
+                <form method="POST" action="{{ route('greens.close', [$green, $day->format('Y-m-d')]) }}"
+                      onsubmit="return confirm(@js('Close green '.$green.' on '.$day->format('D j M').'?'.($bookedCount > 0 ? ' Its '.$bookedCount.' '.Str::plural('booking', $bookedCount).' will be cancelled.' : '')));">
+                    @csrf
+                    <button type="submit" class="danger small">{{ svg('heroicon-o-lock-closed', 'icon') }}Close green {{ $green }} on this day</button>
+                </form>
+            @endif
+            <form method="POST" action="{{ route('greens.direction', [$green, $day->format('Y-m-d')]) }}" class="direction-form">
+                @csrf
+                <select name="direction" aria-label="Direction of play">
+                    <option value="">Direction of play...</option>
+                    @foreach (\App\Services\GreenService::DIRECTIONS as $value => $label)
+                        <option value="{{ $value }}" @selected(app(\App\Services\GreenService::class)->direction($green, $day) === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="subtle small">Set</button>
+            </form>
+            <a class="button subtle small" target="_blank"
+               href="{{ route('greens.sheet', [$green, $day->format('Y-m-d')]) }}">{{ svg('heroicon-o-printer', 'icon') }}Day sheet</a>
+        </div>
+    @endif
 
     @if ($hidden)
         <div class="flash warning">This day is not open for booking.</div>

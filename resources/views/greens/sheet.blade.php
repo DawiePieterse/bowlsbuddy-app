@@ -63,7 +63,7 @@
                             @endforeach
                             @foreach ($cell['bookings'] as $booking)
                                 @foreach (array_merge(
-                                    [trim($booking->user->firstName().' '.$booking->user->lastName()) ?: $booking->user->alias],
+                                    [$booking->user->fullName()],
                                     $booking->playerNames(),
                                 ) as $name)
                                     <div>{{ $name }}</div>

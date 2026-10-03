@@ -39,6 +39,8 @@ class EditRink extends EditRecord
     /** A rink taken out of use cancels its upcoming bookings, and the Secretary lets the members know. */
     protected function afterSave(): void
     {
-        AffectedBookings::cancelDisplaced();
+        if ($this->getRecord()->wasChanged('status')) {
+            AffectedBookings::cancelDisplaced();
+        }
     }
 }

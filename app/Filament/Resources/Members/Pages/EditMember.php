@@ -29,10 +29,11 @@ class EditMember extends EditRecord
         $data['firstname'] = $user->firstName();
         $data['phone'] = Phone::pretty($user->phone);
         $data['lastname'] = $user->lastName();
-        $data['membership'] = $user->meta(Membership::TYPE);
-        $data['joined'] = $user->meta(Membership::JOINED);
-        $data['gender'] = $user->meta(Membership::GENDER);
-        $data['birthday'] = $user->meta(Membership::BIRTHDAY);
+
+        foreach (Membership::DETAILS as $key) {
+            $data[$key] = $user->meta($key);
+        }
+
         $data['privileges'] = array_values(array_filter(
             array_keys(User::PRIVILEGES),
             fn (string $privilege) => $user->meta('allow.'.$privilege) === 'true',

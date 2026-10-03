@@ -1,5 +1,5 @@
 /*
- * A few rules on top of the admin panel's precompiled CSS, so its phone topbar matches the member pages':
+ * Rules on top of the admin panel's precompiled CSS. First, its phone topbar matches the member pages':
  * menu button, brand, avatar. On phones the global search makes way for the brand; members are still
  * searched on the Members page.
  */
@@ -11,3 +11,18 @@
 @media (max-width: 639px) {
     .fi-topbar .fi-global-search-ctn { display: none; }
 }
+
+/*
+ * Helpers for the custom admin pages and widgets (Message members, Affected bookings, Birthdays), in the
+ * panel's own greys. Page-specific rules stay in each view's <style> block.
+ */
+.bb-muted { color: var(--gray-500); }
+.dark .bb-muted { color: var(--gray-400); }
+.bb-small { font-size: 0.875rem; line-height: 1.25rem; }
+.bb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.bb-list { margin: 0; padding: 0; list-style: none; }
+.bb-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.75rem 0; border-top: 1px solid rgb(0 0 0 / 0.06); }
+.bb-list li:first-child { border-top: 0; padding-top: 0; }
+.dark .bb-list li { border-top-color: rgb(255 255 255 / 0.08); }
+.bb-who { min-width: 0; flex: 1 1 12rem; }
+.bb-who strong { font-weight: 600; }

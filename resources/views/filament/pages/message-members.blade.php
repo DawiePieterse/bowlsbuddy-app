@@ -1,17 +1,7 @@
 <x-filament-panels::page>
-    {{-- The panel's CSS is precompiled, so the list brings its own few rules. --}}
+    {{-- Shared bb-* helpers are in public/css/panel.css; this page adds the message preview. --}}
     <style>
-        .bb-list { margin: 0; padding: 0; list-style: none; }
-        .bb-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.75rem 0; border-top: 1px solid rgb(0 0 0 / 0.06); }
-        .bb-list li:first-child { border-top: 0; padding-top: 0; }
-        .bb-who { min-width: 0; flex: 1 1 14rem; }
-        .bb-who strong { font-weight: 600; }
         .bb-preview { margin-top: 0.25rem; font-size: 0.8125rem; line-height: 1.25rem; white-space: pre-line; overflow-wrap: anywhere; }
-        .bb-muted { color: rgb(100 116 139); }
-        .bb-small { font-size: 0.875rem; line-height: 1.25rem; }
-        .bb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
-        .dark .bb-list li { border-top-color: rgb(255 255 255 / 0.08); }
-        .dark .bb-muted { color: rgb(148 163 184); }
     </style>
 
     <form wire:submit="prepare">
@@ -28,9 +18,11 @@
     @if ($prepared)
         @php($messages = $this->messages())
 
+        {{-- Which messages were sent is kept in the browser only, so tapping Send doesn't reload the list. --}}
+        <div x-data="{ sent: [] }">
         <x-filament::section
             :heading="count($messages['send']).' '.Str::plural('message', count($messages['send'])).' to send'"
-            :description="count(array_filter(array_column($messages['send'], 'sent'))).' sent so far. Tap Send to open WhatsApp with the message ready.'"
+            description="Tap Send to open WhatsApp with the message ready."
         >
             <div class="bb-row" style="margin-bottom: 1rem;">
                 <x-filament::button tag="a" :href="$messages['group']" target="_blank" rel="noopener" color="gray" size="sm"
@@ -41,6 +33,7 @@
             </div>
 
             @if ($messages['send'])
+                <p class="bb-small bb-muted" style="margin: 0 0 0.5rem;" x-cloak x-show="sent.length" x-text="sent.length + ' sent so far.'"></p>
                 <ul class="bb-list">
                     @foreach ($messages['send'] as $message)
                         <li wire:key="member-{{ $message['uid'] }}">
@@ -49,12 +42,14 @@
                                 <span class="bb-small bb-muted">&middot; {{ $message['phone'] }}</span>
                                 <div class="bb-preview bb-muted">{{ $message['text'] }}</div>
                             </div>
-                            <x-filament::button tag="a" :href="$message['url']" target="_blank" rel="noopener"
-                                                :color="$message['sent'] ? 'gray' : 'primary'"
-                                                :icon="$message['sent'] ? 'heroicon-o-check' : 'heroicon-o-chat-bubble-left-ellipsis'"
-                                                wire:click="markSent({{ $message['uid'] }})">
-                                {{ $message['sent'] ? 'Sent' : 'Send' }}
-                            </x-filament::button>
+                            <div class="bb-row">
+                                <x-filament::badge color="success" icon="heroicon-o-check" x-cloak x-show="sent.includes({{ $message['uid'] }})">Sent</x-filament::badge>
+                                <x-filament::button tag="a" :href="$message['url']" target="_blank" rel="noopener"
+                                                    icon="heroicon-o-chat-bubble-left-ellipsis"
+                                                    x-on:click="sent.includes({{ $message['uid'] }}) || sent.push({{ $message['uid'] }})">
+                                    Send
+                                </x-filament::button>
+                            </div>
                         </li>
                     @endforeach
                 </ul>
@@ -62,6 +57,7 @@
                 <p class="bb-small bb-muted">None of these members has a cellphone number.</p>
             @endif
         </x-filament::section>
+        </div>
 
         @if ($messages['without'])
             <x-filament::section heading="No cellphone number" description="Let these members know another way.">

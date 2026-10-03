@@ -8,6 +8,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -98,6 +99,18 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->hasMany(MemberPayment::class, 'uid', 'uid');
     }
 
+    /**
+     * Members who have paid for the membership year, or with $paid false, who haven't.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeWherePaidFor(Builder $query, int $year, bool $paid = true): void
+    {
+        $paid
+            ? $query->whereHas('payments', fn (Builder $payments) => $payments->where('year', $year))
+            : $query->whereDoesntHave('payments', fn (Builder $payments) => $payments->where('year', $year));
+    }
+
     public function canLogIn(): bool
     {
         return in_array($this->status, self::LOGIN_STATUSES, true);
@@ -120,6 +133,18 @@ class User extends Authenticatable implements FilamentUser, HasName
     public function lastName(): string
     {
         return (string) $this->meta('lastname');
+    }
+
+    /** First name and surname, or the alias when neither is known. */
+    public function fullName(): string
+    {
+        return trim($this->firstName().' '.$this->lastName()) ?: $this->alias;
+    }
+
+    /** The name to greet the member by in a message: the first name, else the alias's first word. */
+    public function greetingName(): string
+    {
+        return trim($this->firstName()) ?: (string) strtok($this->alias, ' ');
     }
 
     public function canAccessPanel(Panel $panel): bool
