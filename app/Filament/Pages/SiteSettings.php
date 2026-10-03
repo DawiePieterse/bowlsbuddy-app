@@ -154,6 +154,9 @@ class SiteSettings extends Page
         ClubLogo::keepOnly(blank($state['logo'] ?? null) ? null : basename((string) $state['logo']));
 
         Notification::make()->title('Settings saved')->success()->send();
+
+        // Bookings on days now hidden are cancelled, and the Secretary lets the members know.
+        AffectedBookings::cancelDisplaced();
     }
 
     protected function getHeaderActions(): array

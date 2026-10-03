@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
+use App\Filament\Pages\AffectedBookings;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use Filament\Actions\DeleteAction;
@@ -44,5 +45,8 @@ class EditEvent extends EditRecord
         $event = $this->getRecord();
 
         EventResource::saveMeta($event, $this->form->getRawState());
+
+        // Bookings in the event's time are cancelled, and the Secretary lets the members know.
+        AffectedBookings::cancelDisplaced();
     }
 }

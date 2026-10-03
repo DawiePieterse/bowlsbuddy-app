@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\BookingRules;
 use App\Services\ClubSetup;
 use App\Services\DaySheet;
+use App\Services\DisplacedBookings;
 use App\Services\GreenService;
 use App\Services\GreensOverview;
 use Carbon\CarbonImmutable;
@@ -19,6 +20,7 @@ use chillerlan\QRCode\QROptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class GreensController extends Controller
@@ -45,7 +47,7 @@ class GreensController extends Controller
      * One green's calendar for one day: its rinks by hourly slots. Player names show for
      * logged-in members only; the member's own bookings show green.
      */
-    public function show(Request $request, string $green, ?string $date = null): View
+    public function show(Request $request, DisplacedBookings $displaced, string $green, ?string $date = null): View
     {
         $rinks = $this->greens->greens()[$green] ?? abort(404);
 
@@ -68,6 +70,12 @@ class GreensController extends Controller
             'grid' => $this->grid($request, $rinks, $day, $this->greens->isClosed($green, $day)),
             'previousDay' => $dayIndex !== false && $dayIndex > 0 ? $days[$dayIndex - 1] : null,
             'nextDay' => $dayIndex !== false && $dayIndex < count($days) - 1 ? $days[$dayIndex + 1] : null,
+            // For the Secretary: how many bookings closing the green would cancel, and the members whose
+            // bookings a closure cancelled, to message them.
+            'bookedCount' => $request->user()?->hasPrivilege('admin.event') ? $displaced->bookedCount($green, $day) : 0,
+            'affected' => $request->user()?->hasPrivilege('admin.event')
+                ? $displaced->messages($displaced->cancelled($green, $day))
+                : [],
         ]);
     }
 
@@ -75,14 +83,21 @@ class GreensController extends Controller
      * The Secretary closes this green for the day (the plan's green open/close, privilege
      * "admin.event" like other blocked time).
      */
-    public function close(Request $request, string $green, string $date): RedirectResponse
+    public function close(Request $request, DisplacedBookings $displaced, string $green, string $date): RedirectResponse
     {
         $day = $this->greenDay($request, $green, $date);
 
         $this->greens->setClosed($green, $day, true);
 
+        // Its bookings are cancelled, so the members can book another green that day.
+        $cancelled = count(array_filter(
+            $displaced->cancelDisplaced(),
+            fn (array $item) => $item['booking']->rink->green() === $green && $item['start']->isSameDay($day),
+        ));
+
         return redirect()->route('greens.show', [$green, $date])
-            ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M').'.');
+            ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M')
+                .($cancelled > 0 ? ' and its '.$cancelled.' '.Str::plural('booking', $cancelled).' '.($cancelled === 1 ? 'is' : 'are').' cancelled. Let the members know below.' : '.'));
     }
 
     /**
@@ -104,14 +119,15 @@ class GreensController extends Controller
                 : 'Green '.$green.' plays '.GreenService::DIRECTIONS[$direction].' on '.$day->format('D j M').'.');
     }
 
-    public function open(Request $request, string $green, string $date): RedirectResponse
+    public function open(Request $request, DisplacedBookings $displaced, string $green, string $date): RedirectResponse
     {
         $day = $this->greenDay($request, $green, $date);
 
         $this->greens->setClosed($green, $day, false);
 
         return redirect()->route('greens.show', [$green, $date])
-            ->with('status', 'Green '.$green.' is open again on '.$day->format('D j M').'.');
+            ->with('status', 'Green '.$green.' is open again on '.$day->format('D j M').'.'
+                .($displaced->cancelled($green, $day) !== [] ? ' The bookings cancelled when it closed stay cancelled.' : ''));
     }
 
     /**

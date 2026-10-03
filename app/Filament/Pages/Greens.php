@@ -100,11 +100,18 @@ class Greens extends Page
                         'show' => 'Show to members',
                     ])->required(),
                 ])
-                ->action(fn (array $data) => $this->run(function () use ($data) {
-                    app(GreenManager::class)->setHidden((string) $data['green'], $data['visibility'] === 'hide');
+                ->action(function (array $data) {
+                    $this->run(function () use ($data) {
+                        app(GreenManager::class)->setHidden((string) $data['green'], $data['visibility'] === 'hide');
 
-                    return $data['visibility'] === 'hide' ? 'Green hidden from members' : 'Green shown to members';
-                })),
+                        return $data['visibility'] === 'hide' ? 'Green hidden from members' : 'Green shown to members';
+                    });
+
+                    // Upcoming bookings on a hidden green are cancelled, and the Secretary lets the members know.
+                    if ($data['visibility'] === 'hide') {
+                        AffectedBookings::cancelDisplaced();
+                    }
+                }),
 
             Action::make('deleteGreen')
                 ->label('Delete a green')

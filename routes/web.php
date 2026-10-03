@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AffectedBookingsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\BookingController;
@@ -16,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/greens/{green}/{date}/close', [GreensController::class, 'close'])->name('greens.close');
     Route::post('/greens/{green}/{date}/open', [GreensController::class, 'open'])->name('greens.open');
     Route::post('/greens/{green}/{date}/direction', [GreensController::class, 'direction'])->name('greens.direction');
+    Route::post('/affected/told', [AffectedBookingsController::class, 'told'])->name('affected.told');
 });
 
 Route::get('/greens/{green}/{date?}', [GreensController::class, 'show'])->name('greens.show');
