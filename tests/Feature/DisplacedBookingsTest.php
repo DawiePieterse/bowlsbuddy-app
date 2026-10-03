@@ -163,5 +163,12 @@ it('narrows the cancelled bookings to one green on one day', function () {
     expect($this->displaced->cancelled('A', Carbon::parse('2026-10-06')))->toHaveCount(1)
         ->and($this->displaced->cancelled('B'))->toHaveCount(2)
         ->and($this->displaced->cancelled())->toHaveCount(3)
-        ->and($this->displaced->bookedCount('A', Carbon::parse('2026-10-06')))->toBe(0);
+        ->and($this->displaced->bookedCount([rink('A-1')->sid, rink('A-2')->sid], Carbon::parse('2026-10-06')))->toBe(0)
+        ->and($this->displaced->bookedCount([rink('B-1')->sid], Carbon::parse('2026-10-07')))->toBe(0); // B-2 is cancelled, not B-1's
+
+    booked($member, 'A-3', '2026-10-08 12:00');
+    booked($member, 'A-4', '2026-10-05 12:00'); // started this morning
+
+    expect($this->displaced->bookedCount([rink('A-3')->sid], Carbon::parse('2026-10-08')))->toBe(1)
+        ->and($this->displaced->bookedCount([rink('A-4')->sid], Carbon::parse('2026-10-05')))->toBe(0);
 });

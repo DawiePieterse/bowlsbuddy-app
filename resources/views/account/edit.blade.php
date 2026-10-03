@@ -3,7 +3,7 @@
 @section('content')
     <div class="page-header">
         <h1>My account</h1>
-        <p>{{ trim(auth()->user()->firstName().' '.auth()->user()->lastName()) ?: auth()->user()->alias }}
+        <p>{{ auth()->user()->fullName() }}
             &middot; {{ auth()->user()->phone ? \App\Support\Phone::pretty(auth()->user()->phone) : auth()->user()->email }}</p>
     </div>
 

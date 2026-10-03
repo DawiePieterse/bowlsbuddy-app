@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Event;
+use App\Models\Meta\BookingMeta;
 use App\Models\Reservation;
 use App\Models\Rink;
 use App\Models\User;
@@ -71,19 +72,22 @@ class DisplacedBookings
     }
 
     /**
-     * Cancels every live booking a closure or event displaces, noting why on each booking.
+     * Cancels the live bookings a closure or event displaces (only those on one green and one day when given),
+     * noting why on each booking.
      *
      * @return list<Displaced> the bookings it cancelled
      */
-    public function cancelDisplaced(): array
+    public function cancelDisplaced(?string $green = null, ?CarbonInterface $day = null): array
     {
-        $displaced = $this->upcoming();
+        $displaced = $this->upcoming($green, $day);
+        $ids = array_map(fn (array $item) => $item['booking']->bid, $displaced);
 
-        DB::transaction(function () use ($displaced) {
+        DB::transaction(function () use ($displaced, $ids) {
+            Booking::query()->whereIn('bid', $ids)->update(['status' => 'cancelled']);
+            BookingMeta::query()->whereIn('bid', $ids)->where('key', self::TOLD)->delete();
+
             foreach ($displaced as $item) {
-                $item['booking']->update(['status' => 'cancelled']);
                 $item['booking']->setMeta(self::REASON, $item['reason']);
-                $item['booking']->setMeta(self::TOLD, null);
             }
         });
 
@@ -97,23 +101,24 @@ class DisplacedBookings
      */
     public function cancelled(?string $green = null, ?CarbonInterface $day = null): array
     {
-        $cancelled = [];
-
-        foreach ($this->slots(cancelled: true, green: $green, day: $day) as $item) {
-            $reason = $item['booking']->meta(self::REASON);
-
-            if ($reason !== null) {
-                $cancelled[] = [...$item, 'reason' => $reason];
-            }
-        }
-
-        return $cancelled;
+        return array_map(
+            fn (array $item) => [...$item, 'reason' => (string) $item['booking']->meta(self::REASON)],
+            $this->slots(cancelled: true, green: $green, day: $day),
+        );
     }
 
-    /** How many live bookings on a green that day haven't started yet (for the Secretary's close warning). */
-    public function bookedCount(string $green, CarbonInterface $day): int
+    /**
+     * How many live bookings on these rinks that day haven't started yet (for the Secretary's close warning).
+     *
+     * @param  list<int>  $rinkIds
+     */
+    public function bookedCount(array $rinkIds, CarbonInterface $day): int
     {
-        return count($this->slots(cancelled: false, green: $green, day: $day));
+        return Reservation::query()
+            ->where('date', $day->toDateString())
+            ->where(fn (Builder $query) => $this->notStarted($query))
+            ->whereHas('booking', fn (Builder $query) => $query->whereIn('sid', $rinkIds)->where('status', '!=', 'cancelled'))
+            ->count();
     }
 
     /**
@@ -139,7 +144,7 @@ class DisplacedBookings
 
             $messages[] = [
                 'user' => $user,
-                'name' => self::nameOf($user),
+                'name' => $user->fullName(),
                 'phone' => $phone,
                 'items' => $memberItems,
                 'bookings' => implode(',', array_map(fn (array $item) => $item['booking']->bid, $memberItems)),
@@ -152,12 +157,16 @@ class DisplacedBookings
         return $messages;
     }
 
-    /** How many members still have to be told about a cancelled booking (the admin menu's badge). */
+    /** How many members still have to be told about a cancelled booking (the admin menu's badge): one query. */
     public function memberCount(): int
     {
-        $untold = array_filter($this->cancelled(), fn (array $item) => ! $item['told']);
-
-        return count(array_unique(array_map(fn (array $item) => $item['booking']->uid, $untold)));
+        return Booking::query()
+            ->where('status', 'cancelled')
+            ->whereMeta(self::REASON)
+            ->whereDoesntHave('metaEntries', fn (Builder $query) => $query->where('key', self::TOLD))
+            ->whereHas('reservations', fn (Builder $query) => $this->notStarted($query))
+            ->distinct()
+            ->count('uid');
     }
 
     /**
@@ -170,7 +179,7 @@ class DisplacedBookings
         Booking::query()
             ->whereIn('bid', $bookingIds)
             ->where('status', 'cancelled')
-            ->whereHas('metaEntries', fn (Builder $query) => $query->where('key', self::REASON))
+            ->whereMeta(self::REASON)
             ->get()
             ->each(fn (Booking $booking) => $booking->setMeta(self::TOLD, '1'));
     }
@@ -191,11 +200,6 @@ class DisplacedBookings
         );
     }
 
-    public static function nameOf(User $user): string
-    {
-        return trim($user->firstName().' '.$user->lastName()) ?: $user->alias;
-    }
-
     /**
      * The bookings' slots that haven't started yet, live or cancelled.
      *
@@ -212,7 +216,7 @@ class DisplacedBookings
                 fn (Builder $query) => $query->where('date', '>=', $now->toDateString()),
             )
             ->whereHas('booking', fn (Builder $query) => $cancelled
-                ? $query->where('status', 'cancelled')->whereHas('metaEntries', fn (Builder $meta) => $meta->where('key', self::REASON))
+                ? $query->where('status', 'cancelled')->whereMeta(self::REASON)
                 : $query->where('status', '!=', 'cancelled'))
             ->with(['booking.rink', 'booking.user.metaEntries', 'booking.metaEntries'])
             ->orderBy('date')
@@ -244,6 +248,19 @@ class DisplacedBookings
         }
 
         return $slots;
+    }
+
+    /**
+     * Reservations that haven't started: a later day, or later today.
+     *
+     * @param  Builder<Reservation>  $query
+     */
+    private function notStarted(Builder $query): void
+    {
+        $now = CarbonImmutable::now();
+
+        $query->where('date', '>', $now->toDateString())
+            ->orWhere(fn (Builder $today) => $today->where('date', $now->toDateString())->where('time_start', '>', $now->format('H:i:s')));
     }
 
     /**
@@ -280,8 +297,8 @@ class DisplacedBookings
      */
     private function text(User $user, array $items): string
     {
-        $club = (string) $this->settings->get('client.name.short', $this->settings->get('client.name.full', 'the club'));
-        $hello = 'Hi '.(trim($user->firstName()) ?: $user->alias).',';
+        $club = $this->settings->clubName();
+        $hello = 'Hi '.$user->greetingName().',';
         $partners = array_merge(...array_map(fn (array $item) => $item['booking']->playerNames(), $items));
         $after = ' Sorry for the inconvenience.'
             .($partners === [] ? '' : (count($items) === 1 ? ' Please let '.implode(' and ', $partners).' know.' : ' Please let your playing partners know.'))

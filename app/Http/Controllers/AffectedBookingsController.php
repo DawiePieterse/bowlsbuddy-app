@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Pages\AffectedBookings;
 use App\Services\DisplacedBookings;
+use App\Support\Ids;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,9 +17,9 @@ class AffectedBookingsController extends Controller
      */
     public function told(Request $request, DisplacedBookings $displaced): Response|RedirectResponse
     {
-        abort_unless($request->user()?->hasPrivilege('admin.event'), 403);
+        abort_unless(AffectedBookings::canAccess(), 403);
 
-        $displaced->markTold(array_map('intval', array_filter(explode(',', (string) $request->input('bookings')))));
+        $displaced->markTold(Ids::parse((string) $request->input('bookings')));
 
         return $request->expectsJson() ? response()->noContent() : back();
     }

@@ -32,6 +32,9 @@ class Membership
 
     public const BIRTHDAY = 'birthday';
 
+    /** The member's details on their page; each form field is named after its meta key. */
+    public const DETAILS = [self::TYPE, self::JOINED, self::GENDER, self::BIRTHDAY];
+
     public function __construct(private readonly Settings $settings) {}
 
     /**
@@ -92,6 +95,12 @@ class Membership
         return $at->month >= $this->yearStartMonth() ? $at->year : $at->year - 1;
     }
 
+    /** "2026", or "2026/27" when the year runs over New Year. */
+    public function currentYearLabel(): string
+    {
+        return $this->yearLabel($this->currentYear());
+    }
+
     public function yearLabel(int $year): string
     {
         return $this->yearStartMonth() === 1 ? (string) $year : $year.'/'.substr((string) ($year + 1), -2);
@@ -128,15 +137,10 @@ class Membership
         $fee = $user !== null ? $this->feeFor($user->meta(self::TYPE)) : null;
 
         return strtr($message, [
-            '{name}' => $user !== null ? self::firstName($user) : 'everyone',
+            '{name}' => $user !== null ? $user->greetingName() : 'everyone',
             '{fee}' => $fee !== null ? self::rand($fee) : 'the membership fee',
-            '{club}' => (string) $this->settings->get('client.name.short', $this->settings->get('client.name.full', 'the club')),
+            '{club}' => $this->settings->clubName(),
         ]);
-    }
-
-    public static function firstName(User $user): string
-    {
-        return trim($user->firstName()) ?: (string) strtok($user->alias, ' ');
     }
 
     /** "R1 200.00", as South Africans write it. */

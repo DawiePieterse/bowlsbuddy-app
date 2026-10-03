@@ -162,6 +162,7 @@ class SiteSettings extends Page
     public function save(Settings $settings): void
     {
         $state = $this->form->getState();
+        $hiddenDays = $settings->get(self::DAY_EXCEPTIONS);
 
         foreach (self::KEYS as $field => $key) {
             $value = $state[$field] ?? null;
@@ -180,7 +181,9 @@ class SiteSettings extends Page
         Notification::make()->title('Settings saved')->success()->send();
 
         // Bookings on days now hidden are cancelled, and the Secretary lets the members know.
-        AffectedBookings::cancelDisplaced();
+        if ($settings->get(self::DAY_EXCEPTIONS) !== $hiddenDays) {
+            AffectedBookings::cancelDisplaced();
+        }
     }
 
     protected function getHeaderActions(): array

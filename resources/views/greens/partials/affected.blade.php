@@ -5,7 +5,7 @@
      WhatsApp message ready to send from the Secretary's own phone. Tapping Send also notes the member as
      told (in the background, so WhatsApp still opens straight away). --}}
 @php($untold = count(array_filter($messages, fn (array $message) => ! $message['told'])))
-<div class="card affected" id="affected">
+<div class="card" id="affected">
     <h2>Cancelled bookings</h2>
     <p class="muted">
         @if ($untold > 0)

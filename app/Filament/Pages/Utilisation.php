@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\User;
 use App\Services\RinkUtilisation;
+use App\Support\Theme;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -22,7 +23,7 @@ class Utilisation extends Page
     protected string $view = 'filament.pages.utilisation';
 
     /** Sequential ramp for the cells, in the primary emerald: light shades take dark ink, the two darkest white. */
-    public const RAMP = ['#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#047857', '#064e3b'];
+    public const RAMP = [Theme::PRIMARY[100], Theme::PRIMARY[200], Theme::PRIMARY[300], Theme::PRIMARY[400], Theme::PRIMARY[600], Theme::PRIMARY[900]];
 
     #[Url]
     public string $period = 'month';
@@ -79,7 +80,7 @@ class Utilisation extends Page
 
         $step = min(count(self::RAMP) - 1, (int) floor($hours / $max * count(self::RAMP)));
 
-        return ['background' => self::RAMP[$step], 'ink' => $step >= 4 ? '#ffffff' : '#022c22'];
+        return ['background' => self::RAMP[$step], 'ink' => $step >= 4 ? '#ffffff' : Theme::PRIMARY[950]];
     }
 
     public static function formatHours(float $hours): string

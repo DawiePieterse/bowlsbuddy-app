@@ -90,7 +90,7 @@ class AccountController extends Controller
             ]);
 
         return response()->json([
-            'name' => trim($user->firstName().' '.$user->lastName()) ?: $user->alias,
+            'name' => $user->fullName(),
             'cellphone' => $user->phone,
             'email' => $user->email,
             'status' => $user->status,
@@ -104,7 +104,7 @@ class AccountController extends Controller
                     'paid_on' => $payment->paid_on->format('Y-m-d'),
                     'membership_year' => $payment->year,
                     'amount' => $payment->amount,
-                    'method' => MemberPayment::METHODS[$payment->method] ?? $payment->method,
+                    'method' => MemberPayment::methodLabel($payment->method),
                     'reference' => $payment->reference,
                 ])->all(),
             ],

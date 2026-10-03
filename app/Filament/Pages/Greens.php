@@ -109,7 +109,7 @@ class Greens extends Page
 
                     // Upcoming bookings on a hidden green are cancelled, and the Secretary lets the members know.
                     if ($data['visibility'] === 'hide') {
-                        AffectedBookings::cancelDisplaced();
+                        AffectedBookings::cancelDisplaced((string) $data['green']);
                     }
                 }),
 

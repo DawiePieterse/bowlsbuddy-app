@@ -83,8 +83,12 @@ scripts/e2e.sh                                           # Playwright, own datab
 ## Filament and Blade pitfalls
 
 - The panel's CSS is precompiled; Tailwind classes that Filament itself does not use have no effect in
-  custom page views. Use Filament components (`x-filament::section`, `x-filament::button`) and a small
-  scoped `<style>` block for anything else (see `utilisation.blade.php`), with `.dark` variants.
+  custom page views. Use Filament components (`x-filament::section`, `x-filament::button`), the shared
+  `bb-*` helpers in `public/css/panel.css` (`bb-muted`, `bb-small`, `bb-row`, `bb-list`, `bb-who`, in the
+  panel's `--gray-*` colours) and a small scoped `<style>` block only for page-specific rules (see
+  `utilisation.blade.php`), with `.dark` variants. Filament components drop `x-data`; wrap them in a `<div>`.
+- Settings are kept in memory per request (`Settings::get()` is cheap); still, compute labels and options
+  once per table or page rather than in per-row closures, and keep navigation badges to one query each.
 - Import classes in Blade with `@use('App\\...')` at the top of the view, not `use` inside `@php`.
 - A tab that needs its own columns (Members "Use of rinks"): the tab's `modifyQueryUsing` adds the data, and
   columns use `->visible()`/`->hidden()` closures on `$livewire`; see `MemberResource::showingUsage()`.

@@ -31,8 +31,7 @@
         .bb-heatmap thead th:last-child, .bb-heatmap td.bb-total { position: sticky; right: 0; z-index: 1; background-color: #fff; padding-inline-start: 0.5rem; }
         .bb-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
         .bb-swatch { display: inline-block; width: 1.5rem; height: 0.75rem; border-radius: 0.25rem; }
-        .bb-muted { color: rgb(107 114 128); }
-        .dark .bb-heatmap thead th, .dark .bb-muted { color: rgb(156 163 175); }
+        .dark .bb-heatmap thead th { color: rgb(156 163 175); }
         .dark .bb-heatmap td.bb-cell { background-color: rgb(255 255 255 / 0.05); }
         .dark .bb-heatmap thead th:first-child, .dark .bb-heatmap tbody th, .dark .bb-heatmap thead th:last-child, .dark .bb-heatmap td.bb-total { background-color: #111827; }
     </style>

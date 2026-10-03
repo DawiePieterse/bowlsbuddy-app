@@ -3,6 +3,7 @@
 namespace App\Models\Concerns;
 
 use App\Models\Meta\Meta;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -20,6 +21,18 @@ trait HasMeta
     public function metaEntries(): HasMany
     {
         return $this->hasMany(static::metaModel(), $this->getKeyName(), $this->getKeyName());
+    }
+
+    /**
+     * Only the rows with this meta key, or with this key and value.
+     *
+     * @param  Builder<static>  $query
+     */
+    public function scopeWhereMeta(Builder $query, string $key, ?string $value = null): void
+    {
+        $query->whereHas('metaEntries', fn (Builder $meta) => $meta
+            ->where('key', $key)
+            ->when($value !== null, fn (Builder $meta) => $meta->where('value', $value)));
     }
 
     /**

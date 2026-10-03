@@ -15,7 +15,7 @@
 
     <div class="bb-message">{{ $message['text'] }}</div>
 
-    <div class="bb-send">
+    <div class="bb-send bb-row">
         @if ($message['url'])
             <x-filament::button tag="a" :href="$message['url']" target="_blank" rel="noopener"
                                 :color="$message['told'] ? 'gray' : 'primary'"

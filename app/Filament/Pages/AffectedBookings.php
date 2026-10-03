@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\User;
 use App\Services\DisplacedBookings;
+use App\Support\Ids;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -57,9 +58,9 @@ class AffectedBookings extends Page
      * After a change that can close rinks (an event saved, a green hidden, a rink taken out of use, days
      * hidden): cancels the bookings it displaces and nudges the Secretary to let the members know.
      */
-    public static function cancelDisplaced(): void
+    public static function cancelDisplaced(?string $green = null): void
     {
-        $cancelled = app(DisplacedBookings::class)->cancelDisplaced();
+        $cancelled = app(DisplacedBookings::class)->cancelDisplaced($green);
 
         if ($cancelled === []) {
             return;
@@ -85,7 +86,7 @@ class AffectedBookings extends Page
     {
         abort_unless(static::canAccess(), 403);
 
-        app(DisplacedBookings::class)->markTold(array_map('intval', array_filter(explode(',', $bookings))));
+        app(DisplacedBookings::class)->markTold(Ids::parse($bookings));
     }
 
     /** @return list<array<string, mixed>> see DisplacedBookings::messages() */

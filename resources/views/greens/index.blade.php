@@ -10,7 +10,7 @@
                 @php($inviteText = 'Join '.app(\App\Support\Settings::class)->get('client.name.full', 'our club').' on Bowls Buddy and book your practice rink online: '.route('register'))
                 <div class="actions">
                     <a class="button whatsapp" style="margin-top: 0;" target="_blank" rel="noopener"
-                       href="https://wa.me/?text={{ rawurlencode($inviteText) }}">@include('partials.whatsapp-icon')Invite members via WhatsApp</a>
+                       href="{{ \App\Support\WhatsApp::share($inviteText) }}">@include('partials.whatsapp-icon')Invite members via WhatsApp</a>
                 </div>
             @endif
         @endauth

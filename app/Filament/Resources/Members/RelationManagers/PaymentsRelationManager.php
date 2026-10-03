@@ -66,7 +66,7 @@ class PaymentsRelationManager extends RelationManager
                 TextColumn::make('amount')->alignEnd()
                     ->formatStateUsing(fn (string $state): string => Membership::rand($state)),
                 TextColumn::make('method')
-                    ->formatStateUsing(fn (string $state): string => MemberPayment::METHODS[$state] ?? $state),
+                    ->formatStateUsing(fn (string $state): string => MemberPayment::methodLabel($state)),
                 TextColumn::make('reference')->placeholder('—')->visibleFrom('md'),
             ])
             ->defaultSort('paid_on', 'desc')

@@ -14,13 +14,15 @@
         $user?->canAccessPanel(Filament::getPanel('admin')) ? ['Admin panel', url('/admin'), 'heroicon-o-shield-check', false] : null,
     ]);
     $cssVersion = @filemtime(public_path('css/app.css')) ?: null;
+    $clubName = app(Settings::class)->get('client.name.full');
+    $brand = ['logoUrl' => \App\Support\ClubLogo::url(), 'clubName' => $clubName];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>{{ $title ?? 'Greens' }} - Bowls Buddy - {{ app(Settings::class)->get('client.name.full') }}</title>
+    <title>{{ $title ?? 'Greens' }} - Bowls Buddy - {{ $clubName }}</title>
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
     <script>
@@ -35,9 +37,7 @@
     </script>
     <link rel="stylesheet" href="{{ asset('fonts/filament/filament/inter/index.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}{{ $cssVersion ? '?v='.$cssVersion : '' }}">
-    @if ($clubLogo = \App\Support\ClubLogo::url())
-        <link rel="icon" href="{{ $clubLogo }}">
-    @endif
+    <link rel="icon" href="{{ $brand['logoUrl'] }}">
 </head>
 <body>
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" tabindex="-1">
@@ -46,7 +46,7 @@
         <label for="nav-toggle" class="nav-button" aria-label="Menu" title="Menu">
             {{ svg('heroicon-o-bars-3', 'icon') }}
         </label>
-        <a href="{{ route('home') }}" class="brand">@include('filament.brand')</a>
+        <a href="{{ route('home') }}" class="brand">@include('filament.brand', $brand)</a>
         <div class="topbar-end">
             @auth
                 <a href="{{ route('account.edit') }}" class="avatar" title="My account">
@@ -63,7 +63,7 @@
     <div class="layout">
         <aside class="sidebar">
             <div class="sidebar-head">
-                <a href="{{ route('home') }}" class="brand">@include('filament.brand')</a>
+                <a href="{{ route('home') }}" class="brand">@include('filament.brand', $brand)</a>
                 <label for="nav-toggle" class="nav-close" aria-label="Close menu" title="Close menu">
                     {{ svg('heroicon-o-x-mark', 'icon') }}
                 </label>

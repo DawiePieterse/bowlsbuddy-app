@@ -179,8 +179,9 @@ it('prepares a personal WhatsApp message for each member, and one for a group', 
         ->assertSee('Piet Pompies')    // listed without a number
         ->assertSee('https://wa.me/27821234567?text='.rawurlencode('Hi Jan, your R1 200.00 subscription is due.'), false)
         ->assertSee(rawurlencode('Hi everyone, your the membership fee subscription is due.'), false)
-        ->call('markSent', $jan->uid)
-        ->assertSee('1 sent so far');
+        ->assertSee('Members who haven\'t paid for 2026 (3)')
+        ->assertSee('Full members (1)')
+        ->assertSee('Social members (1)');
 
     $page->fillForm(['recipients' => 'type:Social'])->call('prepare')
         ->assertSee('Anna Venter')

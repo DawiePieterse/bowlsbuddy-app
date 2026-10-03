@@ -2,6 +2,7 @@
 
 namespace App\Filament\AvatarProviders;
 
+use App\Support\Theme;
 use Filament\AvatarProviders\Contracts\AvatarProvider;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -22,7 +23,7 @@ class InitialsAvatarProvider implements AvatarProvider
             ->join('');
 
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-            .'<rect width="64" height="64" fill="#047857"/>'
+            .'<rect width="64" height="64" fill="'.Theme::PRIMARY[600].'"/>'
             .'<text x="50%" y="50%" dy=".35em" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" '
             .'font-size="26" font-weight="600" fill="#ffffff">'.e($initials).'</text></svg>';
 

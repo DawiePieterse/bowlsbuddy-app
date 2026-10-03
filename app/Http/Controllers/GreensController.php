@@ -58,24 +58,25 @@ class GreensController extends Controller
         $day = $date === null ? $days[0] : $this->parseDay($date);
 
         $dayIndex = collect($days)->search(fn (CarbonImmutable $other) => $other->isSameDay($day));
+        $closed = $this->greens->isClosed($green, $day);
+        $secretary = (bool) $request->user()?->hasPrivilege('admin.event');
 
         return view('greens.show', [
             'green' => $green,
             'greens' => array_keys($this->greens->greens()),
             'day' => $day,
             'rinks' => $rinks,
-            'closed' => $this->greens->isClosed($green, $day),
+            'closed' => $closed,
             'direction' => $this->greens->directionLabel($green, $day),
             'hidden' => $this->rules->isDayHidden($day),
-            'grid' => $this->grid($request, $rinks, $day, $this->greens->isClosed($green, $day)),
+            'grid' => $this->grid($request, $rinks, $day, $closed),
             'previousDay' => $dayIndex !== false && $dayIndex > 0 ? $days[$dayIndex - 1] : null,
             'nextDay' => $dayIndex !== false && $dayIndex < count($days) - 1 ? $days[$dayIndex + 1] : null,
             // For the Secretary: how many bookings closing the green would cancel, and the members whose
             // bookings a closure cancelled, to message them.
-            'bookedCount' => $request->user()?->hasPrivilege('admin.event') ? $displaced->bookedCount($green, $day) : 0,
-            'affected' => $request->user()?->hasPrivilege('admin.event')
-                ? $displaced->messages($displaced->cancelled($green, $day))
-                : [],
+            'secretary' => $secretary,
+            'bookedCount' => $secretary && ! $closed ? $displaced->bookedCount($rinks->pluck('sid')->all(), $day) : 0,
+            'affected' => $secretary ? $displaced->messages($displaced->cancelled($green, $day)) : [],
         ]);
     }
 
@@ -90,10 +91,7 @@ class GreensController extends Controller
         $this->greens->setClosed($green, $day, true);
 
         // Its bookings are cancelled, so the members can book another green that day.
-        $cancelled = count(array_filter(
-            $displaced->cancelDisplaced(),
-            fn (array $item) => $item['booking']->rink->green() === $green && $item['start']->isSameDay($day),
-        ));
+        $cancelled = count($displaced->cancelDisplaced($green, $day));
 
         return redirect()->route('greens.show', [$green, $date])
             ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M')
@@ -266,7 +264,7 @@ class GreensController extends Controller
 
             if ($user !== null) {
                 $names = array_merge(
-                    [trim($booking->user->firstName().' '.$booking->user->lastName()) ?: $booking->user->alias],
+                    [$booking->user->fullName()],
                     $booking->playerNames(),
                 );
             }

@@ -41,6 +41,11 @@ class MemberPayment extends Model
         ];
     }
 
+    public static function methodLabel(string $method): string
+    {
+        return self::METHODS[$method] ?? $method;
+    }
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
