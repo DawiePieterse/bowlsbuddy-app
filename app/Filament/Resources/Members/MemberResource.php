@@ -2,17 +2,23 @@
 
 namespace App\Filament\Resources\Members;
 
+use App\Filament\Pages\MessageMembers;
 use App\Filament\Pages\Utilisation;
 use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
+use App\Filament\Resources\Members\RelationManagers\PaymentsRelationManager;
 use App\Models\User;
+use App\Services\Membership;
 use App\Support\Phone;
+use App\Support\WhatsApp;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -20,18 +26,22 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
  * The Secretary's member management (PLAN.md section 7): search, create, edit, activate, set a
- * temporary password, privileges. Privileges live in bs_users_meta as "allow.<privilege>"; the
- * Edit/Create pages move them in and out of the form's "privileges" field.
+ * temporary password, privileges, membership details and payments, and WhatsApp messages. Privileges
+ * live in bs_users_meta as "allow.<privilege>", the membership details as meta too (Membership::TYPE...);
+ * the Edit/Create pages move them in and out of the form's fields.
  */
 class MemberResource extends Resource
 {
@@ -93,6 +103,16 @@ class MemberResource extends Resource
                     ->helperText('Leave empty to keep the current password.'),
             ])->columns(2),
 
+            Section::make('Membership')->schema([
+                Select::make('membership')->label('Membership type')
+                    ->options(fn (): array => app(Membership::class)->typeOptions())
+                    ->placeholder('None'),
+                DatePicker::make('joined')->label('Member of the club since')->maxDate(now()),
+                Select::make('gender')->options(Membership::GENDERS)->placeholder('Not given'),
+                DatePicker::make('birthday')->maxDate(now())
+                    ->helperText('For the birthday wishes on the dashboard.'),
+            ])->columns(2),
+
             Section::make('Privileges')
                 ->description('Only used for assistants. Admins can do everything.')
                 ->schema([
@@ -108,10 +128,21 @@ class MemberResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('alias')->label('Name')->searchable()->sortable(),
-                TextColumn::make('contact')->label('Cellphone or email')
-                    ->state(fn (User $record): ?string => $record->phone ? Phone::pretty($record->phone) : $record->email)
-                    ->searchable(['phone', 'email'])
+                // The cellphone number (or email) sits under the name, so the list fits on a phone.
+                TextColumn::make('alias')->label('Name')
+                    ->description(fn (User $record): ?string => $record->phone ? Phone::pretty($record->phone) : $record->email)
+                    ->searchable(['alias', 'phone', 'email'])
+                    ->sortable(),
+                TextColumn::make('membership')->label('Membership')
+                    ->state(fn (User $record): ?string => $record->meta(Membership::TYPE))
+                    ->placeholder('—')
+                    ->visibleFrom('md')
+                    ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
+                IconColumn::make('paid_current')
+                    ->label('Paid')
+                    ->tooltip(fn (): string => 'Paid for '.app(Membership::class)->yearLabel(app(Membership::class)->currentYear()))
+                    ->boolean()
+                    ->alignCenter()
                     ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
                 TextColumn::make('usage_hours')->label('Hours')
                     ->formatStateUsing(fn ($state): string => Utilisation::formatHours((float) $state))
@@ -128,7 +159,9 @@ class MemberResource extends Resource
                     ->formatStateUsing(fn (float $state): string => number_format($state, 1).'%')
                     ->alignEnd()
                     ->visible(fn ($livewire): bool => self::showingUsage($livewire)),
+                // On a phone the "Waiting for approval" tab stands in for the status column.
                 TextColumn::make('status')->badge()
+                    ->visibleFrom('md')
                     ->hidden(fn ($livewire): bool => self::showingUsage($livewire))
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'disabled' => 'Waiting for approval',
@@ -147,6 +180,11 @@ class MemberResource extends Resource
                 TextColumn::make('last_activity')->dateTime('j M Y, H:i')->label('Last active')->sortable()->visibleFrom('xl')
                     ->hidden(fn ($livewire): bool => self::showingUsage($livewire)),
             ])
+            // Whether each member has paid for the current membership year, and their details for the columns.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->with('metaEntries')
+                ->withExists(['payments as paid_current' => fn (Builder $payments) => $payments
+                    ->where('year', app(Membership::class)->currentYear())]))
             ->header(fn ($livewire): ?View => self::showingUsage($livewire)
                 ? view('filament.members.usage-header', ['page' => $livewire])
                 : null)
@@ -156,8 +194,32 @@ class MemberResource extends Resource
                 : $query->orderBy('alias'))
             ->filters([
                 SelectFilter::make('status')->options(User::STATUSES),
+                SelectFilter::make('membership')->label('Membership type')
+                    ->options(fn (): array => array_combine(array_keys(app(Membership::class)->types()), array_keys(app(Membership::class)->types())))
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? $query->whereHas('metaEntries', fn (Builder $meta) => $meta->where('key', Membership::TYPE)->where('value', $data['value']))
+                        : $query),
+                TernaryFilter::make('paid')
+                    ->label(fn (): string => 'Paid for '.app(Membership::class)->yearLabel(app(Membership::class)->currentYear()))
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereHas('payments', fn (Builder $payments) => $payments->where('year', app(Membership::class)->currentYear())),
+                        false: fn (Builder $query) => $query->whereDoesntHave('payments', fn (Builder $payments) => $payments->where('year', app(Membership::class)->currentYear())),
+                    ),
+                SelectFilter::make('gender')
+                    ->options(Membership::GENDERS)
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? $query->whereHas('metaEntries', fn (Builder $meta) => $meta->where('key', Membership::GENDER)->where('value', $data['value']))
+                        : $query),
             ])
             ->recordActions([
+                Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->tooltip('Open a WhatsApp chat')
+                    ->icon(Heroicon::OutlinedChatBubbleLeftEllipsis)
+                    ->iconButton()
+                    ->color('gray')
+                    ->visible(fn (User $record): bool => filled($record->phone))
+                    ->url(fn (User $record): ?string => WhatsApp::to($record->phone), shouldOpenInNewTab: true),
                 Action::make('activate')
                     ->label('Approve')
                     ->button()
@@ -197,13 +259,25 @@ class MemberResource extends Resource
                     EditAction::make(),
                 ])->label('Password and edit')->tooltip('Password and edit'),
             ])
-            ->toolbarActions([]);
+            ->toolbarActions([
+                BulkAction::make('message')
+                    ->label('Send a WhatsApp message')
+                    ->icon(Heroicon::OutlinedChatBubbleLeftEllipsis)
+                    ->action(fn (Collection $records) => redirect(MessageMembers::getUrl(['members' => $records->pluck('uid')->sort()->join(',')]))),
+            ]);
     }
 
     /** Whether the table shows the "Use of rinks" tab of the Members list. */
     private static function showingUsage(mixed $livewire): bool
     {
         return $livewire instanceof ListMembers && $livewire->isShowingUsage();
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            PaymentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -244,7 +318,8 @@ class MemberResource extends Resource
             $data['pw'] = $data['password'];
         }
 
-        unset($data['firstname'], $data['lastname'], $data['privileges'], $data['password']);
+        unset($data['firstname'], $data['lastname'], $data['privileges'], $data['password'],
+            $data['membership'], $data['joined'], $data['gender'], $data['birthday']);
 
         return $data;
     }
@@ -258,6 +333,10 @@ class MemberResource extends Resource
     {
         $user->setMeta('firstname', trim((string) ($state['firstname'] ?? '')) ?: null);
         $user->setMeta('lastname', trim((string) ($state['lastname'] ?? '')) ?: null);
+
+        foreach ([Membership::TYPE => 'membership', Membership::JOINED => 'joined', Membership::GENDER => 'gender', Membership::BIRTHDAY => 'birthday'] as $key => $field) {
+            $user->setMeta($key, filled($state[$field] ?? null) ? substr((string) $state[$field], 0, 100) : null);
+        }
 
         $granted = (array) ($state['privileges'] ?? []);
 

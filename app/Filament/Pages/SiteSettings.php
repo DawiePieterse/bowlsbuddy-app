@@ -3,6 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
+use App\Services\Birthdays;
+use App\Services\Membership;
 use App\Support\ClubLogo;
 use App\Support\Settings;
 use App\Support\StandardTexts;
@@ -12,6 +14,7 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -56,6 +59,9 @@ class SiteSettings extends Page
         'privacy' => 'service.privacy',
         'activation' => 'service.user.activation',
         'max_active_bookings' => 'service.user.default.max_active_bookings',
+        'membership_types' => Membership::TYPES_OPTION,
+        'membership_year_start' => Membership::YEAR_START_OPTION,
+        'birthday_message' => Birthdays::MESSAGE_OPTION,
     ];
 
     private const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -78,6 +84,9 @@ class SiteSettings extends Page
         }
 
         $data['playing_days'] = self::playingDays($settings);
+        $data['membership_types'] ??= Membership::DEFAULT_TYPES;
+        $data['membership_year_start'] ??= '1';
+        $data['birthday_message'] ??= Birthdays::DEFAULT_MESSAGE;
         foreach (array_keys(StandardTexts::DOCUMENTS) as $document) {
             $data[$document] = StandardTexts::for($document);
         }
@@ -119,6 +128,21 @@ class SiteSettings extends Page
                         ->helperText('Members can book on the ticked days. Close a green for a single day on its calendar page.'),
                     TextInput::make('max_active_bookings')->label('Open bookings per member (0 = no limit)')
                         ->numeric()->minValue(0)->maxValue(50),
+                ]),
+                Tab::make('Membership')->schema([
+                    Textarea::make('membership_types')->label('Membership types and yearly fees')
+                        ->rows(5)
+                        ->required()
+                        ->helperText('One per line, with the fee in rand after a colon, like "Full: 1200". Leave the fee off where there is none.'),
+                    Select::make('membership_year_start')->label('The membership year starts in')
+                        ->options(collect(range(1, 12))->mapWithKeys(fn (int $month) => [(string) $month => date('F', mktime(0, 0, 0, $month, 1))])->all())
+                        ->required()
+                        ->helperText('Payments are recorded against a membership year, for example 2026, or 2026/27 when it runs over New Year.'),
+                    Textarea::make('birthday_message')->label('Birthday message')
+                        ->rows(2)
+                        ->required()
+                        ->maxLength(500)
+                        ->helperText('Sent from the dashboard on members\' birthdays. {name} becomes the member\'s first name and {club} the club\'s short name.'),
                 ]),
                 Tab::make('Documents')->schema(array_map(
                     fn (string $document, string $title) => Section::make($title)

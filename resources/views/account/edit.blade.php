@@ -57,7 +57,7 @@
 
     <div class="card danger-zone">
         <h2>Delete my account</h2>
-        <p class="muted">This removes your account and your bookings for good.</p>
+        <p class="muted">This removes your account, bookings and payment history for good.</p>
         <form method="POST" action="{{ route('account.destroy') }}"
               onsubmit="return confirm('Delete your account and all your bookings? This cannot be undone.');">
             @csrf

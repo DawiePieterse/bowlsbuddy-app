@@ -67,16 +67,18 @@ class StandardTexts
         <ul>
         <li>Your first name, surname and cellphone number.</li>
         <li>Your bookings: rink, date, time and the names of the players you add.</li>
+        <li>Your membership: type, since when, the membership fees you paid and, if you give them, your gender and birthday.</li>
         </ul>
         <h2>Why we keep it</h2>
         <ul>
         <li>To run rink bookings and show logged-in members who is playing on each rink.</li>
-        <li>To contact you about your bookings, by WhatsApp or phone.</li>
+        <li>To keep the club's membership and subscription records.</li>
+        <li>To contact you about your bookings and club news, and to wish you a happy birthday, by WhatsApp or phone.</li>
         </ul>
         <h2>Who sees it</h2>
         <p>Logged-in members see the names on booked rinks. The Club Secretary and the members who help run bookings see your details. The club does not sell your information or share it with anyone else.</p>
         <h2>How long we keep it</h2>
-        <p>For as long as you have an account. Deleting your account removes your details and bookings.</p>
+        <p>For as long as you have an account. Deleting your account removes your details, bookings and payment history.</p>
         <h2>Your rights</h2>
         <ul>
         <li>Download everything we keep about you under My account.</li>

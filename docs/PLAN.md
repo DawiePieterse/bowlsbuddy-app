@@ -238,6 +238,12 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 - [x] Members: search, create, edit, activate, set a temporary password, privileges
 - [x] Members: "Use of rinks" tab ranking members by hours booked over the last week, month, quarter or year,
   with bookings and share of the total
+- [x] Members: membership type, member since, gender and birthday; payment history of membership fees recorded
+  by hand (types, fees and the month the membership year starts are in Settings); "Paid" column and filters
+- [x] Members: WhatsApp a member from the list, or prepare one personal message per member ({name}, {fee}) for
+  everyone, members who haven't paid, one membership type or ticked members, plus one for a group chat
+- [x] Dashboard: today's and the coming week's birthdays, with the wishes ready to send in one tap (menu badge
+  until everyone is wished)
 - [x] Bookings: list, create for a member, edit, cancel, delete
 - [x] Events: for a rink, a green or all rinks; list, edit, delete
 - [x] Settings: names and text, the four document pages, rinks, behaviour
@@ -404,3 +410,7 @@ Laravel is set up for this from Phase 1, so moving hosts later needs no code cha
    events. Dark mode follows the panel's light/dark/system choice. Still plain CSS with no build step
    (`public/css/app.css`, plus `public/css/panel.css` for the panel's phone topbar); the panel says "Log in"
    and "Log out" like the member pages (`lang/vendor/filament-panels`).
+7. ~~**Membership fees and WhatsApp?**~~ **Decided: recorded by hand, sent by tap.** Membership fees are recorded
+   by the Secretary (`bb_member_payments`), not paid online, so the online-payments non-goal stands. Every
+   WhatsApp message, birthday wishes included, opens in the Secretary's own WhatsApp (`wa.me` links) to send
+   with one tap; no WhatsApp Business account, template approval, per-message cost or cron job is needed.
