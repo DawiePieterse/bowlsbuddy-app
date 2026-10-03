@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Rinks\Pages;
 
+use App\Filament\Pages\AffectedBookings;
 use App\Filament\Resources\Rinks\RinkResource;
 use Filament\Resources\Pages\EditRecord;
 
@@ -33,5 +34,11 @@ class EditRink extends EditRecord
         unset($data['slot_minutes'], $data['booking_range_days'], $data['cancel_range_hours']);
 
         return $data;
+    }
+
+    /** A rink taken out of use cancels its upcoming bookings, and the Secretary lets the members know. */
+    protected function afterSave(): void
+    {
+        AffectedBookings::cancelDisplaced();
     }
 }

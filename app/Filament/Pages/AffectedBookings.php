@@ -12,9 +12,9 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
 
 /**
- * Every upcoming booking that can't go ahead, whatever closed it (a green closed for the day, an event, a
- * hidden green or a day the club is closed), with a WhatsApp message per member for the Secretary to send.
- * The menu badge counts the members, so a closure made anywhere still shows up here.
+ * Every upcoming booking a closure cancelled, whatever closed it (a green closed for the day, an event, a
+ * hidden green or rink, a day the club is closed), with a WhatsApp message per member for the Secretary to
+ * send. The menu badge counts the members not told yet, so a closure made anywhere still shows up here.
  */
 class AffectedBookings extends Page
 {
@@ -54,28 +54,38 @@ class AffectedBookings extends Page
     }
 
     /**
-     * After a change that displaces bookings (an event saved, a green hidden): a nudge with a link to this
-     * page when members had already booked.
-     *
-     * @param  list<array<string, mixed>>  $displaced  from DisplacedBookings
+     * After a change that can close rinks (an event saved, a green hidden, a rink taken out of use, days
+     * hidden): cancels the bookings it displaces and nudges the Secretary to let the members know.
      */
-    public static function notifyAbout(array $displaced): void
+    public static function cancelDisplaced(): void
     {
-        $members = count(array_unique(array_map(fn (array $item) => $item['booking']->uid, $displaced)));
+        $cancelled = app(DisplacedBookings::class)->cancelDisplaced();
 
-        if ($members === 0 || ! static::canAccess()) {
+        if ($cancelled === []) {
             return;
         }
 
+        $bookings = count($cancelled);
+        $members = count(array_unique(array_map(fn (array $item) => $item['booking']->uid, $cancelled)));
+
         Notification::make()
-            ->title($members.' '.Str::plural('member', $members).' had already booked')
-            ->body('Their bookings can\'t go ahead. Send them a WhatsApp message to let them know.')
+            ->title($bookings.' '.Str::plural('booking', $bookings).' cancelled')
+            ->body(($members === 1 ? '1 member had' : $members.' members had').' booked a time that is now closed. '
+                .(static::canAccess() ? 'Send them a WhatsApp message to let them know.' : 'The Secretary can let them know under Affected bookings.'))
             ->warning()
             ->persistent()
-            ->actions([
-                Action::make('letThemKnow')->label('Let them know')->button()->url(static::getUrl()),
-            ])
+            ->actions(static::canAccess()
+                ? [Action::make('letThemKnow')->label('Let them know')->button()->url(static::getUrl())]
+                : [])
             ->send();
+    }
+
+    /** Send on WhatsApp (in the background) or Mark as told; $bookings holds the booking ids, comma-separated. */
+    public function markTold(string $bookings): void
+    {
+        abort_unless(static::canAccess(), 403);
+
+        app(DisplacedBookings::class)->markTold(array_map('intval', array_filter(explode(',', $bookings))));
     }
 
     /** @return list<array<string, mixed>> see DisplacedBookings::messages() */

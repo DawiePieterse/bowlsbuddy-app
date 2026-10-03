@@ -349,7 +349,11 @@ a.green-pill:hover { text-decoration: none; box-shadow: inset 0 0 0 1px var(--pr
 .affected-list li { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; padding: 0.75rem 0; border-top: 1px solid var(--line); }
 .affected-list .who { min-width: 0; font-size: 0.875rem; }
 .affected-list .who strong { font-size: 1rem; }
-.affected-list .button { flex: none; }
+.affected-list .button, .affected-list form { flex: none; margin: 0; }
+.affected-list .told-mark { display: none; align-items: center; gap: 0.125rem; margin-left: 0.375rem; padding: 0 0.375rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--subtle); color: var(--muted); }
+.affected-list .told-mark .icon { width: 0.875rem; height: 0.875rem; }
+.affected-list li.told .told-mark { display: inline-flex; }
+.affected-list li.told .button.whatsapp { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--input-line) inset; }
 
 /* Green calendar: a grid of rinks and times */
 .calendar-key { display: flex; flex-wrap: wrap; gap: 0.375rem 1rem; margin: 0 0 0.875rem; font-size: 0.8125rem; color: var(--muted); }
@@ -465,7 +469,7 @@ a.green-pill:hover { text-decoration: none; box-shadow: inset 0 0 0 1px var(--pr
     .calendar .slot-own { box-shadow: inset 0 0 0 2px var(--primary-800); }
     .booking-row { gap: 0.75rem; }
     .affected-list li { flex-wrap: wrap; }
-    .affected-list .button { width: 100%; }
+    .affected-list .button, .affected-list form, .affected-list form button { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

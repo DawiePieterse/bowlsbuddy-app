@@ -70,9 +70,11 @@ class GreensController extends Controller
             'grid' => $this->grid($request, $rinks, $day, $this->greens->isClosed($green, $day)),
             'previousDay' => $dayIndex !== false && $dayIndex > 0 ? $days[$dayIndex - 1] : null,
             'nextDay' => $dayIndex !== false && $dayIndex < count($days) - 1 ? $days[$dayIndex + 1] : null,
-            // Bookings on this green that day that can't go ahead, for the Secretary to message the members.
+            // For the Secretary: how many bookings closing the green would cancel, and the members whose
+            // bookings a closure cancelled, to message them.
+            'bookedCount' => $request->user()?->hasPrivilege('admin.event') ? $displaced->bookedCount($green, $day) : 0,
             'affected' => $request->user()?->hasPrivilege('admin.event')
-                ? $displaced->messages($displaced->upcoming($green, $day))
+                ? $displaced->messages($displaced->cancelled($green, $day))
                 : [],
         ]);
     }
@@ -87,11 +89,15 @@ class GreensController extends Controller
 
         $this->greens->setClosed($green, $day, true);
 
-        $members = count($displaced->messages($displaced->upcoming($green, $day)));
+        // Its bookings are cancelled, so the members can book another green that day.
+        $cancelled = count(array_filter(
+            $displaced->cancelDisplaced(),
+            fn (array $item) => $item['booking']->rink->green() === $green && $item['start']->isSameDay($day),
+        ));
 
         return redirect()->route('greens.show', [$green, $date])
-            ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M').'.'
-                .($members > 0 ? ' '.$members.' '.Str::plural('member', $members).' had booked: let them know below.' : ''));
+            ->with('status', 'Green '.$green.' is now closed on '.$day->format('D j M')
+                .($cancelled > 0 ? ' and its '.$cancelled.' '.Str::plural('booking', $cancelled).' '.($cancelled === 1 ? 'is' : 'are').' cancelled. Let the members know below.' : '.'));
     }
 
     /**
@@ -113,14 +119,15 @@ class GreensController extends Controller
                 : 'Green '.$green.' plays '.GreenService::DIRECTIONS[$direction].' on '.$day->format('D j M').'.');
     }
 
-    public function open(Request $request, string $green, string $date): RedirectResponse
+    public function open(Request $request, DisplacedBookings $displaced, string $green, string $date): RedirectResponse
     {
         $day = $this->greenDay($request, $green, $date);
 
         $this->greens->setClosed($green, $day, false);
 
         return redirect()->route('greens.show', [$green, $date])
-            ->with('status', 'Green '.$green.' is open again on '.$day->format('D j M').'.');
+            ->with('status', 'Green '.$green.' is open again on '.$day->format('D j M').'.'
+                .($displaced->cancelled($green, $day) !== [] ? ' The bookings cancelled when it closed stay cancelled.' : ''));
     }
 
     /**

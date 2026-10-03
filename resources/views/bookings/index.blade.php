@@ -1,3 +1,4 @@
+@use('App\Services\DisplacedBookings')
 @extends('layouts.app', ['title' => 'My bookings', 'narrow' => true])
 
 @section('content')
@@ -18,7 +19,7 @@
                     <div class="muted">
                         {{ substr($reservation?->time_start ?? '', 0, 5) }}&ndash;{{ substr($reservation?->time_end ?? '', 0, 5) }}
                         &middot; Rink {{ $booking->rink?->name }}@if ($booking->playerNames()), with {{ implode(', ', $booking->playerNames()) }}@endif
-                        @if ($booking->status === 'cancelled') &middot; cancelled @endif
+                        @if ($booking->status === 'cancelled') &middot; cancelled{{ ($closure = $booking->meta(DisplacedBookings::REASON)) ? ' because '.$closure : '' }} @endif
                     </div>
                 </div>
                 @if ($cancellable[$booking->bid])

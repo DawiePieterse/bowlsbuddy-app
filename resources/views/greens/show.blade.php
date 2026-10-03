@@ -36,7 +36,7 @@
                     </form>
                 @else
                     <form method="POST" action="{{ route('greens.close', [$green, $day->format('Y-m-d')]) }}"
-                          onsubmit="return confirm('Close green {{ $green }} on {{ $day->format('D j M') }}?');">
+                          onsubmit="return confirm(@js('Close green '.$green.' on '.$day->format('D j M').'?'.($bookedCount > 0 ? ' Its '.$bookedCount.' '.Str::plural('booking', $bookedCount).' will be cancelled.' : '')));">
                         @csrf
                         <button type="submit" class="danger small">{{ svg('heroicon-o-lock-closed', 'icon') }}Close green {{ $green }} on this day</button>
                     </form>
