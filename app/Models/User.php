@@ -92,6 +92,12 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->hasMany(Booking::class, 'uid', 'uid');
     }
 
+    /** @return HasMany<MemberPayment, $this> */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(MemberPayment::class, 'uid', 'uid');
+    }
+
     public function canLogIn(): bool
     {
         return in_array($this->status, self::LOGIN_STATUSES, true);

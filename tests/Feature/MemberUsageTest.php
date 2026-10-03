@@ -74,7 +74,7 @@ it('keeps the other member tabs listing everyone by name', function () {
         ->set('activeTab', 'all')
         ->assertCanSeeTableRecords([$this->anna, $this->ben, $this->carl, $this->admin->fresh()])
         ->assertDontSee('Share of total')
-        ->assertSee('Cellphone or email');
+        ->assertSee('Membership');
 
     $this->get('/admin/members?tab=usage&usagePeriod=year')
         ->assertOk()

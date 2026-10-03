@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\Rink;
 use App\Models\User;
 use App\Support\Settings;
+use App\Support\WhatsApp;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -144,8 +145,7 @@ class DisplacedBookings
                 'bookings' => implode(',', array_map(fn (array $item) => $item['booking']->bid, $memberItems)),
                 'told' => ! in_array(false, array_column($memberItems, 'told'), true),
                 'text' => $text,
-                // wa.me wants the number in international format without the plus.
-                'url' => $phone !== null ? 'https://wa.me/'.ltrim($phone, '+').'?text='.rawurlencode($text) : null,
+                'url' => WhatsApp::to($phone, $text),
             ];
         }
 

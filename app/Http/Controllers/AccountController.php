@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\MemberPayment;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Services\Membership;
 use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -93,6 +95,19 @@ class AccountController extends Controller
             'email' => $user->email,
             'status' => $user->status,
             'member_since' => $user->created?->format('Y-m-d'),
+            'membership' => [
+                'type' => $user->meta(Membership::TYPE),
+                'member_of_the_club_since' => $user->meta(Membership::JOINED),
+                'gender' => $user->meta(Membership::GENDER),
+                'birthday' => $user->meta(Membership::BIRTHDAY),
+                'payments' => $user->payments()->orderBy('paid_on')->get()->map(fn (MemberPayment $payment): array => [
+                    'paid_on' => $payment->paid_on->format('Y-m-d'),
+                    'membership_year' => $payment->year,
+                    'amount' => $payment->amount,
+                    'method' => MemberPayment::METHODS[$payment->method] ?? $payment->method,
+                    'reference' => $payment->reference,
+                ])->all(),
+            ],
             'bookings' => $bookings,
         ], 200, [
             'Content-Disposition' => 'attachment; filename="my-data.json"',
