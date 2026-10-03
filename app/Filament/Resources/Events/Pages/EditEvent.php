@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
+use App\Filament\Pages\AffectedBookings;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
+use App\Services\DisplacedBookings;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -44,5 +46,8 @@ class EditEvent extends EditRecord
         $event = $this->getRecord();
 
         EventResource::saveMeta($event, $this->form->getRawState());
+
+        // Members who had booked the event's time get a WhatsApp message from the Secretary.
+        AffectedBookings::notifyAbout(app(DisplacedBookings::class)->forEvent($event));
     }
 }

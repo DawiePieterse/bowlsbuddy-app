@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Booking;
 use App\Models\Rink;
 use App\Models\User;
+use App\Services\DisplacedBookings;
 use App\Services\GreenManager;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -100,11 +101,18 @@ class Greens extends Page
                         'show' => 'Show to members',
                     ])->required(),
                 ])
-                ->action(fn (array $data) => $this->run(function () use ($data) {
-                    app(GreenManager::class)->setHidden((string) $data['green'], $data['visibility'] === 'hide');
+                ->action(function (array $data) {
+                    $this->run(function () use ($data) {
+                        app(GreenManager::class)->setHidden((string) $data['green'], $data['visibility'] === 'hide');
 
-                    return $data['visibility'] === 'hide' ? 'Green hidden from members' : 'Green shown to members';
-                })),
+                        return $data['visibility'] === 'hide' ? 'Green hidden from members' : 'Green shown to members';
+                    });
+
+                    // Members with upcoming bookings on a hidden green get a WhatsApp message from the Secretary.
+                    if ($data['visibility'] === 'hide') {
+                        AffectedBookings::notifyAbout(app(DisplacedBookings::class)->upcoming((string) $data['green']));
+                    }
+                }),
 
             Action::make('deleteGreen')
                 ->label('Delete a green')

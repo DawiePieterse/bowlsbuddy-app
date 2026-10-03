@@ -63,6 +63,10 @@
         <div class="flash warning">{{ svg('heroicon-o-lock-closed', 'icon') }}<div>Green {{ $green }} is closed on this day.</div></div>
     @endif
 
+    @if ($affected)
+        @include('greens.partials.affected', ['messages' => $affected])
+    @endif
+
     @guest
         <div class="flash">{{ svg('heroicon-o-information-circle', 'icon') }}<div><a href="{{ route('login') }}">Log in</a> to book a rink and see who is playing.</div></div>
     @endguest

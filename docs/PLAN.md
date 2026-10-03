@@ -229,6 +229,9 @@ covers the rules that span rinks (one rink per day, active booking limit) and ca
 
 **Secretary / admin**
 - [x] Open or close a green per day
+- [x] Let members know when their bookings can't go ahead (green closed, event, hidden green or rink, club
+  closed that day): one ready WhatsApp message per member, right after closing a green on its calendar and
+  on the admin panel's "Affected bookings" page (menu badge counts the members); bookings are not cancelled
 - [x] Invite members via WhatsApp
 - [x] Printable day sheet with QR code to live bookings
 - [x] Members: search, create, edit, activate, set a temporary password, privileges
