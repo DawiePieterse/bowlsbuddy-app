@@ -2,6 +2,7 @@
 
 use App\Filament\Auth\Login;
 use App\Filament\Pages\Maintenance;
+use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -69,14 +70,36 @@ it('still lets staff log in to the admin panel with an email address', function 
     $this->assertAuthenticatedAs($admin);
 });
 
-it('refuses a wrong password or a member without admin access at the admin login', function () {
+it('refuses a wrong password at the admin login', function () {
     User::factory()->admin()->create(['phone' => '+27836554092', 'pw' => 'secret123']);
     User::factory()->create(['phone' => '+27821234567', 'pw' => 'secret123']);
 
+    foreach (['0836554092', '0821234567'] as $login) {
+        Livewire::test(Login::class)
+            ->fillForm(['email' => $login, 'password' => 'wrong-password'])
+            ->call('authenticate')
+            ->assertHasFormErrors(['email']);
+    }
+
+    $this->assertGuest();
+});
+
+it('logs a member in to the member site from the admin login, without panel access', function () {
+    $member = User::factory()->create(['phone' => '+27825504361', 'pw' => 'LCE123456!']);
+
     Livewire::test(Login::class)
-        ->fillForm(['email' => '0836554092', 'password' => 'wrong-password'])
+        ->fillForm(['email' => '082 550 4361', 'password' => 'LCE123456!'])
         ->call('authenticate')
-        ->assertHasFormErrors(['email']);
+        ->assertHasNoFormErrors()
+        ->assertRedirect(route('home'));
+
+    $this->assertAuthenticatedAs($member);
+    expect(session('status'))->toContain('member site')
+        ->and($member->fresh()->last_activity)->not->toBeNull();
+});
+
+it('still refuses a member who is not active at the admin login', function () {
+    User::factory()->withStatus('disabled')->create(['phone' => '+27821234567', 'pw' => 'secret123']);
 
     Livewire::test(Login::class)
         ->fillForm(['email' => '0821234567', 'password' => 'secret123'])
@@ -84,6 +107,20 @@ it('refuses a wrong password or a member without admin access at the admin login
         ->assertHasFormErrors(['email']);
 
     $this->assertGuest();
+});
+
+it('logs in a member added in the panel with the number and password given', function () {
+    $this->actingAs(staff('admin.see-menu', 'admin.user'));
+
+    Livewire::test(CreateMember::class)
+        ->fillForm(['firstname' => 'New', 'lastname' => 'Member', 'phone' => '0825504361', 'status' => 'enabled', 'password' => 'LCE123456!'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    auth()->logout();
+
+    $this->post('/login', ['login' => '082 550 4361', 'password' => 'LCE123456!'])->assertRedirect(route('home'));
+    expect(auth()->user()?->phone)->toBe('+27825504361');
 });
 
 it('links back to the member site and says "Log out", as the member pages do', function () {
