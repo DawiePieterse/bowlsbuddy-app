@@ -41,8 +41,8 @@ class EventResource extends Resource
                 TextInput::make('name')->required()->maxLength(100)
                     ->helperText('Shown purple on the greens overview and calendar.'),
                 Textarea::make('description')->rows(2),
-                DateTimePicker::make('datetime_start')->label('From')->seconds(false)->required(),
-                DateTimePicker::make('datetime_end')->label('To')->seconds(false)->required()->after('datetime_start'),
+                DateTimePicker::make('datetime_start')->label('From')->native(false)->seconds(false)->displayFormat('D j M Y H:i')->required(),
+                DateTimePicker::make('datetime_end')->label('To')->native(false)->seconds(false)->displayFormat('D j M Y H:i')->required()->after('datetime_start'),
             ])->columns(2),
 
             Section::make('What it blocks')->schema([

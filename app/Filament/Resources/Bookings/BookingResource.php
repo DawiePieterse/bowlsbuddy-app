@@ -52,8 +52,8 @@ class BookingResource extends Resource
                     ->options(Rink::query()->orderBy('priority')->pluck('name', 'sid'))
                     ->required(),
                 DatePicker::make('date')->required()->native(false)->displayFormat('D j M Y'),
-                TimePicker::make('time_start')->label('From')->seconds(false)->required(),
-                TimePicker::make('time_end')->label('To')->seconds(false)->required()->after('time_start'),
+                TimePicker::make('time_start')->label('From')->native(false)->seconds(false)->displayFormat('H:i')->required(),
+                TimePicker::make('time_end')->label('To')->native(false)->seconds(false)->displayFormat('H:i')->required()->after('time_start'),
                 Select::make('quantity')->label('Players')->options([1 => '1', 2 => '2'])->default(1)->required(),
                 Select::make('status')->options(['single' => 'Booked', 'cancelled' => 'Cancelled'])
                     ->default('single')->required(),

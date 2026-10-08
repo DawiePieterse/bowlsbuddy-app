@@ -212,6 +212,17 @@ it('creates events for a rink, a green or all rinks', function () {
         ->and($event->meta('green'))->toBeNull();
 });
 
+it('picks booking and event times on a 24-hour clock, not the phone\'s own picker', function (string $url) {
+    $this->actingAs($this->admin)->get($url)
+        ->assertOk()
+        ->assertDontSee('type="time"', false)
+        ->assertDontSee('type="datetime-local"', false)
+        ->assertSee('max="23"', false);
+})->with([
+    'booking' => '/admin/bookings/create',
+    'event' => '/admin/events/create',
+]);
+
 it('edits a rink in minutes, days and hours', function () {
     $rink = Rink::query()->where('name', 'A-1')->firstOrFail();
 
