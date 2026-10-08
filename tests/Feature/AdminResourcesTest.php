@@ -190,6 +190,7 @@ it('creates events for a rink, a green or all rinks', function () {
     $event = Event::query()->latest('eid')->firstOrFail();
 
     expect($event->sid)->toBeNull()
+        ->and($event->datetime_start->format('Y-m-d H:i'))->toBe('2026-10-06 12:00')
         ->and($event->meta('green'))->toBe('A')
         ->and($event->meta('name'))->toBe('Green A maintenance');
 
@@ -222,6 +223,12 @@ it('picks booking and event times on a 24-hour clock, not the phone\'s own picke
     'booking' => '/admin/bookings/create',
     'event' => '/admin/events/create',
 ]);
+
+it('runs on South African time', function () {
+    expect(config('app.timezone'))->toBe('Africa/Johannesburg')
+        ->and(now()->getTimezone()->getName())->toBe('Africa/Johannesburg')
+        ->and(now()->utcOffset())->toBe(120);
+});
 
 it('edits a rink in minutes, days and hours', function () {
     $rink = Rink::query()->where('name', 'A-1')->firstOrFail();
